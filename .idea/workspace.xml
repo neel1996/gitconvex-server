@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="e019dc87-7a9f-4fde-b1cc-53a085086a0d" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" path="$PROJECT_DIR$/../../../../../go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1iYqMFkrEglMpDWX5IONlpsW0Kn" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="configurable.Global.GOPATH.is.expanded" value="true" />
+    <property name="configurable.Module.GOPATH.is.expanded" value="false" />
+    <property name="configurable.Project.GOPATH.is.expanded" value="true" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="last_opened_file_path" value="$USER_HOME$" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+  </component>
+  <component name="RunManager">
+    <configuration name="go build github.com/neel1996/gitconvex-server" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="gitconvex-server" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <filePath value="$PROJECT_DIR$/server.go" />
+      <package value="github.com/neel1996/gitconvex-server" />
+      <directory value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Build.go build github.com/neel1996/gitconvex-server" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e019dc87-7a9f-4fde-b1cc-53a085086a0d" name="Default Changelist" comment="" />
+      <created>1602094830189</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1602094830189</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>true</integration-enabled>
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="729" y="261" width="533" height="615" key="#Build_Tags_&amp;_Vendoring" timestamp="1602095094007">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state x="729" y="261" width="533" height="615" key="#Build_Tags_&amp;_Vendoring/72.27.1848.1053@72.27.1848.1053" timestamp="1602095094007" />
+    <state x="454" y="211" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1602097617381">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state x="454" y="211" key="#com.intellij.execution.impl.EditConfigurationsDialog/72.27.1848.1053@72.27.1848.1053" timestamp="1602097617381" />
+    <state x="883" y="426" width="216" height="268" key="EnvironmentVariablesDialog" timestamp="1602095231374">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state x="883" y="426" width="216" height="268" key="EnvironmentVariablesDialog/72.27.1848.1053@72.27.1848.1053" timestamp="1602095231374" />
+    <state x="779" y="314" width="424" height="491" key="FileChooserDialogImpl" timestamp="1602094877550">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state x="779" y="314" width="424" height="491" key="FileChooserDialogImpl/72.27.1848.1053@72.27.1848.1053" timestamp="1602094877550" />
+    <state width="902" height="275" key="GridCell.Tab.0.bottom" timestamp="1602097687849">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="902" height="275" key="GridCell.Tab.0.bottom/72.27.1848.1053@72.27.1848.1053" timestamp="1602097687849" />
+    <state width="902" height="275" key="GridCell.Tab.0.center" timestamp="1602097687848">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="902" height="275" key="GridCell.Tab.0.center/72.27.1848.1053@72.27.1848.1053" timestamp="1602097687848" />
+    <state width="902" height="275" key="GridCell.Tab.0.left" timestamp="1602097687847">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="902" height="275" key="GridCell.Tab.0.left/72.27.1848.1053@72.27.1848.1053" timestamp="1602097687847" />
+    <state width="902" height="275" key="GridCell.Tab.0.right" timestamp="1602097687848">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="902" height="275" key="GridCell.Tab.0.right/72.27.1848.1053@72.27.1848.1053" timestamp="1602097687848" />
+    <state x="500" y="272" width="1022" height="737" key="SettingsEditor" timestamp="1602096313592">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state x="500" y="272" width="1022" height="737" key="SettingsEditor/72.27.1848.1053@72.27.1848.1053" timestamp="1602096313592" />
+    <state x="687" y="162" width="618" height="783" key="find.popup" timestamp="1602095651022">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state x="687" y="162" width="618" height="783" key="find.popup/72.27.1848.1053@72.27.1848.1053" timestamp="1602095651022" />
+  </component>
+</project>

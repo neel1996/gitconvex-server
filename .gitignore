@@ -1,0 +1,3 @@
+# Files and Directories to be ignored for gitconvex-server goes here
+
+build/
