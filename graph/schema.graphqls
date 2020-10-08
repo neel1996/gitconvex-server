@@ -1,0 +1,12 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type HealthCheckParams{
+    os: String!
+    git: String!
+}
+
+type Query {
+      healthCheck: HealthCheckParams!
+}

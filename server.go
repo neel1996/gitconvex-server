@@ -1,15 +1,14 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/neel1996/gitconvex-server/api"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
-	"github.com/neel1996/gitconvex-server/model"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/neel1996/gitconvex-server/graph"
+	"github.com/neel1996/gitconvex-server/graph/generated"
 )
 
 const defaultPort = "9002"
@@ -20,29 +19,13 @@ func main() {
 		port = defaultPort
 	}
 
-	router := mux.NewRouter()
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./build/")))
+	http.Handle("/gitconvexapi", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/query", srv)
 
-	api.HealthCheckApi()
+	http.Handle("/", http.FileServer(http.Dir("/build/")))
 
-	router.HandleFunc("/gitconvexapi", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-type", "application/json")
-		w.Header().Set("Accept", "application/json")
-
-		err := json.NewEncoder(w).Encode(model.StatusResponseModel{Status: "Completed", Message: "Request processed successfull!"})
-
-		if err != nil {
-			fmt.Printf("Error occurred : %v", err)
-			panic(err)
-		}
-
-	}).Methods("GET")
-
-	port = ":" + port
-	err := http.ListenAndServe(port, router)
-
-	if err != nil {
-		log.Fatalf("Server cannot be started %v", err)
-	}
+	log.Printf("Gitconvex started on  http://localhost:%v", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
