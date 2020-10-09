@@ -7,6 +7,16 @@ type HealthCheckParams{
     git: String!
 }
 
+type AddRepoParams{
+    repoId: String!
+    status: String!
+    message: String!
+}
+
 type Query {
       healthCheck: HealthCheckParams!
+}
+
+type Mutation {
+    addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, initSwitch: Boolean!): AddRepoParams!
 }

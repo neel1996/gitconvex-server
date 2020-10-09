@@ -35,6 +35,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Mutation() MutationResolver
 	Query() QueryResolver
 }
 
@@ -42,9 +43,19 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AddRepoParams struct {
+		Message func(childComplexity int) int
+		RepoID  func(childComplexity int) int
+		Status  func(childComplexity int) int
+	}
+
 	HealthCheckParams struct {
 		Git func(childComplexity int) int
 		Os  func(childComplexity int) int
+	}
+
+	Mutation struct {
+		AddRepo func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, initSwitch bool) int
 	}
 
 	Query struct {
@@ -52,6 +63,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type MutationResolver interface {
+	AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, initSwitch bool) (*model.AddRepoParams, error)
+}
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
 }
@@ -71,6 +85,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "AddRepoParams.message":
+		if e.complexity.AddRepoParams.Message == nil {
+			break
+		}
+
+		return e.complexity.AddRepoParams.Message(childComplexity), true
+
+	case "AddRepoParams.repoId":
+		if e.complexity.AddRepoParams.RepoID == nil {
+			break
+		}
+
+		return e.complexity.AddRepoParams.RepoID(childComplexity), true
+
+	case "AddRepoParams.status":
+		if e.complexity.AddRepoParams.Status == nil {
+			break
+		}
+
+		return e.complexity.AddRepoParams.Status(childComplexity), true
+
 	case "HealthCheckParams.git":
 		if e.complexity.HealthCheckParams.Git == nil {
 			break
@@ -84,6 +119,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.HealthCheckParams.Os(childComplexity), true
+
+	case "Mutation.addRepo":
+		if e.complexity.Mutation.AddRepo == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addRepo_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddRepo(childComplexity, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["initSwitch"].(bool)), true
 
 	case "Query.healthCheck":
 		if e.complexity.Query.HealthCheck == nil {
@@ -109,6 +156,20 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			}
 			first = false
 			data := ec._Query(ctx, rc.Operation.SelectionSet)
+			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
+	case ast.Mutation:
+		return func(ctx context.Context) *graphql.Response {
+			if !first {
+				return nil
+			}
+			first = false
+			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 
@@ -151,8 +212,18 @@ type HealthCheckParams{
     git: String!
 }
 
+type AddRepoParams{
+    repoId: String!
+    status: String!
+    message: String!
+}
+
 type Query {
       healthCheck: HealthCheckParams!
+}
+
+type Mutation {
+    addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, initSwitch: Boolean!): AddRepoParams!
 }
 `, BuiltIn: false},
 }
@@ -161,6 +232,48 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_addRepo_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoName"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["repoPath"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoPath"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoPath"] = arg1
+	var arg2 bool
+	if tmp, ok := rawArgs["cloneSwitch"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cloneSwitch"))
+		arg2, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["cloneSwitch"] = arg2
+	var arg3 bool
+	if tmp, ok := rawArgs["initSwitch"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("initSwitch"))
+		arg3, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["initSwitch"] = arg3
+	return args, nil
+}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -214,6 +327,111 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _AddRepoParams_repoId(ctx context.Context, field graphql.CollectedField, obj *model.AddRepoParams) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AddRepoParams",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RepoID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AddRepoParams_status(ctx context.Context, field graphql.CollectedField, obj *model.AddRepoParams) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AddRepoParams",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AddRepoParams_message(ctx context.Context, field graphql.CollectedField, obj *model.AddRepoParams) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AddRepoParams",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _HealthCheckParams_os(ctx context.Context, field graphql.CollectedField, obj *model.HealthCheckParams) (ret graphql.Marshaler) {
 	defer func() {
@@ -283,6 +501,48 @@ func (ec *executionContext) _HealthCheckParams_git(ctx context.Context, field gr
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_addRepo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addRepo_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddRepo(rctx, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["initSwitch"].(bool))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AddRepoParams)
+	fc.Result = res
+	return ec.marshalNAddRepoParams2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐAddRepoParams(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_healthCheck(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1486,6 +1746,43 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** object.gotpl ****************************
 
+var addRepoParamsImplementors = []string{"AddRepoParams"}
+
+func (ec *executionContext) _AddRepoParams(ctx context.Context, sel ast.SelectionSet, obj *model.AddRepoParams) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, addRepoParamsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AddRepoParams")
+		case "repoId":
+			out.Values[i] = ec._AddRepoParams_repoId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "status":
+			out.Values[i] = ec._AddRepoParams_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "message":
+			out.Values[i] = ec._AddRepoParams_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var healthCheckParamsImplementors = []string{"HealthCheckParams"}
 
 func (ec *executionContext) _HealthCheckParams(ctx context.Context, sel ast.SelectionSet, obj *model.HealthCheckParams) graphql.Marshaler {
@@ -1504,6 +1801,37 @@ func (ec *executionContext) _HealthCheckParams(ctx context.Context, sel ast.Sele
 			}
 		case "git":
 			out.Values[i] = ec._HealthCheckParams_git(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var mutationImplementors = []string{"Mutation"}
+
+func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mutationImplementors)
+
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
+		Object: "Mutation",
+	})
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Mutation")
+		case "addRepo":
+			out.Values[i] = ec._Mutation_addRepo(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -1806,6 +2134,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNAddRepoParams2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐAddRepoParams(ctx context.Context, sel ast.SelectionSet, v model.AddRepoParams) graphql.Marshaler {
+	return ec._AddRepoParams(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAddRepoParams2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐAddRepoParams(ctx context.Context, sel ast.SelectionSet, v *model.AddRepoParams) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._AddRepoParams(ctx, sel, v)
+}
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)

@@ -1,14 +1,17 @@
 package main
 
 import (
+	"fmt"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/neel1996/gitconvex-server/global"
+	"github.com/neel1996/gitconvex-server/graph"
+	"github.com/neel1996/gitconvex-server/graph/generated"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/neel1996/gitconvex-server/graph"
-	"github.com/neel1996/gitconvex-server/graph/generated"
+	"github.com/gorilla/mux"
 )
 
 const defaultPort = "9002"
@@ -24,8 +27,14 @@ func main() {
 	http.Handle("/gitconvexapi", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)
 
-	http.Handle("/", http.FileServer(http.Dir("/build/")))
+	router := mux.NewRouter()
 
-	log.Printf("Gitconvex started on  http://localhost:%v", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	router.Path("/gitconvexapi").Handler(playground.Handler("GraphQL", "/query"))
+	router.Handle("/query", srv)
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./build/")))
+
+	logger := global.Logger{Message: fmt.Sprintf("Gitconvex started on  http://localhost:%v", port)}
+	logger.LogInfo()
+
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }

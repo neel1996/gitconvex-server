@@ -2,6 +2,12 @@
 
 package model
 
+type AddRepoParams struct {
+	RepoID  string `json:"repoId"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
+}
+
 type HealthCheckParams struct {
 	Os  string `json:"os"`
 	Git string `json:"git"`

@@ -2,11 +2,11 @@ package api
 
 import (
 	"fmt"
-	"log"
 	"os/exec"
 	"runtime"
 	"strings"
 
+	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
 )
 
@@ -18,7 +18,8 @@ func getGitVersion() string {
 	gitPath, err := exec.LookPath("git")
 
 	if err != nil {
-		log.Printf("Git cannot be lovated \n %v", err)
+		logger := global.Logger{Message: fmt.Sprintf("Git cannot be lovated \n %v", err)}
+		logger.LogError()
 		panic(err)
 	}
 
@@ -37,6 +38,10 @@ func getGitVersion() string {
 }
 
 func HealthCheckApi() *model.HealthCheckParams {
+
+	logger := global.Logger{Message: fmt.Sprintf("Obtained host information : %v -- %v", getOs(), getGitVersion())}
+	logger.LogInfo()
+
 	return &model.HealthCheckParams{
 		Os:  getOs(),
 		Git: getGitVersion(),
