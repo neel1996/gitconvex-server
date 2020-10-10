@@ -33,9 +33,15 @@ func cloneHandler(repoPath string, repoURL string) {
 	_, err := git.PlainClone(repoPath, false, &git.CloneOptions{
 		URL: repoURL,
 	})
-
 	if err != nil {
 		logger.Log(fmt.Sprintf("Error occurred while cloning repo \n%v", err), global.StatusError)
+	}
+}
+
+func initRepoHandler(repoPath string) {
+	_, err := git.PlainInit(repoPath, false)
+	if err != nil {
+		logger.Log(fmt.Sprintf("Error occurred while initializing repo \n%v", err), global.StatusError)
 	}
 }
 
@@ -102,14 +108,20 @@ func repoDataFileWriter(repoId string, repoName string, repoPath string) {
 
 }
 
-func AddRepo(repoName string, repoPath string, cloneSwitch bool, repoURL *string) *model.AddRepoParams {
+func AddRepo(repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) *model.AddRepoParams {
 	var repoIdChannel = make(chan string)
 
 	go repoIdGenerator(repoIdChannel)
 	repoId := <-repoIdChannel
 	go repoDataFileWriter(repoId, repoName, repoPath)
-	cloneHandler(repoPath, *repoURL)
 	close(repoIdChannel)
+
+	if cloneSwitch {
+		cloneHandler(repoPath, *repoURL)
+	}
+	if initSwitch {
+		initRepoHandler(repoPath)
+	}
 
 	return &model.AddRepoParams{
 		RepoID:  repoId,

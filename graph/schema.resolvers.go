@@ -12,7 +12,7 @@ import (
 )
 
 func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) (*model.AddRepoParams, error) {
-	return api.AddRepo(repoName, repoPath, cloneSwitch, repoURL), nil
+	return api.AddRepo(repoName, repoPath, cloneSwitch, repoURL, initSwitch), nil
 }
 
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {
