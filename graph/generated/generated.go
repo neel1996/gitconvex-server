@@ -55,7 +55,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddRepo func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, initSwitch bool) int
+		AddRepo func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) int
 	}
 
 	Query struct {
@@ -64,7 +64,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, initSwitch bool) (*model.AddRepoParams, error)
+	AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) (*model.AddRepoParams, error)
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
@@ -130,7 +130,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddRepo(childComplexity, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["initSwitch"].(bool)), true
+		return e.complexity.Mutation.AddRepo(childComplexity, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["repoURL"].(*string), args["initSwitch"].(bool)), true
 
 	case "Query.healthCheck":
 		if e.complexity.Query.HealthCheck == nil {
@@ -223,7 +223,7 @@ type Query {
 }
 
 type Mutation {
-    addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, initSwitch: Boolean!): AddRepoParams!
+    addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!): AddRepoParams!
 }
 `, BuiltIn: false},
 }
@@ -263,15 +263,24 @@ func (ec *executionContext) field_Mutation_addRepo_args(ctx context.Context, raw
 		}
 	}
 	args["cloneSwitch"] = arg2
-	var arg3 bool
-	if tmp, ok := rawArgs["initSwitch"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("initSwitch"))
-		arg3, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+	var arg3 *string
+	if tmp, ok := rawArgs["repoURL"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoURL"))
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["initSwitch"] = arg3
+	args["repoURL"] = arg3
+	var arg4 bool
+	if tmp, ok := rawArgs["initSwitch"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("initSwitch"))
+		arg4, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["initSwitch"] = arg4
 	return args, nil
 }
 
@@ -528,7 +537,7 @@ func (ec *executionContext) _Mutation_addRepo(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddRepo(rctx, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["initSwitch"].(bool))
+		return ec.resolvers.Mutation().AddRepo(rctx, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["repoURL"].(*string), args["initSwitch"].(bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

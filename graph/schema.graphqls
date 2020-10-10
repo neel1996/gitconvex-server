@@ -18,5 +18,5 @@ type Query {
 }
 
 type Mutation {
-    addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, initSwitch: Boolean!): AddRepoParams!
+    addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!): AddRepoParams!
 }

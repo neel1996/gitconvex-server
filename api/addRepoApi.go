@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	git "github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
@@ -26,6 +27,16 @@ func repoIdGenerator(c chan string) {
 	newUUID, _ := uuid.NewUUID()
 	repoId := strings.Split(newUUID.String(), "-")[0]
 	c <- repoId
+}
+
+func cloneHandler(repoPath string, repoURL string) {
+	_, err := git.PlainClone(repoPath, false, &git.CloneOptions{
+		URL: repoURL,
+	})
+
+	if err != nil {
+		logger.Log(fmt.Sprintf("Error occurred while cloning repo \n%v", err), global.StatusError)
+	}
 }
 
 func repoDataFileWriter(repoId string, repoName string, repoPath string) {
@@ -91,13 +102,13 @@ func repoDataFileWriter(repoId string, repoName string, repoPath string) {
 
 }
 
-func AddRepo(repoName string, repoPath string) *model.AddRepoParams {
+func AddRepo(repoName string, repoPath string, cloneSwitch bool, repoURL *string) *model.AddRepoParams {
 	var repoIdChannel = make(chan string)
 
 	go repoIdGenerator(repoIdChannel)
 	repoId := <-repoIdChannel
 	go repoDataFileWriter(repoId, repoName, repoPath)
-
+	cloneHandler(repoPath, *repoURL)
 	close(repoIdChannel)
 
 	return &model.AddRepoParams{
