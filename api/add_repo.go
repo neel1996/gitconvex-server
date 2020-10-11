@@ -7,6 +7,7 @@ import (
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
+	"go/types"
 	"io/ioutil"
 	"os"
 	"path"
@@ -21,6 +22,8 @@ type repoData struct {
 	TimeStamp string `json:"timestamp"`
 }
 
+// localLogger logs messages to the global logger module
+
 func localLogger(message string, status string) {
 	logger := &global.Logger{Message: message}
 	logger.Log(logger.Message, status)
@@ -34,9 +37,44 @@ func repoIdGenerator(c chan string) {
 	c <- repoId
 }
 
+// repoDataCreator creates a new datastore directory and file if repo data does not exist
+
+func repoDataCreator(dbDir string, dbFile string) error {
+	dirErr := os.MkdirAll(dbDir, 0755)
+	_, err := os.Create(dbFile)
+
+	if err != nil {
+		localLogger(err.Error(), global.StatusError)
+		return types.Error{Msg: err.Error()}
+	}
+	if dirErr != nil {
+		localLogger(fmt.Sprintf("Error occurred creating database directory \n%v", dirErr), global.StatusError)
+		return types.Error{Msg: dirErr.Error()}
+	}
+
+	localLogger("New repo datastore created successfully", global.StatusInfo)
+	return nil
+}
+
+func dataFileWriteHandler(dbFile string, repoDataArray []repoData) error {
+	repoDataJSON, _ := json.Marshal(repoDataArray)
+	osRead, _ := os.Open(dbFile)
+	readFileStat, _ := ioutil.ReadAll(osRead)
+
+	var existingData []repoData
+
+	if readFileStat != nil && json.Unmarshal(readFileStat, &existingData) == nil {
+		appendData := append(existingData, repoDataArray[0])
+		writeData, _ := json.MarshalIndent(appendData, "", " ")
+		return ioutil.WriteFile(dbFile, writeData, 0755)
+	} else {
+		return ioutil.WriteFile(dbFile, repoDataJSON, 0755)
+	}
+}
+
 // repoDataFileWriter writes the new repo details to the repo_datastore.json file
 
-func repoDataFileWriter(repoId string, repoName string, repoPath string) {
+func repoDataFileWriter(repoId string, repoName string, repoPath string, repoAddStatus chan string) {
 	rArray := make([]repoData, 1)
 
 	rArray[0] = repoData{
@@ -46,67 +84,36 @@ func repoDataFileWriter(repoId string, repoName string, repoPath string) {
 		TimeStamp: time.Now().String(),
 	}
 
-	repoDataJSON, _ := json.Marshal(rArray)
-
 	cwd, _ := os.Getwd()
 	dbDir := path.Join(cwd, "/database/")
 	dbFile := dbDir + "/" + "repo-datastore.json"
 
-	fileStat, fileOpenErr := os.Open(dbFile)
-	var isDbDirCreated bool
+	_, fileOpenErr := os.Open(dbFile)
 
 	if fileOpenErr != nil {
 		localLogger(fmt.Sprintf("Error occurred while opening repo data JSON file \n%v", fileOpenErr), global.StatusError)
 
-		dirErr := os.Mkdir(dbDir, 0755)
-		_, err := os.Create(dbFile)
+		createErr := repoDataCreator(dbDir, dbFile)
 
-		if err != nil {
-			localLogger(err.Error(), global.StatusError)
-		}
-		if dirErr != nil {
-			localLogger(fmt.Sprintf("Error occurred creating database directory \n%v", dirErr), global.StatusError)
-			panic(dirErr)
-		}
-		fileStat, _ = os.Open(dbFile)
-		isDbDirCreated = true
-	}
-
-	if isDbDirCreated {
-		repoDataContent, readErr := ioutil.ReadAll(fileStat)
-		if readErr != nil {
-			localLogger(fmt.Sprintf("Error occurred while reading data file \n%v", readErr), global.StatusError)
-			panic(readErr)
+		if createErr != nil {
+			localLogger(createErr.Error(), global.StatusError)
+			panic(createErr)
 		} else {
-			var rArray []repoData
-			parseErr := json.Unmarshal(repoDataContent, &rArray)
-
-			if parseErr != nil {
-				localLogger(fmt.Sprintf("%v", readErr), global.StatusError)
-
-				err := ioutil.WriteFile(dbFile, repoDataJSON, 0644)
-				if err != nil {
-					localLogger(fmt.Sprintf("Error occurred while writing repo data JSON file \n%v", err), global.StatusError)
-				} else {
-					localLogger(fmt.Sprintf("New repo details added to data file \n%v", rArray), global.StatusError)
-				}
+			if err := dataFileWriteHandler(dbFile, rArray); err != nil && err.Error() != "" {
+				localLogger(err.Error(), global.StatusError)
+				repoAddStatus <- "failed"
 			} else {
-				newRepoData := append(rArray, repoData{
-					Id:        repoId,
-					RepoName:  repoName,
-					RepoPath:  repoPath,
-					TimeStamp: time.Now().String(),
-				})
-
-				newRepoDataJSON, _ := json.MarshalIndent(newRepoData, "", " ")
-				err := ioutil.WriteFile(dbFile, newRepoDataJSON, 0644)
-				if err != nil {
-					localLogger(fmt.Sprintf("Error occurred while writing repo data JSON file \n%v", err), global.StatusError)
-				}
+				repoAddStatus <- "success"
 			}
 		}
+	} else {
+		if err := dataFileWriteHandler(dbFile, rArray); err != nil && err.Error() != "" {
+			localLogger(err.Error(), global.StatusError)
+			repoAddStatus <- "failed"
+		} else {
+			repoAddStatus <- "success"
+		}
 	}
-
 }
 
 // AddRepo function gets the repository details and includes a record to the gitconvex repo datastore file
@@ -115,6 +122,29 @@ func repoDataFileWriter(repoId string, repoName string, repoPath string) {
 
 func AddRepo(repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) *model.AddRepoParams {
 	var repoIdChannel = make(chan string)
+
+	if cloneSwitch && len(*repoURL) > 0 {
+		_, err := git.CloneHandler(repoPath, *repoURL)
+		if err != nil {
+			localLogger(fmt.Sprintf("%v", err), global.StatusError)
+			return &model.AddRepoParams{
+				RepoID:  "",
+				Status:  "Failed",
+				Message: err.Error(),
+			}
+		}
+	}
+	if initSwitch {
+		_, err := git.InitHandler(repoPath)
+		if err != nil {
+			localLogger(fmt.Sprintf("%v", err), global.StatusError)
+			return &model.AddRepoParams{
+				RepoID:  "",
+				Status:  "Failed",
+				Message: err.Error(),
+			}
+		}
+	}
 
 	_, invalidRepoErr := git.RepoValidator(repoPath)
 
@@ -130,41 +160,27 @@ func AddRepo(repoName string, repoPath string, cloneSwitch bool, repoURL *string
 
 	go repoIdGenerator(repoIdChannel)
 	repoId := <-repoIdChannel
-	go repoDataFileWriter(repoId, repoName, repoPath)
+
+	var repoAddStatusChannel = make(chan string)
+	go repoDataFileWriter(repoId, repoName, repoPath, repoAddStatusChannel)
+	status := <-repoAddStatusChannel
+
 	close(repoIdChannel)
+	close(repoAddStatusChannel)
 
-	if cloneSwitch && len(*repoURL) > 0 {
-		_, err := git.CloneHandler(repoPath, *repoURL)
-
-		if err != nil {
-			localLogger(fmt.Sprintf("%v", err), global.StatusError)
-
-			return &model.AddRepoParams{
-				RepoID:  "",
-				Status:  "Failed",
-				Message: err.Error(),
-			}
+	if status == "success" {
+		localLogger("Repo entry added to the data store", global.StatusInfo)
+		return &model.AddRepoParams{
+			RepoID:  repoId,
+			Status:  "Repo Added",
+			Message: "The new repository has been added to Gitconvex",
 		}
-	}
-	if initSwitch {
-		_, err := git.InitHandler(repoPath)
-
-		if err != nil {
-			localLogger(fmt.Sprintf("%v", err), global.StatusError)
-
-			return &model.AddRepoParams{
-				RepoID:  "",
-				Status:  "Failed",
-				Message: err.Error(),
-			}
+	} else {
+		localLogger("Failed to add new repo entry", global.StatusError)
+		return &model.AddRepoParams{
+			RepoID: "",
+			Status: "Failed",
 		}
 	}
 
-	localLogger("New repo added to the datastore", global.StatusInfo)
-
-	return &model.AddRepoParams{
-		RepoID:  repoId,
-		Status:  "Repo Added",
-		Message: "The new repository has been added to Gitconvex",
-	}
 }
