@@ -1,6 +1,8 @@
 package global
 
-import "log"
+import ("log"
+"github.com/TwinProduction/go-color"
+)
 
 type LoggerInterface interface {
 	LogInfo()
@@ -21,28 +23,28 @@ const (
 func (logger *Logger) Log(message string, status string) {
 	logger.Message = message
 	switch status {
-	case StatusInfo:
-		logger.LogInfo()
-		break
-	case StatusWarning:
-		logger.LogWarning()
-		break
-	case StatusError:
-		logger.LogError()
-		break
-	default:
-		logger.LogInfo()
+		case StatusInfo:
+			logger.LogInfo()
+			break
+		case StatusWarning:
+			logger.LogWarning()
+			break
+		case StatusError:
+			logger.LogError()
+			break
+		default:
+			logger.LogInfo()
 	}
 }
 
 func (logger *Logger) LogInfo() {
-	log.Printf("INFO : %v\n", logger.Message)
+	log.Printf("%vINFO: %v%v\n", color.Cyan, color.Reset, logger.Message)
 }
 
 func (logger *Logger) LogWarning() {
-	log.Printf("WARNING: %v\n", logger.Message)
+	log.Printf("%vWARNING: %v%v\n", color.Yellow, color.Reset, logger.Message)
 }
 
 func (logger *Logger) LogError() {
-	log.Printf("ERROR: %v\n", logger.Message)
+	log.Printf("%vERROR: %v%v\n", color.Red, color.Reset, logger.Message)
 }
