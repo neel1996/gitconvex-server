@@ -7,14 +7,14 @@ import (
 	"go/types"
 )
 
-func InitHandler(repoPath string) (*GitResponseModel, error){
+func InitHandler(repoPath string) (*GitResponseModel, error) {
 	_, err := git.PlainInit(repoPath, false)
 
 	if err != nil {
 		logger := &global.Logger{}
 		logger.Log(fmt.Sprintf("Git repo init failed \n%v", err), global.StatusError)
 		return nil, types.Error{
-			Msg:  fmt.Sprintf("Git repo clone failed \n%v", err),
+			Msg: fmt.Sprintf("Git repo clone failed \n%v", err),
 		}
 	}
 

@@ -4,23 +4,32 @@ import (
 	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gorilla/mux"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph"
 	"github.com/neel1996/gitconvex-server/graph/generated"
+	"github.com/neel1996/gitconvex-server/utils"
 	"github.com/rs/cors"
 	"log"
 	"net/http"
-	"os"
-
-	"github.com/gorilla/mux"
 )
 
 const defaultPort = "9001"
 
+var (
+	Port string
+)
+
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
+	//var envConfig *utils.EnvConfig
+
+	if err := utils.EnvConfigValidator(); err != nil {
+		_ = utils.EnvConfigFileGenerator()
+	} else {
+		if err := utils.EnvConfigFileGenerator(); err == nil {
+			_ = utils.EnvConfigFileReader()
+			Port = "9001"
+		}
 	}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
@@ -35,8 +44,12 @@ func main() {
 	router.Handle("/gitconvexapi", srv)
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./build/")))
 
-	logger := global.Logger{Message: fmt.Sprintf("Gitconvex started on  http://localhost:%v", port)}
+	logger := global.Logger{Message: fmt.Sprintf("Gitconvex started on  http://localhost:%v", Port)}
 	logger.LogInfo()
 
-	log.Fatal(http.ListenAndServe(":"+port, cors.Default().Handler(router)))
+	if Port != "" {
+		log.Fatal(http.ListenAndServe(":"+Port, cors.Default().Handler(router)))
+	} else {
+		log.Fatal(http.ListenAndServe(":"+defaultPort, cors.Default().Handler(router)))
+	}
 }
