@@ -26,7 +26,6 @@ func EnvConfigValidator() error {
 		localLogger(openErr.Error(), global.StatusError)
 		return openErr
 	}
-
 	return nil
 }
 
@@ -35,21 +34,23 @@ func EnvConfigFileReader() *EnvConfig {
 	fileString := cwd + "/env_config.json"
 	envFile, err := os.Open(fileString)
 
+	var envConfig *EnvConfig
+
 	if err != nil {
 		localLogger(err.Error(), global.StatusError)
 		return nil
 	} else {
 		if fileContent, openErr := ioutil.ReadAll(envFile); openErr == nil {
-			unMarshallErr := json.Unmarshal(fileContent, &EnvConfig{})
+			unMarshallErr := json.Unmarshal(fileContent, &envConfig)
 			if unMarshallErr == nil {
-				return &EnvConfig{}
+				return envConfig
 			} else {
+				localLogger(unMarshallErr.Error(), global.StatusError)
 				return nil
 			}
-		} else {
-			return nil
 		}
 	}
+	return nil
 }
 
 func EnvConfigFileGenerator() error {

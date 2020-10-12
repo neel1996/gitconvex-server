@@ -7,10 +7,10 @@ import (
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
+	"github.com/neel1996/gitconvex-server/utils"
 	"go/types"
 	"io/ioutil"
 	"os"
-	"path"
 	"strings"
 	"time"
 )
@@ -39,7 +39,9 @@ func repoIdGenerator(c chan string) {
 
 // repoDataCreator creates a new datastore directory and file if repo data does not exist
 
-func repoDataCreator(dbDir string, dbFile string) error {
+func repoDataCreator(dbFile string) error {
+	sliceDbFile := strings.Split(dbFile, "/")
+	dbDir := strings.Join(sliceDbFile[0:len(sliceDbFile)-1], "/")
 	dirErr := os.MkdirAll(dbDir, 0755)
 	_, err := os.Create(dbFile)
 
@@ -84,16 +86,16 @@ func repoDataFileWriter(repoId string, repoName string, repoPath string, repoAdd
 		TimeStamp: time.Now().String(),
 	}
 
-	cwd, _ := os.Getwd()
-	dbDir := path.Join(cwd, "/database/")
-	dbFile := dbDir + "/" + "repo-datastore.json"
+	envConfig := *utils.EnvConfigFileReader()
 
+	dbFile := envConfig.DataBaseFile
+	localLogger("Opening DB file present in env_config", global.StatusInfo)
 	_, fileOpenErr := os.Open(dbFile)
 
 	if fileOpenErr != nil {
 		localLogger(fmt.Sprintf("Error occurred while opening repo data JSON file \n%v", fileOpenErr), global.StatusError)
 
-		createErr := repoDataCreator(dbDir, dbFile)
+		createErr := repoDataCreator(dbFile)
 
 		if createErr != nil {
 			localLogger(createErr.Error(), global.StatusError)
@@ -124,6 +126,7 @@ func AddRepo(repoName string, repoPath string, cloneSwitch bool, repoURL *string
 	var repoIdChannel = make(chan string)
 
 	if cloneSwitch && len(*repoURL) > 0 {
+		repoPath = repoPath + "/" + repoName
 		_, err := git.CloneHandler(repoPath, *repoURL)
 		if err != nil {
 			localLogger(fmt.Sprintf("%v", err), global.StatusError)

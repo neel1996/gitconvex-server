@@ -8,6 +8,12 @@ type AddRepoParams struct {
 	Message string `json:"message"`
 }
 
+type FetchRepoParams struct {
+	RepoID   []string `json:"repoId"`
+	RepoName []string `json:"repoName"`
+	RepoPath []string `json:"repoPath"`
+}
+
 type HealthCheckParams struct {
 	Os  string `json:"os"`
 	Git string `json:"git"`

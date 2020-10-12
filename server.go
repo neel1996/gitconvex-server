@@ -22,13 +22,12 @@ var (
 
 func main() {
 	//var envConfig *utils.EnvConfig
-
 	if err := utils.EnvConfigValidator(); err != nil {
 		_ = utils.EnvConfigFileGenerator()
 	} else {
 		if err := utils.EnvConfigFileGenerator(); err == nil {
-			_ = utils.EnvConfigFileReader()
-			Port = "9001"
+			envConfig := *utils.EnvConfigFileReader()
+			Port = envConfig.Port
 		}
 	}
 

@@ -49,6 +49,12 @@ type ComplexityRoot struct {
 		Status  func(childComplexity int) int
 	}
 
+	FetchRepoParams struct {
+		RepoID   func(childComplexity int) int
+		RepoName func(childComplexity int) int
+		RepoPath func(childComplexity int) int
+	}
+
 	HealthCheckParams struct {
 		Git func(childComplexity int) int
 		Os  func(childComplexity int) int
@@ -59,6 +65,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		FetchRepo   func(childComplexity int) int
 		HealthCheck func(childComplexity int) int
 	}
 }
@@ -68,6 +75,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
+	FetchRepo(ctx context.Context) (*model.FetchRepoParams, error)
 }
 
 type executableSchema struct {
@@ -106,6 +114,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddRepoParams.Status(childComplexity), true
 
+	case "FetchRepoParams.repoId":
+		if e.complexity.FetchRepoParams.RepoID == nil {
+			break
+		}
+
+		return e.complexity.FetchRepoParams.RepoID(childComplexity), true
+
+	case "FetchRepoParams.repoName":
+		if e.complexity.FetchRepoParams.RepoName == nil {
+			break
+		}
+
+		return e.complexity.FetchRepoParams.RepoName(childComplexity), true
+
+	case "FetchRepoParams.repoPath":
+		if e.complexity.FetchRepoParams.RepoPath == nil {
+			break
+		}
+
+		return e.complexity.FetchRepoParams.RepoPath(childComplexity), true
+
 	case "HealthCheckParams.git":
 		if e.complexity.HealthCheckParams.Git == nil {
 			break
@@ -131,6 +160,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddRepo(childComplexity, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["repoURL"].(*string), args["initSwitch"].(bool)), true
+
+	case "Query.fetchRepo":
+		if e.complexity.Query.FetchRepo == nil {
+			break
+		}
+
+		return e.complexity.Query.FetchRepo(childComplexity), true
 
 	case "Query.healthCheck":
 		if e.complexity.Query.HealthCheck == nil {
@@ -212,6 +248,12 @@ type HealthCheckParams{
     git: String!
 }
 
+type FetchRepoParams{
+    repoId: [String!]
+    repoName: [String!]
+    repoPath: [String!]
+}
+
 type AddRepoParams{
     repoId: String!
     status: String!
@@ -220,6 +262,7 @@ type AddRepoParams{
 
 type Query {
       healthCheck: HealthCheckParams!
+      fetchRepo: FetchRepoParams!
 }
 
 type Mutation {
@@ -442,6 +485,102 @@ func (ec *executionContext) _AddRepoParams_message(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _FetchRepoParams_repoId(ctx context.Context, field graphql.CollectedField, obj *model.FetchRepoParams) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FetchRepoParams",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RepoID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FetchRepoParams_repoName(ctx context.Context, field graphql.CollectedField, obj *model.FetchRepoParams) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FetchRepoParams",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RepoName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FetchRepoParams_repoPath(ctx context.Context, field graphql.CollectedField, obj *model.FetchRepoParams) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FetchRepoParams",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RepoPath, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _HealthCheckParams_os(ctx context.Context, field graphql.CollectedField, obj *model.HealthCheckParams) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -587,6 +726,41 @@ func (ec *executionContext) _Query_healthCheck(ctx context.Context, field graphq
 	res := resTmp.(*model.HealthCheckParams)
 	fc.Result = res
 	return ec.marshalNHealthCheckParams2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐHealthCheckParams(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_fetchRepo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().FetchRepo(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.FetchRepoParams)
+	fc.Result = res
+	return ec.marshalNFetchRepoParams2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFetchRepoParams(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1792,6 +1966,34 @@ func (ec *executionContext) _AddRepoParams(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var fetchRepoParamsImplementors = []string{"FetchRepoParams"}
+
+func (ec *executionContext) _FetchRepoParams(ctx context.Context, sel ast.SelectionSet, obj *model.FetchRepoParams) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fetchRepoParamsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FetchRepoParams")
+		case "repoId":
+			out.Values[i] = ec._FetchRepoParams_repoId(ctx, field, obj)
+		case "repoName":
+			out.Values[i] = ec._FetchRepoParams_repoName(ctx, field, obj)
+		case "repoPath":
+			out.Values[i] = ec._FetchRepoParams_repoPath(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var healthCheckParamsImplementors = []string{"HealthCheckParams"}
 
 func (ec *executionContext) _HealthCheckParams(ctx context.Context, sel ast.SelectionSet, obj *model.HealthCheckParams) graphql.Marshaler {
@@ -1879,6 +2081,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_healthCheck(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "fetchRepo":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_fetchRepo(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -2173,6 +2389,20 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNFetchRepoParams2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFetchRepoParams(ctx context.Context, sel ast.SelectionSet, v model.FetchRepoParams) graphql.Marshaler {
+	return ec._FetchRepoParams(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFetchRepoParams2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFetchRepoParams(ctx context.Context, sel ast.SelectionSet, v *model.FetchRepoParams) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._FetchRepoParams(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNHealthCheckParams2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐHealthCheckParams(ctx context.Context, sel ast.SelectionSet, v model.HealthCheckParams) graphql.Marshaler {
 	return ec._HealthCheckParams(ctx, sel, &v)
 }
@@ -2462,6 +2692,42 @@ func (ec *executionContext) unmarshalOString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	return graphql.MarshalString(v)
+}
+
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

@@ -7,6 +7,12 @@ type HealthCheckParams{
     git: String!
 }
 
+type FetchRepoParams{
+    repoId: [String!]
+    repoName: [String!]
+    repoPath: [String!]
+}
+
 type AddRepoParams{
     repoId: String!
     status: String!
@@ -15,6 +21,7 @@ type AddRepoParams{
 
 type Query {
       healthCheck: HealthCheckParams!
+      fetchRepo: FetchRepoParams!
 }
 
 type Mutation {

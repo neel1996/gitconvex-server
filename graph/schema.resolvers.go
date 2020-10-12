@@ -6,7 +6,6 @@ package graph
 import (
 	"context"
 	"github.com/neel1996/gitconvex-server/api"
-
 	"github.com/neel1996/gitconvex-server/graph/generated"
 	"github.com/neel1996/gitconvex-server/graph/model"
 )
@@ -17,6 +16,10 @@ func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPat
 
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {
 	return api.HealthCheckApi(), nil
+}
+
+func (r *queryResolver) FetchRepo(ctx context.Context) (*model.FetchRepoParams, error) {
+	return api.FetchRepo(), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
