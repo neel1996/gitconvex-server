@@ -55,6 +55,20 @@ type ComplexityRoot struct {
 		RepoPath func(childComplexity int) int
 	}
 
+	GitRepoStatusResults struct {
+		GitAllBranchList     func(childComplexity int) int
+		GitBranchList        func(childComplexity int) int
+		GitCurrentBranch     func(childComplexity int) int
+		GitFileBasedCommit   func(childComplexity int) int
+		GitLatestCommit      func(childComplexity int) int
+		GitRemoteData        func(childComplexity int) int
+		GitRemoteHost        func(childComplexity int) int
+		GitRepoName          func(childComplexity int) int
+		GitTotalCommits      func(childComplexity int) int
+		GitTotalTrackedFiles func(childComplexity int) int
+		GitTrackedFiles      func(childComplexity int) int
+	}
+
 	HealthCheckParams struct {
 		Git func(childComplexity int) int
 		Os  func(childComplexity int) int
@@ -65,8 +79,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		FetchRepo   func(childComplexity int) int
-		HealthCheck func(childComplexity int) int
+		FetchRepo     func(childComplexity int) int
+		GitRepoStatus func(childComplexity int, repoID string) int
+		HealthCheck   func(childComplexity int) int
 	}
 }
 
@@ -76,6 +91,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
 	FetchRepo(ctx context.Context) (*model.FetchRepoParams, error)
+	GitRepoStatus(ctx context.Context, repoID string) (*model.GitRepoStatusResults, error)
 }
 
 type executableSchema struct {
@@ -135,6 +151,83 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FetchRepoParams.RepoPath(childComplexity), true
 
+	case "GitRepoStatusResults.gitAllBranchList":
+		if e.complexity.GitRepoStatusResults.GitAllBranchList == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitAllBranchList(childComplexity), true
+
+	case "GitRepoStatusResults.gitBranchList":
+		if e.complexity.GitRepoStatusResults.GitBranchList == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitBranchList(childComplexity), true
+
+	case "GitRepoStatusResults.gitCurrentBranch":
+		if e.complexity.GitRepoStatusResults.GitCurrentBranch == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitCurrentBranch(childComplexity), true
+
+	case "GitRepoStatusResults.gitFileBasedCommit":
+		if e.complexity.GitRepoStatusResults.GitFileBasedCommit == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitFileBasedCommit(childComplexity), true
+
+	case "GitRepoStatusResults.gitLatestCommit":
+		if e.complexity.GitRepoStatusResults.GitLatestCommit == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitLatestCommit(childComplexity), true
+
+	case "GitRepoStatusResults.gitRemoteData":
+		if e.complexity.GitRepoStatusResults.GitRemoteData == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitRemoteData(childComplexity), true
+
+	case "GitRepoStatusResults.gitRemoteHost":
+		if e.complexity.GitRepoStatusResults.GitRemoteHost == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitRemoteHost(childComplexity), true
+
+	case "GitRepoStatusResults.gitRepoName":
+		if e.complexity.GitRepoStatusResults.GitRepoName == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitRepoName(childComplexity), true
+
+	case "GitRepoStatusResults.gitTotalCommits":
+		if e.complexity.GitRepoStatusResults.GitTotalCommits == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitTotalCommits(childComplexity), true
+
+	case "GitRepoStatusResults.gitTotalTrackedFiles":
+		if e.complexity.GitRepoStatusResults.GitTotalTrackedFiles == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitTotalTrackedFiles(childComplexity), true
+
+	case "GitRepoStatusResults.gitTrackedFiles":
+		if e.complexity.GitRepoStatusResults.GitTrackedFiles == nil {
+			break
+		}
+
+		return e.complexity.GitRepoStatusResults.GitTrackedFiles(childComplexity), true
+
 	case "HealthCheckParams.git":
 		if e.complexity.HealthCheckParams.Git == nil {
 			break
@@ -167,6 +260,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.FetchRepo(childComplexity), true
+
+	case "Query.gitRepoStatus":
+		if e.complexity.Query.GitRepoStatus == nil {
+			break
+		}
+
+		args, err := ec.field_Query_gitRepoStatus_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GitRepoStatus(childComplexity, args["repoId"].(string)), true
 
 	case "Query.healthCheck":
 		if e.complexity.Query.HealthCheck == nil {
@@ -260,9 +365,24 @@ type AddRepoParams{
     message: String!
 }
 
+type GitRepoStatusResults {
+  gitRemoteData: String
+  gitRepoName: String
+  gitBranchList: [String]
+  gitAllBranchList: [String]
+  gitCurrentBranch: String
+  gitRemoteHost: String
+  gitTotalCommits: Int
+  gitLatestCommit: String
+  gitTrackedFiles: [String]
+  gitFileBasedCommit: [String]
+  gitTotalTrackedFiles: Int
+}
+
 type Query {
       healthCheck: HealthCheckParams!
       fetchRepo: FetchRepoParams!
+      gitRepoStatus(repoId: String!): GitRepoStatusResults!
 }
 
 type Mutation {
@@ -339,6 +459,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_gitRepoStatus_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
 	return args, nil
 }
 
@@ -581,6 +716,358 @@ func (ec *executionContext) _FetchRepoParams_repoPath(ctx context.Context, field
 	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _GitRepoStatusResults_gitRemoteData(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitRemoteData, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitRepoStatusResults_gitRepoName(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitRepoName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitRepoStatusResults_gitBranchList(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitBranchList, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitRepoStatusResults_gitAllBranchList(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitAllBranchList, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitRepoStatusResults_gitCurrentBranch(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitCurrentBranch, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitRepoStatusResults_gitRemoteHost(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitRemoteHost, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitRepoStatusResults_gitTotalCommits(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitTotalCommits, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitRepoStatusResults_gitLatestCommit(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitLatestCommit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitRepoStatusResults_gitTrackedFiles(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitTrackedFiles, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitRepoStatusResults_gitFileBasedCommit(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitFileBasedCommit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitRepoStatusResults_gitTotalTrackedFiles(ctx context.Context, field graphql.CollectedField, obj *model.GitRepoStatusResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GitRepoStatusResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GitTotalTrackedFiles, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _HealthCheckParams_os(ctx context.Context, field graphql.CollectedField, obj *model.HealthCheckParams) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -761,6 +1248,48 @@ func (ec *executionContext) _Query_fetchRepo(ctx context.Context, field graphql.
 	res := resTmp.(*model.FetchRepoParams)
 	fc.Result = res
 	return ec.marshalNFetchRepoParams2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFetchRepoParams(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_gitRepoStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_gitRepoStatus_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GitRepoStatus(rctx, args["repoId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.GitRepoStatusResults)
+	fc.Result = res
+	return ec.marshalNGitRepoStatusResults2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitRepoStatusResults(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1994,6 +2523,50 @@ func (ec *executionContext) _FetchRepoParams(ctx context.Context, sel ast.Select
 	return out
 }
 
+var gitRepoStatusResultsImplementors = []string{"GitRepoStatusResults"}
+
+func (ec *executionContext) _GitRepoStatusResults(ctx context.Context, sel ast.SelectionSet, obj *model.GitRepoStatusResults) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, gitRepoStatusResultsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GitRepoStatusResults")
+		case "gitRemoteData":
+			out.Values[i] = ec._GitRepoStatusResults_gitRemoteData(ctx, field, obj)
+		case "gitRepoName":
+			out.Values[i] = ec._GitRepoStatusResults_gitRepoName(ctx, field, obj)
+		case "gitBranchList":
+			out.Values[i] = ec._GitRepoStatusResults_gitBranchList(ctx, field, obj)
+		case "gitAllBranchList":
+			out.Values[i] = ec._GitRepoStatusResults_gitAllBranchList(ctx, field, obj)
+		case "gitCurrentBranch":
+			out.Values[i] = ec._GitRepoStatusResults_gitCurrentBranch(ctx, field, obj)
+		case "gitRemoteHost":
+			out.Values[i] = ec._GitRepoStatusResults_gitRemoteHost(ctx, field, obj)
+		case "gitTotalCommits":
+			out.Values[i] = ec._GitRepoStatusResults_gitTotalCommits(ctx, field, obj)
+		case "gitLatestCommit":
+			out.Values[i] = ec._GitRepoStatusResults_gitLatestCommit(ctx, field, obj)
+		case "gitTrackedFiles":
+			out.Values[i] = ec._GitRepoStatusResults_gitTrackedFiles(ctx, field, obj)
+		case "gitFileBasedCommit":
+			out.Values[i] = ec._GitRepoStatusResults_gitFileBasedCommit(ctx, field, obj)
+		case "gitTotalTrackedFiles":
+			out.Values[i] = ec._GitRepoStatusResults_gitTotalTrackedFiles(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var healthCheckParamsImplementors = []string{"HealthCheckParams"}
 
 func (ec *executionContext) _HealthCheckParams(ctx context.Context, sel ast.SelectionSet, obj *model.HealthCheckParams) graphql.Marshaler {
@@ -2095,6 +2668,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_fetchRepo(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "gitRepoStatus":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_gitRepoStatus(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -2403,6 +2990,20 @@ func (ec *executionContext) marshalNFetchRepoParams2ᚖgithubᚗcomᚋneel1996�
 	return ec._FetchRepoParams(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNGitRepoStatusResults2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitRepoStatusResults(ctx context.Context, sel ast.SelectionSet, v model.GitRepoStatusResults) graphql.Marshaler {
+	return ec._GitRepoStatusResults(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGitRepoStatusResults2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitRepoStatusResults(ctx context.Context, sel ast.SelectionSet, v *model.GitRepoStatusResults) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._GitRepoStatusResults(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNHealthCheckParams2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐHealthCheckParams(ctx context.Context, sel ast.SelectionSet, v model.HealthCheckParams) graphql.Marshaler {
 	return ec._HealthCheckParams(ctx, sel, &v)
 }
@@ -2685,6 +3286,21 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return graphql.MarshalBoolean(*v)
 }
 
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalInt(*v)
+}
+
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -2725,6 +3341,42 @@ func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel
 	ret := make(graphql.Array, len(v))
 	for i := range v {
 		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
 	}
 
 	return ret

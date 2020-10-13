@@ -5,6 +5,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/mux"
+	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph"
 	"github.com/neel1996/gitconvex-server/graph/generated"
@@ -45,6 +46,8 @@ func main() {
 
 	logger := global.Logger{Message: fmt.Sprintf("Gitconvex started on  http://localhost:%v", Port)}
 	logger.LogInfo()
+
+	git.Repo("")
 
 	if Port != "" {
 		log.Fatal(http.ListenAndServe(":"+Port, cors.Default().Handler(router)))

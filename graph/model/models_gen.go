@@ -14,6 +14,20 @@ type FetchRepoParams struct {
 	RepoPath []string `json:"repoPath"`
 }
 
+type GitRepoStatusResults struct {
+	GitRemoteData        *string   `json:"gitRemoteData"`
+	GitRepoName          *string   `json:"gitRepoName"`
+	GitBranchList        []*string `json:"gitBranchList"`
+	GitAllBranchList     []*string `json:"gitAllBranchList"`
+	GitCurrentBranch     *string   `json:"gitCurrentBranch"`
+	GitRemoteHost        *string   `json:"gitRemoteHost"`
+	GitTotalCommits      *int      `json:"gitTotalCommits"`
+	GitLatestCommit      *string   `json:"gitLatestCommit"`
+	GitTrackedFiles      []*string `json:"gitTrackedFiles"`
+	GitFileBasedCommit   []*string `json:"gitFileBasedCommit"`
+	GitTotalTrackedFiles *int      `json:"gitTotalTrackedFiles"`
+}
+
 type HealthCheckParams struct {
 	Os  string `json:"os"`
 	Git string `json:"git"`

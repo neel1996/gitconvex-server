@@ -22,6 +22,10 @@ func (r *queryResolver) FetchRepo(ctx context.Context) (*model.FetchRepoParams, 
 	return api.FetchRepo(), nil
 }
 
+func (r *queryResolver) GitRepoStatus(ctx context.Context, repoID string) (*model.GitRepoStatusResults, error) {
+	return api.RepoStatus(repoID), nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
