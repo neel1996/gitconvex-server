@@ -12,17 +12,9 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	git.RemoteData(&repo)
 	git.GetBranchList(&repo)
 
-	var cBranch string
 	currentBranch := &git.GetBranchList(&repo).CurrentBranch
-
-	cBranch = func() string {
-		splitBranch := strings.Split(*currentBranch, " ")[1]
-		slashSplit := strings.Split(splitBranch, "/")
-		return slashSplit[len(slashSplit)-1]
-	}()
-
-	var currentBranchPtr *string
-	currentBranchPtr = &cBranch
+	splitCurrentBranch := strings.Split(*currentBranch, "/")
+	currentBranch = &splitCurrentBranch[len(splitCurrentBranch)-1]
 
 	var commitLength int
 	var commitLengthPtr *int
@@ -32,17 +24,22 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	commitLength = len(commits)
 	commitLengthPtr = &commitLength
 
+	trackedFileList := git.ListFiles(&repo)
+	trackedFileCount := len(*trackedFileList)
+	var trackedFileCountPtr *int
+	trackedFileCountPtr = &trackedFileCount
+
 	return &model.GitRepoStatusResults{
 		GitRemoteData:        nil,
 		GitRepoName:          nil,
 		GitBranchList:        nil,
 		GitAllBranchList:     nil,
-		GitCurrentBranch:     currentBranchPtr,
+		GitCurrentBranch:     currentBranch,
 		GitRemoteHost:        nil,
 		GitTotalCommits:      commitLengthPtr,
 		GitLatestCommit:      nil,
 		GitTrackedFiles:      nil,
 		GitFileBasedCommit:   nil,
-		GitTotalTrackedFiles: nil,
+		GitTotalTrackedFiles: trackedFileCountPtr,
 	}
 }

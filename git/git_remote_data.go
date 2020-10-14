@@ -15,5 +15,6 @@ func RemoteData(repo *git.Repository) []string {
 		remoteList = append(remoteList, r.String())
 	}
 	logger.Log(fmt.Sprintf("Available remotes in repo : \n%v\n", remoteList), global.StatusInfo)
+
 	return remoteList
 }

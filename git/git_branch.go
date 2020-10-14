@@ -16,9 +16,14 @@ type Branch struct {
 func GetBranchList(repo *git.Repository) *Branch {
 	var branchList *Branch
 	var branches []string
+	var currentBranch string
+
 	logger := global.Logger{}
 
 	if repo != nil {
+		head, _ := repo.Head()
+		currentBranch = head.Name().String()
+
 		bIter, _ := repo.Branches()
 		_ = bIter.ForEach(func(reference *plumbing.Reference) error {
 			if reference != nil {
@@ -33,7 +38,7 @@ func GetBranchList(repo *git.Repository) *Branch {
 
 	branchList = &Branch{
 		BranchList:    branches,
-		CurrentBranch: branches[len(branches)-1],
+		CurrentBranch: currentBranch,
 	}
 
 	logger.Log(fmt.Sprintf("Obtained branch info -- \n%v\n", branchList), global.StatusInfo)
