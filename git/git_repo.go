@@ -6,7 +6,13 @@ import (
 	"github.com/neel1996/gitconvex-server/utils"
 )
 
-func Repo(repoId string) (git.Repository, error) {
+type RepoDetails struct {
+	RepoId   string
+	RepoPath string
+	GitRepo  *git.Repository
+}
+
+func Repo(repoId string) (*RepoDetails, error) {
 	var repoData []utils.RepoData
 	var repoPath string
 	logger := global.Logger{}
@@ -24,8 +30,12 @@ func Repo(repoId string) (git.Repository, error) {
 
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
-		return git.Repository{}, err
+		return nil, err
 	} else {
-		return *repository, nil
+		return &RepoDetails{
+			RepoId:   repoId,
+			RepoPath: repoPath,
+			GitRepo:  repository,
+		}, nil
 	}
 }

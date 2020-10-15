@@ -7,14 +7,17 @@ import (
 )
 
 func RemoteData(repo *git.Repository) []string {
-	var remoteList []string
 	logger := global.Logger{}
 
 	remote, _ := repo.Remotes()
-	for _, r := range remote {
-		remoteList = append(remoteList, r.String())
-	}
-	logger.Log(fmt.Sprintf("Available remotes in repo : \n%v\n", remoteList), global.StatusInfo)
+	remoteURL := func() []string {
+		var rUrl []string
+		for _, i := range remote {
+			rUrl = append(rUrl, i.Config().URLs...)
+		}
+		return rUrl
+	}()
 
-	return remoteList
+	logger.Log(fmt.Sprintf("Available remotes in repo : \n%v", remoteURL), global.StatusInfo)
+	return remoteURL
 }
