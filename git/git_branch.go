@@ -12,14 +12,18 @@ import (
 type Branch struct {
 	CurrentBranch string
 	BranchList    []*string
+	AllBranchList []*string
 }
 
 // GetBranchList fetches all the branches from the target repository
 // The result will be returned as a struct with the current branch and all the available branches
 
 func GetBranchList(repo *git.Repository) *Branch {
-	var branchList *Branch
-	var branches []*string
+	var (
+		branchList    *Branch
+		branches      []*string
+		allBranchList []*string
+	)
 	var currentBranch string
 
 	logger := global.Logger{}
@@ -31,6 +35,31 @@ func GetBranchList(repo *git.Repository) *Branch {
 		currentBranch = splitCurrentBranch[len(splitCurrentBranch)-1]
 
 		bIter, _ := repo.Branches()
+
+		ref, _ := repo.References()
+		_ = ref.ForEach(func(reference *plumbing.Reference) error {
+			var (
+				//refName    string
+				refNamePtr *string
+			)
+
+			if reference.Name().String() != "HEAD" && strings.Contains(reference.Name().String(), "refs/") {
+				refNameSplit := strings.Split(reference.Name().String(), "refs/")
+				if len(refNameSplit) == 2 {
+					logger.Log(fmt.Sprintf("Available Branch : %v", refNameSplit[1]), global.StatusInfo)
+					if strings.Contains(refNameSplit[1], "heads/") {
+						headBranch := strings.Split(refNameSplit[1], "heads/")[1]
+						refNamePtr = &headBranch
+					} else {
+						refNamePtr = &refNameSplit[1]
+					}
+					allBranchList = append(allBranchList, refNamePtr)
+				}
+			}
+
+			return nil
+		})
+
 		_ = bIter.ForEach(func(reference *plumbing.Reference) error {
 			if reference != nil {
 				localBranch := reference.String()
@@ -49,6 +78,7 @@ func GetBranchList(repo *git.Repository) *Branch {
 	branchList = &Branch{
 		BranchList:    branches,
 		CurrentBranch: currentBranch,
+		AllBranchList: allBranchList,
 	}
 
 	logger.Log(fmt.Sprintf("Obtained branch info -- \n%v -- %v\n", branchList.CurrentBranch, branchList.BranchList), global.StatusInfo)

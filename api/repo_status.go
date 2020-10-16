@@ -31,8 +31,10 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		*remoteURL = *remotes[0]
 	}
 
-	currentBranch := &git.GetBranchList(repo).CurrentBranch
-	branches := git.GetBranchList(repo).BranchList
+	branchList := git.GetBranchList(repo)
+	currentBranch := &branchList.CurrentBranch
+	branches := branchList.BranchList
+	allBranches := branchList.AllBranchList
 
 	var commitLength int
 	var commitLengthPtr *int
@@ -56,7 +58,7 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		GitRemoteData:        remoteURL,
 		GitRepoName:          repoName,
 		GitBranchList:        branches,
-		GitAllBranchList:     nil,
+		GitAllBranchList:     allBranches,
 		GitCurrentBranch:     currentBranch,
 		GitRemoteHost:        remoteData.RemoteHost,
 		GitTotalCommits:      commitLengthPtr,

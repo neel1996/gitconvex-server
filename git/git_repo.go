@@ -26,7 +26,9 @@ func Repo(repoId string) (*RepoDetails, error) {
 		}
 	}
 
-	repository, err := git.PlainOpen(repoPath)
+	repository, err := git.PlainOpenWithOptions(repoPath, &git.PlainOpenOptions{
+		DetectDotGit: true,
+	})
 
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
