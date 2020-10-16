@@ -8,7 +8,7 @@ import (
 	"go/types"
 )
 
-func CommitLogs(repo *git.Repository) []*object.Commit {
+func CommitLogs(repo *git.Repository, commitChan chan []*object.Commit) {
 	logIter, _ := repo.Log(&git.LogOptions{})
 	logger := global.Logger{}
 	var commits []*object.Commit
@@ -24,8 +24,7 @@ func CommitLogs(repo *git.Repository) []*object.Commit {
 
 	if err != nil {
 		logger.Log(fmt.Sprintf("Unable to obtain commits for the repo"), global.StatusError)
-		return nil
 	} else {
-		return commits
+		commitChan <- commits
 	}
 }

@@ -1,23 +1,34 @@
 package api
 
 import (
+	"fmt"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/neel1996/gitconvex-server/git"
+	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"strings"
 )
 
 func RepoStatus(repoId string) *model.GitRepoStatusResults {
+	logger := global.Logger{}
+	repoChan := make(chan *git.RepoDetails)
+	remoteChan := make(chan *git.RemoteDataModel)
+	branchChan := make(chan *git.Branch)
+	commitChan := make(chan []*object.Commit)
+	lsFileChan := make(chan *git.LsFileInfo)
+
+	go git.Repo(repoId, repoChan)
+
 	var repoName *string
-	r, _ := git.Repo(repoId)
+	r := <-repoChan
 	repo := r.GitRepo
 
 	remote := ""
 	var remoteURL *string
 	remoteURL = &remote
-	remoteData := git.RemoteData(repo)
+	go git.RemoteData(repo, remoteChan)
+	remoteData := <-remoteChan
 	remotes := remoteData.RemoteURL
-
 	sRemote := strings.Split(*remotes[0], "/")
 	repoName = &sRemote[len(sRemote)-1]
 
@@ -31,28 +42,30 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		*remoteURL = *remotes[0]
 	}
 
-	branchList := git.GetBranchList(repo)
+	go git.GetBranchList(repo, branchChan)
+	branchList := <-branchChan
 	currentBranch := &branchList.CurrentBranch
 	branches := branchList.BranchList
 	allBranches := branchList.AllBranchList
+
+	logger.Log(fmt.Sprintf("Obtained branch info -- \n%v -- %v\n", branchList.CurrentBranch, branchList.BranchList), global.StatusInfo)
 
 	var commitLength int
 	var commitLengthPtr *int
 	var commits []*object.Commit
 	var latestCommit *string
 
-	commits = git.CommitLogs(repo)
+	go git.CommitLogs(repo, commitChan)
+	commits = <-commitChan
 	latestCommit = &commits[0].Message
 	commitLength = len(commits)
 	commitLengthPtr = &commitLength
 
-	lsFileInfo := git.ListFiles(repo, r.RepoPath)
+	go git.ListFiles(repo, r.RepoPath, lsFileChan)
+	lsFileInfo := <-lsFileChan
 	trackedFileList := lsFileInfo.Content
-	trackedFileCount := len(lsFileInfo.Content)
+	trackedFileCount := lsFileInfo.TotalTrackedCount
 	trackedFileCommits := lsFileInfo.Commits
-
-	var trackedFileCountPtr *int
-	trackedFileCountPtr = &trackedFileCount
 
 	return &model.GitRepoStatusResults{
 		GitRemoteData:        remoteURL,
@@ -65,6 +78,6 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		GitLatestCommit:      latestCommit,
 		GitTrackedFiles:      trackedFileList,
 		GitFileBasedCommit:   trackedFileCommits,
-		GitTotalTrackedFiles: trackedFileCountPtr,
+		GitTotalTrackedFiles: trackedFileCount,
 	}
 }

@@ -12,7 +12,7 @@ type RepoDetails struct {
 	GitRepo  *git.Repository
 }
 
-func Repo(repoId string) (*RepoDetails, error) {
+func Repo(repoId string, repoChan chan *RepoDetails) {
 	var repoData []utils.RepoData
 	var repoPath string
 	logger := global.Logger{}
@@ -32,12 +32,11 @@ func Repo(repoId string) (*RepoDetails, error) {
 
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
-		return nil, err
 	} else {
-		return &RepoDetails{
+		repoChan <- &RepoDetails{
 			RepoId:   repoId,
 			RepoPath: repoPath,
 			GitRepo:  repository,
-		}, nil
+		}
 	}
 }

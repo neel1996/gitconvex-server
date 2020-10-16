@@ -18,9 +18,8 @@ type Branch struct {
 // GetBranchList fetches all the branches from the target repository
 // The result will be returned as a struct with the current branch and all the available branches
 
-func GetBranchList(repo *git.Repository) *Branch {
+func GetBranchList(repo *git.Repository, branchChan chan *Branch) {
 	var (
-		branchList    *Branch
 		branches      []*string
 		allBranchList []*string
 	)
@@ -75,12 +74,9 @@ func GetBranchList(repo *git.Repository) *Branch {
 		bIter.Close()
 	}
 
-	branchList = &Branch{
+	branchChan <- &Branch{
 		BranchList:    branches,
 		CurrentBranch: currentBranch,
 		AllBranchList: allBranchList,
 	}
-
-	logger.Log(fmt.Sprintf("Obtained branch info -- \n%v -- %v\n", branchList.CurrentBranch, branchList.BranchList), global.StatusInfo)
-	return branchList
 }
