@@ -15,15 +15,20 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	remote := ""
 	var remoteURL *string
 	remoteURL = &remote
-	remotes := git.RemoteData(repo)
+	remoteData := git.RemoteData(repo)
+	remotes := remoteData.RemoteURL
 
-	sRemote := strings.Split(remotes[0], "/")
+	sRemote := strings.Split(*remotes[0], "/")
 	repoName = &sRemote[len(sRemote)-1]
 
 	if len(remotes) > 1 {
-		*remoteURL = strings.Join(remotes, "||")
+		var tempRemoteArray []string
+		for _, ptrRemote := range remotes {
+			tempRemoteArray = append(tempRemoteArray, *ptrRemote)
+		}
+		*remoteURL = strings.Join(tempRemoteArray, "||")
 	} else {
-		*remoteURL = remotes[0]
+		*remoteURL = *remotes[0]
 	}
 
 	currentBranch := &git.GetBranchList(repo).CurrentBranch
@@ -32,13 +37,18 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	var commitLength int
 	var commitLengthPtr *int
 	var commits []*object.Commit
+	var latestCommit *string
 
 	commits = git.CommitLogs(repo)
+	latestCommit = &commits[0].Message
 	commitLength = len(commits)
 	commitLengthPtr = &commitLength
 
-	trackedFileList := git.ListFiles(repo, r.RepoPath)
-	trackedFileCount := len(trackedFileList)
+	lsFileInfo := git.ListFiles(repo, r.RepoPath)
+	trackedFileList := lsFileInfo.Content
+	trackedFileCount := len(lsFileInfo.Content)
+	trackedFileCommits := lsFileInfo.Commits
+
 	var trackedFileCountPtr *int
 	trackedFileCountPtr = &trackedFileCount
 
@@ -48,11 +58,11 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		GitBranchList:        branches,
 		GitAllBranchList:     nil,
 		GitCurrentBranch:     currentBranch,
-		GitRemoteHost:        nil,
+		GitRemoteHost:        remoteData.RemoteHost,
 		GitTotalCommits:      commitLengthPtr,
-		GitLatestCommit:      nil,
+		GitLatestCommit:      latestCommit,
 		GitTrackedFiles:      trackedFileList,
-		GitFileBasedCommit:   nil,
+		GitFileBasedCommit:   trackedFileCommits,
 		GitTotalTrackedFiles: trackedFileCountPtr,
 	}
 }
