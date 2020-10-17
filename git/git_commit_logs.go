@@ -24,6 +24,7 @@ func CommitLogs(repo *git.Repository, commitChan chan []*object.Commit) {
 
 	if err != nil {
 		logger.Log(fmt.Sprintf("Unable to obtain commits for the repo"), global.StatusError)
+		commitChan <- commits
 	} else {
 		commitChan <- commits
 	}
