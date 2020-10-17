@@ -3,7 +3,6 @@ package tests
 import (
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/graph/model"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -14,12 +13,12 @@ func TestHealthCheckApi(t *testing.T) {
 		want *model.HealthCheckParams
 	}{
 		{name: "HealthCheck OS test case", want: &model.HealthCheckParams{
-			Os: "linux",
+			Os: "linux||darwin||win",
 		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := api.HealthCheckApi(); !reflect.DeepEqual(got.Os, tt.want.Os) {
+			if got := api.HealthCheckApi(); strings.Contains(got.Os, tt.want.Os) {
 				t.Errorf("HealthCheckApi() = %v, want %v", got, tt.want)
 			}
 
