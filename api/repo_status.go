@@ -67,6 +67,12 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	trackedFileCount := lsFileInfo.TotalTrackedCount
 	trackedFileCommits := lsFileInfo.Commits
 
+	close(repoChan)
+	close(remoteChan)
+	close(branchChan)
+	close(commitChan)
+	close(lsFileChan)
+
 	return &model.GitRepoStatusResults{
 		GitRemoteData:        remoteURL,
 		GitRepoName:          repoName,

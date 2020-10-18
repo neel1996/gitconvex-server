@@ -16,10 +16,21 @@ type LsFileInfo struct {
 	TotalTrackedCount *int
 }
 
+var fileList []*string
+var dirList []*string
+var dummyList []string
+var selectedDir string
+
+func pathFilterCheck(filterPath string) bool {
+	if strings.Contains(filterPath, selectedDir) {
+		return true
+	}
+	return false
+}
+
 func ListFiles(repo *git.Repository, repoPath string, lsFileChan chan *LsFileInfo) {
 	logger := global.Logger{}
-	var fileList []*string
-	var dirList []*string
+
 	var fileFilterList []*string
 	var commitList []*string
 	var totalFileCount *int
@@ -54,9 +65,46 @@ func ListFiles(repo *git.Repository, repoPath string, lsFileChan chan *LsFileInf
 			return types.Error{Msg: "File from the tree is empty"}
 		}
 	})
+	tObj.Files().Close()
 
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
+	}
+
+	for _, dirName := range dirList {
+		var commitMsg *string
+		var tempDirCommits []string
+
+		selectedDir = *dirName
+		dirIter, _ := repo.Log(&git.LogOptions{
+			Order:      git.LogOrderCommitterTime,
+			PathFilter: pathFilterCheck,
+			All:        true,
+		})
+
+		_ = dirIter.ForEach(func(commit *object.Commit) error {
+			tempDirCommits = append(tempDirCommits, commit.Message)
+			//commitMsg = &commit.Message
+			return nil
+		})
+
+		if len(tempDirCommits) == 0 {
+			continue
+		}
+
+		commitMsg = &tempDirCommits[0]
+		dirEntry := *dirName + ": directory"
+		fileFilterList = append(fileFilterList, &dirEntry)
+
+		if commitMsg != nil {
+			if strings.Contains(*commitMsg, "\n") {
+				msg := *commitMsg
+				tempMsg := strings.Split(msg, "\n")[0]
+				commitMsg = &tempMsg
+			}
+			commitList = append(commitList, commitMsg)
+		}
+		dirIter.Close()
 	}
 
 	for _, file := range fileList {
@@ -71,14 +119,23 @@ func ListFiles(repo *git.Repository, repoPath string, lsFileChan chan *LsFileInf
 			logger.Log(fmt.Sprintf("%s -- %s", *file, strings.Split(commit.Message, "\n")[0]), global.StatusInfo)
 			fileStr := *file + ":File"
 			fileFilterList = append(fileFilterList, &fileStr)
-			commitList = append(commitList, &commit.Message)
+			trimMsg := strings.TrimSpace(commit.Message)
+			commitList = append(commitList, &trimMsg)
 		}
 		commitItr.Close()
 	}
+
 	logger.Log(fmt.Sprintf("Total Tracked Files : %v", len(fileFilterList)), global.StatusInfo)
 	lsFileChan <- &LsFileInfo{
 		Content:           fileFilterList,
 		Commits:           commitList,
 		TotalTrackedCount: totalFileCount,
 	}
+
+	for _, dummy := range dummyList {
+		fmt.Printf("%s\n", dummy)
+	}
+
+	fileList = nil
+	dirList = nil
 }
