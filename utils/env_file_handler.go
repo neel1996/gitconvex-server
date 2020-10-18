@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"github.com/neel1996/gitconvex-server/global"
+	"go/types"
 	"io/ioutil"
 	"os"
 )
@@ -18,13 +19,24 @@ func localLogger(message string, status string) {
 }
 
 func EnvConfigValidator() error {
-	cwd, _ := os.Getwd()
+	cwd, wdErr := os.Getwd()
+
+	if wdErr != nil {
+		localLogger(wdErr.Error(), global.StatusError)
+		return wdErr
+	}
+
 	fileString := cwd + "/env_config.json"
 	_, openErr := os.Open(fileString)
 
 	if openErr != nil {
 		localLogger(openErr.Error(), global.StatusError)
 		return openErr
+	} else {
+		if envContent := EnvConfigFileReader(); envContent == nil {
+			localLogger("Unable to read env file", global.StatusError)
+			return types.Error{Msg: "Invalid content in env_config file"}
+		}
 	}
 	return nil
 }

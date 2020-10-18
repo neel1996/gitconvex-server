@@ -21,13 +21,18 @@ var (
 )
 
 func main() {
-	//var envConfig *utils.EnvConfig
-	if err := utils.EnvConfigValidator(); err != nil {
-		_ = utils.EnvConfigFileGenerator()
+	logger := global.Logger{}
+	logger.Log("Starting Gitconvex server modules", global.StatusInfo)
+
+	if envError := utils.EnvConfigValidator(); envError == nil {
+		logger.Log("Using available env config file", global.StatusInfo)
+		envConfig := *utils.EnvConfigFileReader()
+		Port = envConfig.Port
 	} else {
-		if err := utils.EnvConfigFileGenerator(); err == nil {
-			envConfig := *utils.EnvConfigFileReader()
-			Port = envConfig.Port
+		logger.Log("No env config file is present. Falling back to default config data", global.StatusWarning)
+		envGeneratorError := utils.EnvConfigFileGenerator()
+		if envGeneratorError != nil {
+			panic(envGeneratorError)
 		}
 	}
 
@@ -43,12 +48,11 @@ func main() {
 	router.Handle("/gitconvexapi", srv)
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./build/")))
 
-	logger := global.Logger{Message: fmt.Sprintf("Gitconvex started on  http://localhost:%v", Port)}
-	logger.LogInfo()
-
-	if Port != "" {
+	if Port != "" && len(Port) > 0 {
+		logger.Log(fmt.Sprintf("Gitconvex started on  http://localhost:%v", Port), global.StatusInfo)
 		log.Fatal(http.ListenAndServe(":"+Port, cors.Default().Handler(router)))
 	} else {
+		logger.Log(fmt.Sprintf("Gitconvex started on  http://localhost:%v", defaultPort), global.StatusInfo)
 		log.Fatal(http.ListenAndServe(":"+defaultPort, cors.Default().Handler(router)))
 	}
 }
