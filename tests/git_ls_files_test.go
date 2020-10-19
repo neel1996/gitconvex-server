@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	git2 "github.com/neel1996/gitconvex-server/git"
 	"os"
@@ -10,8 +11,17 @@ import (
 
 func TestListFiles(t *testing.T) {
 	lsFileChan := make(chan *git2.LsFileInfo)
+	var repoPath string
+
 	cwd, _ := os.Getwd()
-	repoPath := path.Join(cwd, "..")
+	repoPath = path.Join(cwd, "..")
+
+	currentEnv := os.Getenv("GOTESTENV")
+	fmt.Println("Environment : " + currentEnv)
+
+	if currentEnv == "ci" {
+		repoPath = "/home/runner/work/gitconvex-go-server/starfleet"
+	}
 	r, _ := git.PlainOpen(repoPath)
 
 	type args struct {
