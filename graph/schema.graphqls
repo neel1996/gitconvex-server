@@ -20,25 +20,26 @@ type AddRepoParams{
 }
 
 type GitRepoStatusResults {
-  gitRemoteData: String
-  gitRepoName: String
-  gitBranchList: [String]
-  gitAllBranchList: [String]
-  gitCurrentBranch: String
-  gitRemoteHost: String
-  gitTotalCommits: Int
-  gitLatestCommit: String
-  gitTrackedFiles: [String]
-  gitFileBasedCommit: [String]
-  gitTotalTrackedFiles: Int
+    gitRemoteData: String
+    gitRepoName: String
+    gitBranchList: [String]
+    gitAllBranchList: [String]
+    gitCurrentBranch: String
+    gitRemoteHost: String
+    gitTotalCommits: Int
+    gitLatestCommit: String
+    gitTrackedFiles: [String]
+    gitFileBasedCommit: [String]
+    gitTotalTrackedFiles: Int
 }
 
 type Query {
-      healthCheck: HealthCheckParams!
-      fetchRepo: FetchRepoParams!
-      gitRepoStatus(repoId: String!): GitRepoStatusResults!
+    healthCheck: HealthCheckParams!
+    fetchRepo: FetchRepoParams!
+    gitRepoStatus(repoId: String!): GitRepoStatusResults!
 }
 
 type Mutation {
     addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!): AddRepoParams!
+    addBranch(repoId: String!, branchName: String!): String!
 }

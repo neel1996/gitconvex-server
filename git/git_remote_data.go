@@ -13,7 +13,6 @@ type RemoteDataModel struct {
 }
 
 func GetRemoteHost(remoteURL string) *string {
-
 	var remoteHostReference []string
 	remoteHostReference = []string{"github", "gitlab", "bitbucket", "azure", "codecommit"}
 
