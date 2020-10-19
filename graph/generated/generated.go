@@ -75,8 +75,9 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddBranch func(childComplexity int, repoID string, branchName string) int
-		AddRepo   func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) int
+		AddBranch      func(childComplexity int, repoID string, branchName string) int
+		AddRepo        func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) int
+		CheckoutBranch func(childComplexity int, repoID string, branchName string) int
 	}
 
 	Query struct {
@@ -89,6 +90,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) (*model.AddRepoParams, error)
 	AddBranch(ctx context.Context, repoID string, branchName string) (string, error)
+	CheckoutBranch(ctx context.Context, repoID string, branchName string) (string, error)
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
@@ -268,6 +270,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddRepo(childComplexity, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["repoURL"].(*string), args["initSwitch"].(bool)), true
 
+	case "Mutation.checkoutBranch":
+		if e.complexity.Mutation.CheckoutBranch == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_checkoutBranch_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CheckoutBranch(childComplexity, args["repoId"].(string), args["branchName"].(string)), true
+
 	case "Query.fetchRepo":
 		if e.complexity.Query.FetchRepo == nil {
 			break
@@ -402,6 +416,7 @@ type Query {
 type Mutation {
     addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!): AddRepoParams!
     addBranch(repoId: String!, branchName: String!): String!
+    checkoutBranch(repoId: String!, branchName: String!): String!
 }
 `, BuiltIn: false},
 }
@@ -483,6 +498,30 @@ func (ec *executionContext) field_Mutation_addRepo_args(ctx context.Context, raw
 		}
 	}
 	args["initSwitch"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_checkoutBranch_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["branchName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("branchName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["branchName"] = arg1
 	return args, nil
 }
 
@@ -1245,6 +1284,48 @@ func (ec *executionContext) _Mutation_addBranch(ctx context.Context, field graph
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().AddBranch(rctx, args["repoId"].(string), args["branchName"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_checkoutBranch(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_checkoutBranch_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CheckoutBranch(rctx, args["repoId"].(string), args["branchName"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2702,6 +2783,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "addBranch":
 			out.Values[i] = ec._Mutation_addBranch(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "checkoutBranch":
+			out.Values[i] = ec._Mutation_checkoutBranch(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

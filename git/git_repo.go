@@ -12,6 +12,17 @@ type RepoDetails struct {
 	GitRepo  *git.Repository
 }
 
+func GetRepo(repoId string) *git.Repository {
+	repoChan := make(chan *RepoDetails)
+	go Repo(repoId, repoChan)
+
+	r := <-repoChan
+	repo := r.GitRepo
+	close(repoChan)
+
+	return repo
+}
+
 func Repo(repoId string, repoChan chan *RepoDetails) {
 	var repoData []utils.RepoData
 	var repoPath string

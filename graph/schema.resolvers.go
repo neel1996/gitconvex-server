@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/generated"
@@ -18,6 +17,10 @@ func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPat
 
 func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchName string) (string, error) {
 	return git.AddBranch(repoID, branchName), nil
+}
+
+func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, branchName string) (string, error) {
+	return git.CheckoutBranch(repoID, branchName), nil
 }
 
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {

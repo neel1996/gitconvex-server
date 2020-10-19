@@ -2,27 +2,23 @@ package git
 
 import (
 	"fmt"
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/neel1996/gitconvex-server/global"
 )
 
-func AddBranch(repoId string, branchName string) string {
+func CheckoutBranch(repoId string, branchName string) string {
 	logger := global.Logger{}
-	repoChan := make(chan *RepoDetails)
-	go Repo(repoId, repoChan)
+	repo := GetRepo(repoId)
 
-	r := <-repoChan
-	repo := r.GitRepo
-	close(repoChan)
+	w, _ := repo.Worktree()
+	checkoutErr := w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.ReferenceName("refs/heads/" + branchName),
+		Keep:   true,
+	})
 
-	headRef, _ := repo.Head()
-	ref := plumbing.NewHashReference(plumbing.ReferenceName(fmt.Sprintf("refs/heads/%v", branchName)), headRef.Hash())
-	branchErr := repo.Storer.SetReference(ref)
-
-	if branchErr != nil {
-		logger.Log(branchErr.Error(), global.StatusError)
-		return ""
+	if checkoutErr != nil {
+		logger.Log(checkoutErr.Error(), global.StatusError)
 	}
-
-	return fmt.Sprintf("Branch %v created", branchName)
+	return fmt.Sprintf("Head checked out to branch - %v", branchName)
 }

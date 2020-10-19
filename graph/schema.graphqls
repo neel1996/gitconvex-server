@@ -42,4 +42,5 @@ type Query {
 type Mutation {
     addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!): AddRepoParams!
     addBranch(repoId: String!, branchName: String!): String!
+    checkoutBranch(repoId: String!, branchName: String!): String!
 }
