@@ -16,8 +16,8 @@ func AddBranch(repoId string, branchName string) string {
 
 	if branchErr != nil {
 		logger.Log(branchErr.Error(), global.StatusError)
-		return ""
+		return "BRANCH_ADD_FAILED"
 	}
 
-	return fmt.Sprintf("Branch %v created", branchName)
+	return "BRANCH_CREATION_SUCCESS"
 }

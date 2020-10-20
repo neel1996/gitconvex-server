@@ -23,6 +23,10 @@ func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, br
 	return git.CheckoutBranch(repoID, branchName), nil
 }
 
+func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, branchName string, forceFlag bool) (*model.BranchDeleteStatus, error) {
+	return git.DeleteBranch(repoID, branchName, forceFlag), nil
+}
+
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {
 	return api.HealthCheckApi(), nil
 }

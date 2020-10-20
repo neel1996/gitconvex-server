@@ -8,6 +8,10 @@ type AddRepoParams struct {
 	Message string `json:"message"`
 }
 
+type BranchDeleteStatus struct {
+	Status string `json:"status"`
+}
+
 type FetchRepoParams struct {
 	RepoID   []string `json:"repoId"`
 	RepoName []string `json:"repoName"`

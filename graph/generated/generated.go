@@ -49,6 +49,10 @@ type ComplexityRoot struct {
 		Status  func(childComplexity int) int
 	}
 
+	BranchDeleteStatus struct {
+		Status func(childComplexity int) int
+	}
+
 	FetchRepoParams struct {
 		RepoID   func(childComplexity int) int
 		RepoName func(childComplexity int) int
@@ -78,6 +82,7 @@ type ComplexityRoot struct {
 		AddBranch      func(childComplexity int, repoID string, branchName string) int
 		AddRepo        func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) int
 		CheckoutBranch func(childComplexity int, repoID string, branchName string) int
+		DeleteBranch   func(childComplexity int, repoID string, branchName string, forceFlag bool) int
 	}
 
 	Query struct {
@@ -91,6 +96,7 @@ type MutationResolver interface {
 	AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) (*model.AddRepoParams, error)
 	AddBranch(ctx context.Context, repoID string, branchName string) (string, error)
 	CheckoutBranch(ctx context.Context, repoID string, branchName string) (string, error)
+	DeleteBranch(ctx context.Context, repoID string, branchName string, forceFlag bool) (*model.BranchDeleteStatus, error)
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
@@ -133,6 +139,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AddRepoParams.Status(childComplexity), true
+
+	case "BranchDeleteStatus.status":
+		if e.complexity.BranchDeleteStatus.Status == nil {
+			break
+		}
+
+		return e.complexity.BranchDeleteStatus.Status(childComplexity), true
 
 	case "FetchRepoParams.repoId":
 		if e.complexity.FetchRepoParams.RepoID == nil {
@@ -282,6 +295,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CheckoutBranch(childComplexity, args["repoId"].(string), args["branchName"].(string)), true
 
+	case "Mutation.deleteBranch":
+		if e.complexity.Mutation.DeleteBranch == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteBranch_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteBranch(childComplexity, args["repoId"].(string), args["branchName"].(string), args["forceFlag"].(bool)), true
+
 	case "Query.fetchRepo":
 		if e.complexity.Query.FetchRepo == nil {
 			break
@@ -413,10 +438,15 @@ type Query {
     gitRepoStatus(repoId: String!): GitRepoStatusResults!
 }
 
+type BranchDeleteStatus{
+    status: String!
+}
+
 type Mutation {
     addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!): AddRepoParams!
     addBranch(repoId: String!, branchName: String!): String!
     checkoutBranch(repoId: String!, branchName: String!): String!
+    deleteBranch(repoId: String!, branchName: String!, forceFlag: Boolean!): BranchDeleteStatus!
 }
 `, BuiltIn: false},
 }
@@ -522,6 +552,39 @@ func (ec *executionContext) field_Mutation_checkoutBranch_args(ctx context.Conte
 		}
 	}
 	args["branchName"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteBranch_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["branchName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("branchName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["branchName"] = arg1
+	var arg2 bool
+	if tmp, ok := rawArgs["forceFlag"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("forceFlag"))
+		arg2, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["forceFlag"] = arg2
 	return args, nil
 }
 
@@ -682,6 +745,41 @@ func (ec *executionContext) _AddRepoParams_message(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BranchDeleteStatus_status(ctx context.Context, field graphql.CollectedField, obj *model.BranchDeleteStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "BranchDeleteStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1340,6 +1438,48 @@ func (ec *executionContext) _Mutation_checkoutBranch(ctx context.Context, field 
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteBranch(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteBranch_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteBranch(rctx, args["repoId"].(string), args["branchName"].(string), args["forceFlag"].(bool))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.BranchDeleteStatus)
+	fc.Result = res
+	return ec.marshalNBranchDeleteStatus2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐBranchDeleteStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_healthCheck(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2657,6 +2797,33 @@ func (ec *executionContext) _AddRepoParams(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var branchDeleteStatusImplementors = []string{"BranchDeleteStatus"}
+
+func (ec *executionContext) _BranchDeleteStatus(ctx context.Context, sel ast.SelectionSet, obj *model.BranchDeleteStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, branchDeleteStatusImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BranchDeleteStatus")
+		case "status":
+			out.Values[i] = ec._BranchDeleteStatus_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var fetchRepoParamsImplementors = []string{"FetchRepoParams"}
 
 func (ec *executionContext) _FetchRepoParams(ctx context.Context, sel ast.SelectionSet, obj *model.FetchRepoParams) graphql.Marshaler {
@@ -2788,6 +2955,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "checkoutBranch":
 			out.Values[i] = ec._Mutation_checkoutBranch(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteBranch":
+			out.Values[i] = ec._Mutation_deleteBranch(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3146,6 +3318,20 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNBranchDeleteStatus2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐBranchDeleteStatus(ctx context.Context, sel ast.SelectionSet, v model.BranchDeleteStatus) graphql.Marshaler {
+	return ec._BranchDeleteStatus(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBranchDeleteStatus2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐBranchDeleteStatus(ctx context.Context, sel ast.SelectionSet, v *model.BranchDeleteStatus) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._BranchDeleteStatus(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNFetchRepoParams2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFetchRepoParams(ctx context.Context, sel ast.SelectionSet, v model.FetchRepoParams) graphql.Marshaler {
