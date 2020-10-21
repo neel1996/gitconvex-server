@@ -48,4 +48,5 @@ type Mutation {
     addBranch(repoId: String!, branchName: String!): String!
     checkoutBranch(repoId: String!, branchName: String!): String!
     deleteBranch(repoId: String!, branchName: String!, forceFlag: Boolean!): BranchDeleteStatus!
+    addRemote(repoId: String!, remoteName: String!, remoteUrl: String!): String!
 }

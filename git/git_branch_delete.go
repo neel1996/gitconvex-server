@@ -2,15 +2,15 @@ package git
 
 import (
 	"fmt"
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
 )
 
-func DeleteBranch(repoId string, branchName string, forceFlag bool) *model.BranchDeleteStatus {
+func DeleteBranch(repo *git.Repository, branchName string, forceFlag bool) *model.BranchDeleteStatus {
 	var branchErr error
 	logger := global.Logger{}
-	repo := GetRepo(repoId)
 
 	headRef, _ := repo.Head()
 	ref := plumbing.NewHashReference(plumbing.ReferenceName(fmt.Sprintf("refs/heads/%v", branchName)), headRef.Hash())

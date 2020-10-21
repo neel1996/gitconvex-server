@@ -16,15 +16,31 @@ func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPat
 }
 
 func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchName string) (string, error) {
-	return git.AddBranch(repoID, branchName), nil
+	repoChan := make(chan *git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+	return git.AddBranch(repo.GitRepo, branchName), nil
 }
 
 func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, branchName string) (string, error) {
-	return git.CheckoutBranch(repoID, branchName), nil
+	repoChan := make(chan *git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+	return git.CheckoutBranch(repo.GitRepo, branchName), nil
 }
 
 func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, branchName string, forceFlag bool) (*model.BranchDeleteStatus, error) {
-	return git.DeleteBranch(repoID, branchName, forceFlag), nil
+	repoChan := make(chan *git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+	return git.DeleteBranch(repo.GitRepo, branchName, forceFlag), nil
+}
+
+func (r *mutationResolver) AddRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (string, error) {
+	repoChan := make(chan *git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+	return git.AddRemote(repo.GitRepo, remoteName, remoteURL), nil
 }
 
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {
@@ -54,6 +70,3 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *mutationResolver) SetBranch(ctx context.Context, repoID string, branchName string) (string, error) {
-	return git.AddBranch(repoID, branchName), nil
-}

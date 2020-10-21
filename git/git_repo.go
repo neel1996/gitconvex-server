@@ -4,6 +4,7 @@ import (
 	git "github.com/go-git/go-git/v5"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/utils"
+	"go/types"
 )
 
 type RepoDetails struct {
@@ -12,7 +13,10 @@ type RepoDetails struct {
 	GitRepo  *git.Repository
 }
 
-func GetRepo(repoId string) *git.Repository {
+func GetRepo(repoId string) (*git.Repository, error) {
+	if repoId == "" {
+		return nil, types.Error{Msg: "No Repo ID received"}
+	}
 	repoChan := make(chan *RepoDetails)
 	go Repo(repoId, repoChan)
 
@@ -20,13 +24,28 @@ func GetRepo(repoId string) *git.Repository {
 	repo := r.GitRepo
 	close(repoChan)
 
-	return repo
+	return repo, nil
+}
+
+func handlePanic() {
+	logger := global.Logger{}
+
+	panicMsg := recover()
+	if panicMsg != nil {
+		logger.Log("Required fields not received", global.StatusWarning)
+	}
 }
 
 func Repo(repoId string, repoChan chan *RepoDetails) {
 	var repoData []utils.RepoData
 	var repoPath string
 	logger := global.Logger{}
+
+	defer handlePanic()
+	if repoId == "" || repoChan == nil {
+		close(repoChan)
+		panic("Required fields not received")
+	}
 
 	repoData = utils.DataStoreFileReader()
 

@@ -7,9 +7,8 @@ import (
 	"github.com/neel1996/gitconvex-server/global"
 )
 
-func CheckoutBranch(repoId string, branchName string) string {
+func CheckoutBranch(repo *git.Repository, branchName string) string {
 	logger := global.Logger{}
-	repo := GetRepo(repoId)
 
 	w, _ := repo.Worktree()
 	checkoutErr := w.Checkout(&git.CheckoutOptions{
