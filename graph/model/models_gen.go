@@ -18,6 +18,11 @@ type FetchRepoParams struct {
 	RepoPath []string `json:"repoPath"`
 }
 
+type GitFolderContentResults struct {
+	TrackedFiles     []*string `json:"trackedFiles"`
+	FileBasedCommits []*string `json:"fileBasedCommits"`
+}
+
 type GitRepoStatusResults struct {
 	GitRemoteData        *string   `json:"gitRemoteData"`
 	GitRepoName          *string   `json:"gitRepoName"`
@@ -27,8 +32,6 @@ type GitRepoStatusResults struct {
 	GitRemoteHost        *string   `json:"gitRemoteHost"`
 	GitTotalCommits      *int      `json:"gitTotalCommits"`
 	GitLatestCommit      *string   `json:"gitLatestCommit"`
-	GitTrackedFiles      []*string `json:"gitTrackedFiles"`
-	GitFileBasedCommit   []*string `json:"gitFileBasedCommit"`
 	GitTotalTrackedFiles *int      `json:"gitTotalTrackedFiles"`
 }
 

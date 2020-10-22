@@ -24,7 +24,7 @@ func GetRemoteHost(remoteURL string) *string {
 	return nil
 }
 
-func RemoteData(repo *git.Repository, remoteChan chan *RemoteDataModel) {
+func RemoteData(repo *git.Repository, remoteChan chan RemoteDataModel) {
 	logger := global.Logger{}
 	var remoteURL []*string
 
@@ -40,8 +40,10 @@ func RemoteData(repo *git.Repository, remoteChan chan *RemoteDataModel) {
 	}()
 
 	logger.Log(fmt.Sprintf("Available remotes in repo : \n%v", remoteURL), global.StatusInfo)
-	remoteChan <- &RemoteDataModel{
+	remoteChan <- RemoteDataModel{
 		RemoteHost: GetRemoteHost(*remoteURL[0]),
 		RemoteURL:  remoteURL,
 	}
+
+	close(remoteChan)
 }

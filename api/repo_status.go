@@ -11,11 +11,11 @@ import (
 
 func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	logger := global.Logger{}
-	repoChan := make(chan *git.RepoDetails)
-	remoteChan := make(chan *git.RemoteDataModel)
-	branchChan := make(chan *git.Branch)
+	repoChan := make(chan git.RepoDetails)
+	remoteChan := make(chan git.RemoteDataModel)
+	branchChan := make(chan git.Branch)
 	commitChan := make(chan []*object.Commit)
-	lsFileChan := make(chan *git.LsFileInfo)
+	trackedFileCountChan := make(chan int)
 
 	go git.Repo(repoId, repoChan)
 
@@ -61,17 +61,8 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	commitLength = len(commits)
 	commitLengthPtr = &commitLength
 
-	go git.ListFiles(repo, r.RepoPath, lsFileChan)
-	lsFileInfo := <-lsFileChan
-	trackedFileList := lsFileInfo.Content
-	trackedFileCount := lsFileInfo.TotalTrackedCount
-	trackedFileCommits := lsFileInfo.Commits
-
-	close(repoChan)
-	close(remoteChan)
-	close(branchChan)
-	close(commitChan)
-	close(lsFileChan)
+	go git.TrackedFileCount(repo, trackedFileCountChan)
+	trackedFileCount := <-trackedFileCountChan
 
 	return &model.GitRepoStatusResults{
 		GitRemoteData:        remoteURL,
@@ -82,8 +73,6 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		GitRemoteHost:        remoteData.RemoteHost,
 		GitTotalCommits:      commitLengthPtr,
 		GitLatestCommit:      latestCommit,
-		GitTrackedFiles:      trackedFileList,
-		GitFileBasedCommit:   trackedFileCommits,
-		GitTotalTrackedFiles: trackedFileCount,
+		GitTotalTrackedFiles: &trackedFileCount,
 	}
 }

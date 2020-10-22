@@ -28,4 +28,5 @@ func CommitLogs(repo *git.Repository, commitChan chan []*object.Commit) {
 	} else {
 		commitChan <- commits
 	}
+	close(commitChan)
 }

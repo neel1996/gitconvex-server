@@ -5,6 +5,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/neel1996/gitconvex-server/global"
+	"github.com/neel1996/gitconvex-server/graph/model"
 	"go/types"
 	"io/ioutil"
 	"strings"
@@ -16,9 +17,11 @@ type LsFileInfo struct {
 	TotalTrackedCount *int
 }
 
-var fileList []*string
-var dirList []*string
-var dummyList []string
+type dirCommitDataModel struct {
+	dirNameList   []*string
+	dirCommitList []*string
+}
+
 var selectedDir string
 
 func pathFilterCheck(filterPath string) bool {
@@ -28,12 +31,83 @@ func pathFilterCheck(filterPath string) bool {
 	return false
 }
 
-func ListFiles(repo *git.Repository, repoPath string, lsFileChan chan *LsFileInfo) {
+func dirCommitHandler(repo *git.Repository, dirList []*string, dirCommitChan chan dirCommitDataModel) {
+	var fileFilterList []*string
+	var commitList []*string
+
+	for _, dirName := range dirList {
+		selectedDir = *dirName
+		dirIter, _ := repo.Log(&git.LogOptions{
+			Order:      git.LogOrderCommitterTime,
+			PathFilter: pathFilterCheck,
+			All:        true,
+		})
+
+		if idx, _ := dirIter.Next(); idx != nil {
+			if idx.Message != "" {
+				commitMsg := idx.Message
+				dirEntry := *dirName + ": directory"
+				fileFilterList = append(fileFilterList, &dirEntry)
+
+				if strings.Contains(commitMsg, "\n") {
+					commitMsg = strings.Split(commitMsg, "\n")[0]
+				}
+				commitList = append(commitList, &commitMsg)
+			}
+			dirIter.Close()
+			continue
+		}
+	}
+
+	dirCommitChan <- dirCommitDataModel{
+		dirNameList:   fileFilterList,
+		dirCommitList: commitList,
+	}
+
+	close(dirCommitChan)
+}
+
+func TrackedFileCount(repo *git.Repository, trackedFileCountChan chan int) {
+	var totalFileCount int
 	logger := global.Logger{}
 
+	head, _ := repo.Head()
+	hash := head.Hash()
+
+	allCommits, _ := repo.CommitObject(hash)
+	tObj, _ := allCommits.Tree()
+
+	err := tObj.Files().ForEach(func(file *object.File) error {
+		if file != nil {
+			totalFileCount++
+			return nil
+		} else {
+			return types.Error{Msg: "File from the tree is empty"}
+		}
+	})
+	tObj.Files().Close()
+
+	if err != nil {
+		logger.Log(err.Error(), global.StatusError)
+		trackedFileCountChan <- 0
+	} else {
+		logger.Log(fmt.Sprintf("Total Tracked Files : %v", totalFileCount), global.StatusInfo)
+		trackedFileCountChan <- totalFileCount
+	}
+	close(trackedFileCountChan)
+}
+
+func ListFiles(repo *git.Repository, repoPath string) *model.GitFolderContentResults {
+	logger := global.Logger{}
+
+	var fileList []*string
+	var dirList []*string
 	var fileFilterList []*string
 	var commitList []*string
 	var totalFileCount *int
+
+	fileFilterList = nil
+	commitList = nil
 
 	tempCount := 0
 	totalFileCount = &tempCount
@@ -49,6 +123,7 @@ func ListFiles(repo *git.Repository, repoPath string, lsFileChan chan *LsFileInf
 			fileList = append(fileList, &fileName)
 		}
 	}
+	content = nil
 
 	head, _ := repo.Head()
 	hash := head.Hash()
@@ -71,71 +146,33 @@ func ListFiles(repo *git.Repository, repoPath string, lsFileChan chan *LsFileInf
 		logger.Log(err.Error(), global.StatusError)
 	}
 
-	for _, dirName := range dirList {
-		var commitMsg *string
-		var tempDirCommits []string
-
-		selectedDir = *dirName
-		dirIter, _ := repo.Log(&git.LogOptions{
-			Order:      git.LogOrderCommitterTime,
-			PathFilter: pathFilterCheck,
-			All:        true,
-		})
-
-		_ = dirIter.ForEach(func(commit *object.Commit) error {
-			tempDirCommits = append(tempDirCommits, commit.Message)
-			//commitMsg = &commit.Message
-			return nil
-		})
-
-		if len(tempDirCommits) == 0 {
-			continue
-		}
-
-		commitMsg = &tempDirCommits[0]
-		dirEntry := *dirName + ": directory"
-		fileFilterList = append(fileFilterList, &dirEntry)
-
-		if commitMsg != nil {
-			if strings.Contains(*commitMsg, "\n") {
-				msg := *commitMsg
-				tempMsg := strings.Split(msg, "\n")[0]
-				commitMsg = &tempMsg
-			}
-			commitList = append(commitList, commitMsg)
-		}
-		dirIter.Close()
-	}
-
 	for _, file := range fileList {
-		logger.Log(fmt.Sprintf("Fetching logs for - %s", *file), global.StatusInfo)
 		commitItr, _ := repo.Log(&git.LogOptions{
 			From:     hash,
-			Order:    0,
 			FileName: file,
 			All:      false,
 		})
 		if commit, _ := commitItr.Next(); commit != nil {
-			logger.Log(fmt.Sprintf("%s -- %s", *file, strings.Split(commit.Message, "\n")[0]), global.StatusInfo)
 			fileStr := *file + ":File"
 			fileFilterList = append(fileFilterList, &fileStr)
 			trimMsg := strings.TrimSpace(commit.Message)
 			commitList = append(commitList, &trimMsg)
+			commitItr.Close()
 		}
-		commitItr.Close()
 	}
 
-	logger.Log(fmt.Sprintf("Total Tracked Files : %v", len(fileFilterList)), global.StatusInfo)
-	lsFileChan <- &LsFileInfo{
-		Content:           fileFilterList,
-		Commits:           commitList,
-		TotalTrackedCount: totalFileCount,
-	}
+	var dirCommitChan = make(chan dirCommitDataModel)
+	go dirCommitHandler(repo, dirList, dirCommitChan)
 
-	for _, dummy := range dummyList {
-		fmt.Printf("%s\n", dummy)
-	}
+	repoDirContent := <-dirCommitChan
 
-	fileList = nil
-	dirList = nil
+	fileFilterList = append(fileFilterList, repoDirContent.dirNameList...)
+	commitList = append(commitList, repoDirContent.dirCommitList...)
+
+	logger.Log(fmt.Sprintf("Total Tracked Files : %v", *totalFileCount), global.StatusInfo)
+
+	return &model.GitFolderContentResults{
+		TrackedFiles:     fileFilterList,
+		FileBasedCommits: commitList,
+	}
 }

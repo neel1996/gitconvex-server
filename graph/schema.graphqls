@@ -28,15 +28,19 @@ type GitRepoStatusResults {
     gitRemoteHost: String
     gitTotalCommits: Int
     gitLatestCommit: String
-    gitTrackedFiles: [String]
-    gitFileBasedCommit: [String]
     gitTotalTrackedFiles: Int
+}
+
+type GitFolderContentResults{
+    trackedFiles: [String]!
+    fileBasedCommits: [String]!
 }
 
 type Query {
     healthCheck: HealthCheckParams!
     fetchRepo: FetchRepoParams!
     gitRepoStatus(repoId: String!): GitRepoStatusResults!
+    gitFolderContent(repoId: String!): GitFolderContentResults!
 }
 
 type BranchDeleteStatus{

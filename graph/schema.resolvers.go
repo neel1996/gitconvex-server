@@ -16,28 +16,28 @@ func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPat
 }
 
 func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchName string) (string, error) {
-	repoChan := make(chan *git.RepoDetails)
+	repoChan := make(chan git.RepoDetails)
 	go git.Repo(repoID, repoChan)
 	repo := <-repoChan
 	return git.AddBranch(repo.GitRepo, branchName), nil
 }
 
 func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, branchName string) (string, error) {
-	repoChan := make(chan *git.RepoDetails)
+	repoChan := make(chan git.RepoDetails)
 	go git.Repo(repoID, repoChan)
 	repo := <-repoChan
 	return git.CheckoutBranch(repo.GitRepo, branchName), nil
 }
 
 func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, branchName string, forceFlag bool) (*model.BranchDeleteStatus, error) {
-	repoChan := make(chan *git.RepoDetails)
+	repoChan := make(chan git.RepoDetails)
 	go git.Repo(repoID, repoChan)
 	repo := <-repoChan
 	return git.DeleteBranch(repo.GitRepo, branchName, forceFlag), nil
 }
 
 func (r *mutationResolver) AddRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (string, error) {
-	repoChan := make(chan *git.RepoDetails)
+	repoChan := make(chan git.RepoDetails)
 	go git.Repo(repoID, repoChan)
 	repo := <-repoChan
 	return git.AddRemote(repo.GitRepo, remoteName, remoteURL), nil
@@ -55,6 +55,18 @@ func (r *queryResolver) GitRepoStatus(ctx context.Context, repoID string) (*mode
 	return api.RepoStatus(repoID), nil
 }
 
+func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string) (*model.GitFolderContentResults, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+
+	tmp := &model.GitFolderContentResults{}
+	tmp.FileBasedCommits = nil
+	tmp.TrackedFiles = nil
+
+	return git.ListFiles(repo.GitRepo, repo.RepoPath), nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
@@ -63,10 +75,3 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.

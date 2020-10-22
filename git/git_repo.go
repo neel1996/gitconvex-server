@@ -17,7 +17,7 @@ func GetRepo(repoId string) (*git.Repository, error) {
 	if repoId == "" {
 		return nil, types.Error{Msg: "No Repo ID received"}
 	}
-	repoChan := make(chan *RepoDetails)
+	repoChan := make(chan RepoDetails)
 	go Repo(repoId, repoChan)
 
 	r := <-repoChan
@@ -36,7 +36,7 @@ func handlePanic() {
 	}
 }
 
-func Repo(repoId string, repoChan chan *RepoDetails) {
+func Repo(repoId string, repoChan chan RepoDetails) {
 	var repoData []utils.RepoData
 	var repoPath string
 	logger := global.Logger{}
@@ -63,10 +63,12 @@ func Repo(repoId string, repoChan chan *RepoDetails) {
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
 	} else {
-		repoChan <- &RepoDetails{
+		repoChan <- RepoDetails{
 			RepoId:   repoId,
 			RepoPath: repoPath,
 			GitRepo:  repository,
 		}
 	}
+
+	close(repoChan)
 }
