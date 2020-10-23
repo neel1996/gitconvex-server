@@ -7,7 +7,7 @@ import (
 	"go/types"
 )
 
-func InitHandler(repoPath string) (*GitResponseModel, error) {
+func InitHandler(repoPath string) (*ResponseModel, error) {
 	_, err := git.PlainInit(repoPath, false)
 
 	if err != nil {
@@ -18,7 +18,7 @@ func InitHandler(repoPath string) (*GitResponseModel, error) {
 		}
 	}
 
-	return &GitResponseModel{
+	return &ResponseModel{
 		Status:    "success",
 		Message:   "Git repo has been initialized",
 		HasFailed: false,

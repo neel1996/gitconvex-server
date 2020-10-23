@@ -18,6 +18,11 @@ type FetchRepoParams struct {
 	RepoPath []string `json:"repoPath"`
 }
 
+type FetchResult struct {
+	Status       string    `json:"status"`
+	FetchedItems []*string `json:"fetchedItems"`
+}
+
 type GitFolderContentResults struct {
 	TrackedFiles     []*string `json:"trackedFiles"`
 	FileBasedCommits []*string `json:"fileBasedCommits"`
@@ -38,4 +43,9 @@ type GitRepoStatusResults struct {
 type HealthCheckParams struct {
 	Os  string `json:"os"`
 	Git string `json:"git"`
+}
+
+type PullResult struct {
+	Status      string    `json:"status"`
+	PulledItems []*string `json:"pulledItems"`
 }

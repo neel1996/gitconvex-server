@@ -7,7 +7,7 @@ import (
 	"go/types"
 )
 
-func CloneHandler(repoPath string, repoURL string) (*GitResponseModel, error){
+func CloneHandler(repoPath string, repoURL string) (*ResponseModel, error){
 	_, err := git.PlainClone(repoPath, false, &git.CloneOptions{
 		URL: repoURL,
 	})
@@ -17,7 +17,7 @@ func CloneHandler(repoPath string, repoURL string) (*GitResponseModel, error){
 		return nil, types.Error{Msg: "Git repo clone failed"}
 	}
 
-	return &GitResponseModel{
+	return &ResponseModel{
 		Status:    "success",
 		Message:   "Git clone completed",
 		HasFailed: false,

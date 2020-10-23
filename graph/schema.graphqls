@@ -47,10 +47,21 @@ type BranchDeleteStatus{
     status: String!
 }
 
+type FetchResult{
+    status: String!
+    fetchedItems: [String]!
+}
+
+type PullResult{
+    status: String!
+    pulledItems: [String]!
+}
+
 type Mutation {
     addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!): AddRepoParams!
     addBranch(repoId: String!, branchName: String!): String!
     checkoutBranch(repoId: String!, branchName: String!): String!
     deleteBranch(repoId: String!, branchName: String!, forceFlag: Boolean!): BranchDeleteStatus!
     addRemote(repoId: String!, remoteName: String!, remoteUrl: String!): String!
+    fetchFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): FetchResult!
 }

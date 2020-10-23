@@ -1,6 +1,6 @@
 package git
 
-type GitResponseModel struct{
+type ResponseModel struct{
 	Status    string
 	Message   string
 	HasFailed bool

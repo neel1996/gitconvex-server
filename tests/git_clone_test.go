@@ -22,13 +22,13 @@ func TestCloneHandler(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *git.GitResponseModel
+		want    *git.ResponseModel
 		wantErr bool
 	}{
 		{name: "Git clone test case", args: struct {
 			repoPath string
 			repoURL  string
-		}{repoPath: testRepoPath, repoURL: testURL}, want: &git.GitResponseModel{
+		}{repoPath: testRepoPath, repoURL: testURL}, want: &git.ResponseModel{
 			Status:    "success",
 			Message:   "Git clone completed",
 			HasFailed: false,

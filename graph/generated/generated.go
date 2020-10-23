@@ -59,6 +59,11 @@ type ComplexityRoot struct {
 		RepoPath func(childComplexity int) int
 	}
 
+	FetchResult struct {
+		FetchedItems func(childComplexity int) int
+		Status       func(childComplexity int) int
+	}
+
 	GitFolderContentResults struct {
 		FileBasedCommits func(childComplexity int) int
 		TrackedFiles     func(childComplexity int) int
@@ -82,11 +87,17 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddBranch      func(childComplexity int, repoID string, branchName string) int
-		AddRemote      func(childComplexity int, repoID string, remoteName string, remoteURL string) int
-		AddRepo        func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) int
-		CheckoutBranch func(childComplexity int, repoID string, branchName string) int
-		DeleteBranch   func(childComplexity int, repoID string, branchName string, forceFlag bool) int
+		AddBranch       func(childComplexity int, repoID string, branchName string) int
+		AddRemote       func(childComplexity int, repoID string, remoteName string, remoteURL string) int
+		AddRepo         func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) int
+		CheckoutBranch  func(childComplexity int, repoID string, branchName string) int
+		DeleteBranch    func(childComplexity int, repoID string, branchName string, forceFlag bool) int
+		FetchFromRemote func(childComplexity int, repoID string, remoteURL *string, remoteBranch *string) int
+	}
+
+	PullResult struct {
+		PulledItems func(childComplexity int) int
+		Status      func(childComplexity int) int
 	}
 
 	Query struct {
@@ -103,6 +114,7 @@ type MutationResolver interface {
 	CheckoutBranch(ctx context.Context, repoID string, branchName string) (string, error)
 	DeleteBranch(ctx context.Context, repoID string, branchName string, forceFlag bool) (*model.BranchDeleteStatus, error)
 	AddRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (string, error)
+	FetchFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.FetchResult, error)
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
@@ -174,6 +186,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FetchRepoParams.RepoPath(childComplexity), true
+
+	case "FetchResult.fetchedItems":
+		if e.complexity.FetchResult.FetchedItems == nil {
+			break
+		}
+
+		return e.complexity.FetchResult.FetchedItems(childComplexity), true
+
+	case "FetchResult.status":
+		if e.complexity.FetchResult.Status == nil {
+			break
+		}
+
+		return e.complexity.FetchResult.Status(childComplexity), true
 
 	case "GitFolderContentResults.fileBasedCommits":
 		if e.complexity.GitFolderContentResults.FileBasedCommits == nil {
@@ -326,6 +352,32 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteBranch(childComplexity, args["repoId"].(string), args["branchName"].(string), args["forceFlag"].(bool)), true
 
+	case "Mutation.fetchFromRemote":
+		if e.complexity.Mutation.FetchFromRemote == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_fetchFromRemote_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.FetchFromRemote(childComplexity, args["repoId"].(string), args["remoteUrl"].(*string), args["remoteBranch"].(*string)), true
+
+	case "PullResult.pulledItems":
+		if e.complexity.PullResult.PulledItems == nil {
+			break
+		}
+
+		return e.complexity.PullResult.PulledItems(childComplexity), true
+
+	case "PullResult.status":
+		if e.complexity.PullResult.Status == nil {
+			break
+		}
+
+		return e.complexity.PullResult.Status(childComplexity), true
+
 	case "Query.fetchRepo":
 		if e.complexity.Query.FetchRepo == nil {
 			break
@@ -477,12 +529,23 @@ type BranchDeleteStatus{
     status: String!
 }
 
+type FetchResult{
+    status: String!
+    fetchedItems: [String]!
+}
+
+type PullResult{
+    status: String!
+    pulledItems: [String]!
+}
+
 type Mutation {
     addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!): AddRepoParams!
     addBranch(repoId: String!, branchName: String!): String!
     checkoutBranch(repoId: String!, branchName: String!): String!
     deleteBranch(repoId: String!, branchName: String!, forceFlag: Boolean!): BranchDeleteStatus!
     addRemote(repoId: String!, remoteName: String!, remoteUrl: String!): String!
+    fetchFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): FetchResult!
 }
 `, BuiltIn: false},
 }
@@ -654,6 +717,39 @@ func (ec *executionContext) field_Mutation_deleteBranch_args(ctx context.Context
 		}
 	}
 	args["forceFlag"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_fetchFromRemote_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["remoteUrl"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteUrl"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["remoteUrl"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["remoteBranch"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteBranch"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["remoteBranch"] = arg2
 	return args, nil
 }
 
@@ -974,6 +1070,76 @@ func (ec *executionContext) _FetchRepoParams_repoPath(ctx context.Context, field
 	res := resTmp.([]string)
 	fc.Result = res
 	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FetchResult_status(ctx context.Context, field graphql.CollectedField, obj *model.FetchResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FetchResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FetchResult_fetchedItems(ctx context.Context, field graphql.CollectedField, obj *model.FetchResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FetchResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FetchedItems, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _GitFolderContentResults_trackedFiles(ctx context.Context, field graphql.CollectedField, obj *model.GitFolderContentResults) (ret graphql.Marshaler) {
@@ -1612,6 +1778,118 @@ func (ec *executionContext) _Mutation_addRemote(ctx context.Context, field graph
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_fetchFromRemote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_fetchFromRemote_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().FetchFromRemote(rctx, args["repoId"].(string), args["remoteUrl"].(*string), args["remoteBranch"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.FetchResult)
+	fc.Result = res
+	return ec.marshalNFetchResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFetchResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PullResult_status(ctx context.Context, field graphql.CollectedField, obj *model.PullResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PullResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PullResult_pulledItems(ctx context.Context, field graphql.CollectedField, obj *model.PullResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PullResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PulledItems, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_healthCheck(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3026,6 +3304,38 @@ func (ec *executionContext) _FetchRepoParams(ctx context.Context, sel ast.Select
 	return out
 }
 
+var fetchResultImplementors = []string{"FetchResult"}
+
+func (ec *executionContext) _FetchResult(ctx context.Context, sel ast.SelectionSet, obj *model.FetchResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fetchResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FetchResult")
+		case "status":
+			out.Values[i] = ec._FetchResult_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fetchedItems":
+			out.Values[i] = ec._FetchResult_fetchedItems(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var gitFolderContentResultsImplementors = []string{"GitFolderContentResults"}
 
 func (ec *executionContext) _GitFolderContentResults(ctx context.Context, sel ast.SelectionSet, obj *model.GitFolderContentResults) graphql.Marshaler {
@@ -3167,6 +3477,43 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "addRemote":
 			out.Values[i] = ec._Mutation_addRemote(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fetchFromRemote":
+			out.Values[i] = ec._Mutation_fetchFromRemote(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var pullResultImplementors = []string{"PullResult"}
+
+func (ec *executionContext) _PullResult(ctx context.Context, sel ast.SelectionSet, obj *model.PullResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pullResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PullResult")
+		case "status":
+			out.Values[i] = ec._PullResult_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pulledItems":
+			out.Values[i] = ec._PullResult_pulledItems(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3567,6 +3914,20 @@ func (ec *executionContext) marshalNFetchRepoParams2ᚖgithubᚗcomᚋneel1996�
 		return graphql.Null
 	}
 	return ec._FetchRepoParams(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFetchResult2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFetchResult(ctx context.Context, sel ast.SelectionSet, v model.FetchResult) graphql.Marshaler {
+	return ec._FetchResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFetchResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFetchResult(ctx context.Context, sel ast.SelectionSet, v *model.FetchResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._FetchResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNGitFolderContentResults2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitFolderContentResults(ctx context.Context, sel ast.SelectionSet, v model.GitFolderContentResults) graphql.Marshaler {
