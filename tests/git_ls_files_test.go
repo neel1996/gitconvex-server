@@ -41,14 +41,12 @@ func TestListFiles(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go git2.ListFiles(tt.args.repo, tt.args.repoPath, lsFileChan)
-			lsFiles := <-lsFileChan
+			repoContent := git2.ListFiles(tt.args.repo, tt.args.repoPath)
 
-			content := lsFiles.Content
-			commits := lsFiles.Commits
-			totalCommits := lsFiles.TotalTrackedCount
+			trackedFiles := repoContent.TrackedFiles
+			commits := repoContent.FileBasedCommits
 
-			if len(content) == 0 || len(commits) == 0 || *totalCommits == 0 {
+			if len(trackedFiles) == 0 || len(commits) == 0 {
 				t.Error("Expected repo file data not received")
 			}
 		})

@@ -11,8 +11,18 @@ import (
 )
 
 func TestCommitLogs(t *testing.T) {
-	cwd, _ := os.Getwd()
-	r, _ := git.PlainOpen(path.Join(cwd, ".."))
+	var repoPath string
+	var r *git.Repository
+	currentEnv := os.Getenv("GOTESTENV")
+	fmt.Println("Environment : " + currentEnv)
+
+	if currentEnv == "ci" {
+		repoPath = "/home/runner/work/gitconvex-go-server/starfleet"
+		r, _ = git.PlainOpen(repoPath)
+	} else {
+		cwd, _ := os.Getwd()
+		r, _ = git.PlainOpen(path.Join(cwd, ".."))
+	}
 	logChan := make(chan []*object.Commit)
 
 	type args struct {

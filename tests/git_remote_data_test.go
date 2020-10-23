@@ -10,13 +10,13 @@ import (
 )
 
 func TestRemoteData(t *testing.T) {
-	remoteChan := make(chan *git2.RemoteDataModel)
+	remoteChan := make(chan git2.RemoteDataModel)
 	cwd, _ := os.Getwd()
 	r, _ := git.PlainOpen(path.Join(cwd, ".."))
 
 	type args struct {
 		repo       *git.Repository
-		remoteChan chan *git2.RemoteDataModel
+		remoteChan chan git2.RemoteDataModel
 	}
 	tests := []struct {
 		name string
@@ -24,7 +24,7 @@ func TestRemoteData(t *testing.T) {
 	}{
 		{name: "Git remote data test case", args: struct {
 			repo       *git.Repository
-			remoteChan chan *git2.RemoteDataModel
+			remoteChan chan git2.RemoteDataModel
 		}{repo: r, remoteChan: remoteChan}},
 	}
 	for _, tt := range tests {

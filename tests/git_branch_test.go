@@ -11,13 +11,13 @@ import (
 )
 
 func TestGetBranchList(t *testing.T) {
-	b := make(chan *git2.Branch)
+	b := make(chan git2.Branch)
 	cwd, _ := os.Getwd()
 	r, _ := git.PlainOpen(path.Join(cwd, ".."))
 
 	type args struct {
 		repo       *git.Repository
-		branchChan chan *git2.Branch
+		branchChan chan git2.Branch
 	}
 	tests := []struct {
 		name string
@@ -25,7 +25,7 @@ func TestGetBranchList(t *testing.T) {
 	}{
 		{name: "Git branch list test case", args: struct {
 			repo       *git.Repository
-			branchChan chan *git2.Branch
+			branchChan chan git2.Branch
 		}{repo: r, branchChan: b}},
 	}
 	for _, tt := range tests {
