@@ -64,4 +64,5 @@ type Mutation {
     deleteBranch(repoId: String!, branchName: String!, forceFlag: Boolean!): BranchDeleteStatus!
     addRemote(repoId: String!, remoteName: String!, remoteUrl: String!): String!
     fetchFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): FetchResult!
+    pullFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): PullResult!
 }

@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/generated"
@@ -49,6 +48,13 @@ func (r *mutationResolver) FetchFromRemote(ctx context.Context, repoID string, r
 	go git.Repo(repoID, repoChan)
 	repo := <-repoChan
 	return git.FetchFromRemote(repo.GitRepo, *remoteURL, *remoteBranch), nil
+}
+
+func (r *mutationResolver) PullFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.PullResult, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+	return git.PullFromRemote(repo.GitRepo, *remoteURL, *remoteBranch), nil
 }
 
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {

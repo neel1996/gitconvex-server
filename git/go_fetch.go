@@ -12,20 +12,8 @@ import (
 )
 
 func FetchFromRemote(repo *git.Repository, remoteURL string, remoteBranch string) *model.FetchResult {
-	var remoteName string
+	remoteName := GetRemoteName(repo, remoteURL)
 	logger := global.Logger{}
-
-	remotes, remoteErr := repo.Remotes()
-
-	if remoteErr != nil {
-		logger.Log(remoteErr.Error(), global.StatusError)
-	} else {
-		for _, remote := range remotes {
-			if remote.Config().URLs[0] == remoteURL {
-				remoteName = remote.Config().Name
-			}
-		}
-	}
 
 	targetRefPsec := "refs/heads/" + remoteBranch + ":refs/remotes/" + remoteBranch
 	b := new(bytes.Buffer)
@@ -64,6 +52,7 @@ func FetchFromRemote(repo *git.Repository, remoteURL string, remoteBranch string
 		}
 
 	} else {
+		logger.Log(b.String(), global.StatusInfo)
 		msg := fmt.Sprintf("Changes fetched from %v", git.DefaultRemoteName)
 		return &model.FetchResult{
 			Status:       "CHANGES FETCHED FROM REMOTE",
