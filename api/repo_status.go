@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
@@ -14,7 +13,7 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	repoChan := make(chan git.RepoDetails)
 	remoteChan := make(chan git.RemoteDataModel)
 	branchChan := make(chan git.Branch)
-	commitChan := make(chan []*object.Commit)
+	commitChan := make(chan git.AllCommitData)
 	trackedFileCountChan := make(chan int)
 
 	go git.Repo(repoId, repoChan)
@@ -50,19 +49,17 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 
 	logger.Log(fmt.Sprintf("Obtained branch info -- \n%v -- %v\n", branchList.CurrentBranch, branchList.BranchList), global.StatusInfo)
 
-	var commitLength int
-	var commitLengthPtr *int
-	var commits []*object.Commit
 	var latestCommit *string
 
-	go git.CommitLogs(repo, commitChan)
-	commits = <-commitChan
-	latestCommit = &commits[0].Message
-	commitLength = len(commits)
-	commitLengthPtr = &commitLength
+	go git.AllCommits(repo, commitChan)
+	commitData := <-commitChan
+	latestCommit = &commitData.LatestCommit
+	totalCommits := commitData.TotalCommits
+	totalCommitsPtr := &totalCommits
 
 	go git.TrackedFileCount(repo, trackedFileCountChan)
 	trackedFileCount := <-trackedFileCountChan
+	trackedFilePtr := &trackedFileCount
 
 	return &model.GitRepoStatusResults{
 		GitRemoteData:        remoteURL,
@@ -71,8 +68,8 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		GitAllBranchList:     allBranches,
 		GitCurrentBranch:     currentBranch,
 		GitRemoteHost:        remoteData.RemoteHost,
-		GitTotalCommits:      commitLengthPtr,
+		GitTotalCommits:      totalCommitsPtr,
 		GitLatestCommit:      latestCommit,
-		GitTotalTrackedFiles: &trackedFileCount,
+		GitTotalTrackedFiles: trackedFilePtr,
 	}
 }

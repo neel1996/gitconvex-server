@@ -8,7 +8,12 @@ import (
 	"go/types"
 )
 
-func CommitLogs(repo *git.Repository, commitChan chan []*object.Commit) {
+type AllCommitData struct {
+	TotalCommits float64
+	LatestCommit string
+}
+
+func AllCommits(repo *git.Repository, commitChan chan AllCommitData) {
 	logIter, _ := repo.Log(&git.LogOptions{})
 	logger := global.Logger{}
 	var commits []*object.Commit
@@ -24,9 +29,16 @@ func CommitLogs(repo *git.Repository, commitChan chan []*object.Commit) {
 
 	if err != nil {
 		logger.Log(fmt.Sprintf("Unable to obtain commits for the repo"), global.StatusError)
-		commitChan <- commits
+		commitChan <- AllCommitData{
+			TotalCommits: 0,
+			LatestCommit: "NO COMMITS",
+		}
+
 	} else {
-		commitChan <- commits
+		commitChan <- AllCommitData{
+			TotalCommits: float64(len(commits)),
+			LatestCommit: commits[0].Message,
+		}
 	}
 	close(commitChan)
 }

@@ -35,7 +35,7 @@ type GitRepoStatusResults struct {
 	GitAllBranchList     []*string `json:"gitAllBranchList"`
 	GitCurrentBranch     *string   `json:"gitCurrentBranch"`
 	GitRemoteHost        *string   `json:"gitRemoteHost"`
-	GitTotalCommits      *int      `json:"gitTotalCommits"`
+	GitTotalCommits      *float64  `json:"gitTotalCommits"`
 	GitLatestCommit      *string   `json:"gitLatestCommit"`
 	GitTotalTrackedFiles *int      `json:"gitTotalTrackedFiles"`
 }
@@ -48,4 +48,18 @@ type HealthCheckParams struct {
 type PullResult struct {
 	Status      string    `json:"status"`
 	PulledItems []*string `json:"pulledItems"`
+}
+
+type GitCommitLogResults struct {
+	TotalCommits *int          `json:"totalCommits"`
+	Commits      []*GitCommits `json:"commits"`
+}
+
+type GitCommits struct {
+	Hash               *string `json:"hash"`
+	Author             *string `json:"author"`
+	CommitTime         *string `json:"commitTime"`
+	CommitMessage      *string `json:"commitMessage"`
+	CommitRelativeTime *string `json:"commitRelativeTime"`
+	CommitFilesCount   *int    `json:"commitFilesCount"`
 }

@@ -5,6 +5,8 @@ package graph
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/generated"
@@ -79,6 +81,10 @@ func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string) (*m
 	tmp.TrackedFiles = nil
 
 	return git.ListFiles(repo.GitRepo, repo.RepoPath), nil
+}
+
+func (r *queryResolver) GitCommitLogs(ctx context.Context, repoID string, skipLimit string) (*model.GitCommitLogResults, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 // Mutation returns generated.MutationResolver implementation.

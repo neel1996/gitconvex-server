@@ -26,7 +26,7 @@ type GitRepoStatusResults {
     gitAllBranchList: [String]
     gitCurrentBranch: String
     gitRemoteHost: String
-    gitTotalCommits: Int
+    gitTotalCommits: Float
     gitLatestCommit: String
     gitTotalTrackedFiles: Int
 }
@@ -41,6 +41,21 @@ type Query {
     fetchRepo: FetchRepoParams!
     gitRepoStatus(repoId: String!): GitRepoStatusResults!
     gitFolderContent(repoId: String!): GitFolderContentResults!
+    gitCommitLogs(repoId: String!, skipLimit: String!): gitCommitLogResults!
+}
+
+type gitCommitLogResults {
+    totalCommits: Int
+    commits: [gitCommits]
+}
+
+type gitCommits {
+    hash: String
+    author: String
+    commitTime: String
+    commitMessage: String
+    commitRelativeTime: String
+    commitFilesCount: Int
 }
 
 type BranchDeleteStatus{
