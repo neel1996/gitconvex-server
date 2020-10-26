@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
@@ -83,8 +82,12 @@ func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string) (*m
 	return git.ListFiles(repo.GitRepo, repo.RepoPath), nil
 }
 
-func (r *queryResolver) GitCommitLogs(ctx context.Context, repoID string, skipLimit string) (*model.GitCommitLogResults, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) GitCommitLogs(ctx context.Context, repoID string, skipLimit int) (*model.GitCommitLogResults, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+
+	return git.CommitLogs(repo.GitRepo, skipLimit), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

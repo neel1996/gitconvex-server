@@ -51,7 +51,7 @@ type PullResult struct {
 }
 
 type GitCommitLogResults struct {
-	TotalCommits *int          `json:"totalCommits"`
+	TotalCommits *float64      `json:"totalCommits"`
 	Commits      []*GitCommits `json:"commits"`
 }
 

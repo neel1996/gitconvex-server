@@ -103,7 +103,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		FetchRepo        func(childComplexity int) int
-		GitCommitLogs    func(childComplexity int, repoID string, skipLimit string) int
+		GitCommitLogs    func(childComplexity int, repoID string, skipLimit int) int
 		GitFolderContent func(childComplexity int, repoID string) int
 		GitRepoStatus    func(childComplexity int, repoID string) int
 		HealthCheck      func(childComplexity int) int
@@ -138,7 +138,7 @@ type QueryResolver interface {
 	FetchRepo(ctx context.Context) (*model.FetchRepoParams, error)
 	GitRepoStatus(ctx context.Context, repoID string) (*model.GitRepoStatusResults, error)
 	GitFolderContent(ctx context.Context, repoID string) (*model.GitFolderContentResults, error)
-	GitCommitLogs(ctx context.Context, repoID string, skipLimit string) (*model.GitCommitLogResults, error)
+	GitCommitLogs(ctx context.Context, repoID string, skipLimit int) (*model.GitCommitLogResults, error)
 }
 
 type executableSchema struct {
@@ -425,7 +425,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GitCommitLogs(childComplexity, args["repoId"].(string), args["skipLimit"].(string)), true
+		return e.complexity.Query.GitCommitLogs(childComplexity, args["repoId"].(string), args["skipLimit"].(int)), true
 
 	case "Query.gitFolderContent":
 		if e.complexity.Query.GitFolderContent == nil {
@@ -621,11 +621,11 @@ type Query {
     fetchRepo: FetchRepoParams!
     gitRepoStatus(repoId: String!): GitRepoStatusResults!
     gitFolderContent(repoId: String!): GitFolderContentResults!
-    gitCommitLogs(repoId: String!, skipLimit: String!): gitCommitLogResults!
+    gitCommitLogs(repoId: String!, skipLimit: Int!): gitCommitLogResults!
 }
 
 type gitCommitLogResults {
-    totalCommits: Int
+    totalCommits: Float
     commits: [gitCommits]
 }
 
@@ -927,10 +927,10 @@ func (ec *executionContext) field_Query_gitCommitLogs_args(ctx context.Context, 
 		}
 	}
 	args["repoId"] = arg0
-	var arg1 string
+	var arg1 int
 	if tmp, ok := rawArgs["skipLimit"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skipLimit"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2284,7 +2284,7 @@ func (ec *executionContext) _Query_gitCommitLogs(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GitCommitLogs(rctx, args["repoId"].(string), args["skipLimit"].(string))
+		return ec.resolvers.Query().GitCommitLogs(rctx, args["repoId"].(string), args["skipLimit"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3482,9 +3482,9 @@ func (ec *executionContext) _gitCommitLogResults_totalCommits(ctx context.Contex
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(*float64)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _gitCommitLogResults_commits(ctx context.Context, field graphql.CollectedField, obj *model.GitCommitLogResults) (ret graphql.Marshaler) {
@@ -4560,6 +4560,21 @@ func (ec *executionContext) marshalNHealthCheckParams2ᚖgithubᚗcomᚋneel1996
 		return graphql.Null
 	}
 	return ec._HealthCheckParams(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNPullResult2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐPullResult(ctx context.Context, sel ast.SelectionSet, v model.PullResult) graphql.Marshaler {

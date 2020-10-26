@@ -41,11 +41,11 @@ type Query {
     fetchRepo: FetchRepoParams!
     gitRepoStatus(repoId: String!): GitRepoStatusResults!
     gitFolderContent(repoId: String!): GitFolderContentResults!
-    gitCommitLogs(repoId: String!, skipLimit: String!): gitCommitLogResults!
+    gitCommitLogs(repoId: String!, skipLimit: Int!): gitCommitLogResults!
 }
 
 type gitCommitLogResults {
-    totalCommits: Int
+    totalCommits: Float
     commits: [gitCommits]
 }
 
