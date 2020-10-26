@@ -5,6 +5,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
+	"github.com/nleeper/goment"
 	"strings"
 	"time"
 )
@@ -36,8 +37,12 @@ func CommitOrganizer(commits []object.Commit) []*model.GitCommits {
 						logger.Log(convErr.Error(), global.StatusError)
 					} else {
 						commitDate = cTime.String()
-						t := time.Now()
-						commitRelativeTime = strings.Split(t.Sub(cTime).String(), ".")[0]
+						gTime, gTimeErr := goment.New(cTime)
+						if gTimeErr != nil {
+							logger.Log(gTimeErr.Error(), global.StatusError)
+						} else {
+							commitRelativeTime = gTime.ToNow()
+						}
 					}
 				}
 			}
