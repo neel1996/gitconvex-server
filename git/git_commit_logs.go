@@ -28,16 +28,12 @@ func commitOrganizer(repo *git.Repository, commits []object.Commit) []*model.Git
 			currentTree, _ := commit.Tree()
 
 			if parentErr != nil {
-				logger.Log(parentErr.Error(), global.StatusError)
-				h, _ := repo.Head()
-				hash := h.Hash()
-				prevTree, _ = repo.TreeObject(hash)
+				commitFileCount = 0
 			} else {
 				prevTree, _ = prevCommit.Tree()
+				diff, _ := currentTree.Diff(prevTree)
+				commitFileCount = diff.Len()
 			}
-
-			diff, _ := currentTree.Diff(prevTree)
-			commitFileCount = diff.Len()
 
 			for _, cString := range strings.Split(commit.String(), "\n") {
 				if strings.Contains(cString, "Date:") {
@@ -126,10 +122,33 @@ func CommitLogs(repo *git.Repository, skipCount int) *model.GitCommitLogResults 
 		})
 	}
 
-	commitLimit := skipCount + 10
-	refinedCommits := commitOrganizer(repo, commitLogs[skipCount:commitLimit])
-	return &model.GitCommitLogResults{
-		TotalCommits: &totalCommits,
-		Commits:      refinedCommits,
+	if len(commitLogs) == 0 {
+		return &model.GitCommitLogResults{
+			TotalCommits: &totalCommits,
+			Commits:      nil,
+		}
+	}
+
+	if len(commitLogs) <= 10 {
+		refinedCommits := commitOrganizer(repo, commitLogs)
+		return &model.GitCommitLogResults{
+			TotalCommits: &totalCommits,
+			Commits:      refinedCommits,
+		}
+	} else {
+		var commitSlice []object.Commit
+
+		commitLimit := skipCount + 10
+		if commitLimit > len(commitLogs) {
+			commitLimit = skipCount
+			commitSlice = commitLogs[skipCount:]
+		} else {
+			commitSlice = commitLogs[skipCount:commitLimit]
+		}
+		refinedCommits := commitOrganizer(repo, commitSlice)
+		return &model.GitCommitLogResults{
+			TotalCommits: &totalCommits,
+			Commits:      refinedCommits,
+		}
 	}
 }
