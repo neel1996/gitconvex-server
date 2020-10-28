@@ -36,13 +36,6 @@ type GitFolderContentResults{
     fileBasedCommits: [String]!
 }
 
-type Query {
-    healthCheck: HealthCheckParams!
-    fetchRepo: FetchRepoParams!
-    gitRepoStatus(repoId: String!): GitRepoStatusResults!
-    gitFolderContent(repoId: String!): GitFolderContentResults!
-    gitCommitLogs(repoId: String!, skipLimit: Int!): gitCommitLogResults!
-}
 
 type gitCommitLogResults {
     totalCommits: Float
@@ -56,6 +49,20 @@ type gitCommits {
     commitMessage: String
     commitRelativeTime: String
     commitFilesCount: Int
+}
+
+type gitCommitFileResult{
+    type: String!
+    fileName: String!
+}
+
+type Query {
+    healthCheck: HealthCheckParams!
+    fetchRepo: FetchRepoParams!
+    gitRepoStatus(repoId: String!): GitRepoStatusResults!
+    gitFolderContent(repoId: String!): GitFolderContentResults!
+    gitCommitLogs(repoId: String!, skipLimit: Int!): gitCommitLogResults!
+    gitCommitFiles(repoId: String!, commitHash: String!): [gitCommitFileResult]!
 }
 
 type BranchDeleteStatus{

@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/generated"
@@ -88,6 +87,14 @@ func (r *queryResolver) GitCommitLogs(ctx context.Context, repoID string, skipLi
 	repo := <-repoChan
 
 	return git.CommitLogs(repo.GitRepo, skipLimit), nil
+}
+
+func (r *queryResolver) GitCommitFiles(ctx context.Context, repoID string, commitHash string) ([]*model.GitCommitFileResult, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+
+	return git.CommitFileList(repo.GitRepo, commitHash), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
