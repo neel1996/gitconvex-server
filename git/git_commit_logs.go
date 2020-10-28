@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func CommitOrganizer(commits []object.Commit) []*model.GitCommits {
+func commitOrganizer(repo *git.Repository, commits []object.Commit) []*model.GitCommits {
 	logger := global.Logger{}
 	var commitList []*model.GitCommits
 	for _, commit := range commits {
@@ -22,6 +22,22 @@ func CommitOrganizer(commits []object.Commit) []*model.GitCommits {
 			commitFileCount := 0
 			commitDate := ""
 			commitRelativeTime := ""
+
+			var prevTree *object.Tree
+			prevCommit, parentErr := commit.Parents().Next()
+			currentTree, _ := commit.Tree()
+
+			if parentErr != nil {
+				logger.Log(parentErr.Error(), global.StatusError)
+				h, _ := repo.Head()
+				hash := h.Hash()
+				prevTree, _ = repo.TreeObject(hash)
+			} else {
+				prevTree, _ = prevCommit.Tree()
+			}
+
+			diff, _ := currentTree.Diff(prevTree)
+			commitFileCount = diff.Len()
 
 			for _, cString := range strings.Split(commit.String(), "\n") {
 				if strings.Contains(cString, "Date:") {
@@ -41,7 +57,7 @@ func CommitOrganizer(commits []object.Commit) []*model.GitCommits {
 						if gTimeErr != nil {
 							logger.Log(gTimeErr.Error(), global.StatusError)
 						} else {
-							commitRelativeTime = gTime.ToNow()
+							commitRelativeTime = gTime.FromNow()
 						}
 					}
 				}
@@ -51,7 +67,6 @@ func CommitOrganizer(commits []object.Commit) []*model.GitCommits {
 				logger.Log(err.Error(), global.StatusError)
 			} else {
 				_ = commitFilesItr.ForEach(func(file *object.File) error {
-
 					return nil
 				})
 			}
@@ -73,8 +88,25 @@ func CommitOrganizer(commits []object.Commit) []*model.GitCommits {
 	return commitList
 }
 
+func getTrackedFiles(repo *git.Repository) []string {
+	var fileList []string
+	head, _ := repo.Head()
+	hash := head.Hash()
+
+	treeItr, _ := repo.CommitObject(hash)
+	t, _ := treeItr.Tree()
+
+	_ = t.Files().ForEach(func(file *object.File) error {
+		fileList = append(fileList, file.Name)
+		return nil
+	})
+
+	return fileList
+}
+
 func CommitLogs(repo *git.Repository, skipCount int) *model.GitCommitLogResults {
 	var commitLogs []object.Commit
+
 	allCommitChan := make(chan AllCommitData)
 	go AllCommits(repo, allCommitChan)
 	acc := <-allCommitChan
@@ -95,7 +127,7 @@ func CommitLogs(repo *git.Repository, skipCount int) *model.GitCommitLogResults 
 	}
 
 	commitLimit := skipCount + 10
-	refinedCommits := CommitOrganizer(commitLogs[skipCount:commitLimit])
+	refinedCommits := commitOrganizer(repo, commitLogs[skipCount:commitLimit])
 	return &model.GitCommitLogResults{
 		TotalCommits: &totalCommits,
 		Commits:      refinedCommits,
