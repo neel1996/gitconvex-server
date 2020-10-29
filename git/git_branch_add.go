@@ -7,6 +7,8 @@ import (
 	"github.com/neel1996/gitconvex-server/global"
 )
 
+// AddBranch adds a new branch to the target repo
+
 func AddBranch(repo *git.Repository, branchName string) string {
 	logger := global.Logger{}
 	headRef, _ := repo.Head()

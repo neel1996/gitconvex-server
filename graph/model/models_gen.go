@@ -8,6 +8,17 @@ type AddRepoParams struct {
 	Message string `json:"message"`
 }
 
+type NewRepoInputs struct {
+	RepoName    string
+	RepoPath    string
+	CloneSwitch bool
+	RepoURL     *string
+	InitSwitch  bool
+	AuthOption  string
+	UserName    *string
+	Password    *string
+}
+
 type BranchDeleteStatus struct {
 	Status string `json:"status"`
 }

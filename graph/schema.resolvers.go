@@ -5,14 +5,25 @@ package graph
 
 import (
 	"context"
+
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/generated"
 	"github.com/neel1996/gitconvex-server/graph/model"
 )
 
-func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) (*model.AddRepoParams, error) {
-	return api.AddRepo(repoName, repoPath, cloneSwitch, repoURL, initSwitch), nil
+func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool, authOption string, userName *string, password *string) (*model.AddRepoParams, error) {
+
+	return api.AddRepo(model.NewRepoInputs{
+		RepoName:    repoName,
+		RepoPath:    repoPath,
+		CloneSwitch: cloneSwitch,
+		RepoURL:     repoURL,
+		InitSwitch:  initSwitch,
+		AuthOption:  authOption,
+		UserName:    userName,
+		Password:    password,
+	}), nil
 }
 
 func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchName string) (string, error) {

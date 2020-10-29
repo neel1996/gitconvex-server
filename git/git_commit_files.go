@@ -40,8 +40,6 @@ func CommitFileList(repo *git.Repository, commitHash string) []*model.GitCommitF
 		return res
 	}
 	prevTree, _ := prev.Tree()
-	//diff, _ := currentTree.Diff(prevTree)
-
 	diff, diffErr := prevTree.Diff(currentTree)
 
 	if diffErr != nil {

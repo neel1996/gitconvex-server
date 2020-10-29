@@ -89,7 +89,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddBranch       func(childComplexity int, repoID string, branchName string) int
 		AddRemote       func(childComplexity int, repoID string, remoteName string, remoteURL string) int
-		AddRepo         func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) int
+		AddRepo         func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool, authOption string, userName *string, password *string) int
 		CheckoutBranch  func(childComplexity int, repoID string, branchName string) int
 		DeleteBranch    func(childComplexity int, repoID string, branchName string, forceFlag bool) int
 		FetchFromRemote func(childComplexity int, repoID string, remoteURL *string, remoteBranch *string) int
@@ -131,7 +131,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) (*model.AddRepoParams, error)
+	AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool, authOption string, userName *string, password *string) (*model.AddRepoParams, error)
 	AddBranch(ctx context.Context, repoID string, branchName string) (string, error)
 	CheckoutBranch(ctx context.Context, repoID string, branchName string) (string, error)
 	DeleteBranch(ctx context.Context, repoID string, branchName string, forceFlag bool) (*model.BranchDeleteStatus, error)
@@ -351,7 +351,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddRepo(childComplexity, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["repoURL"].(*string), args["initSwitch"].(bool)), true
+		return e.complexity.Mutation.AddRepo(childComplexity, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["repoURL"].(*string), args["initSwitch"].(bool), args["authOption"].(string), args["userName"].(*string), args["password"].(*string)), true
 
 	case "Mutation.checkoutBranch":
 		if e.complexity.Mutation.CheckoutBranch == nil {
@@ -693,7 +693,7 @@ type PullResult{
 }
 
 type Mutation {
-    addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!): AddRepoParams!
+    addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!, authOption: String!, userName: String, password: String): AddRepoParams!
     addBranch(repoId: String!, branchName: String!): String!
     checkoutBranch(repoId: String!, branchName: String!): String!
     deleteBranch(repoId: String!, branchName: String!, forceFlag: Boolean!): BranchDeleteStatus!
@@ -814,6 +814,33 @@ func (ec *executionContext) field_Mutation_addRepo_args(ctx context.Context, raw
 		}
 	}
 	args["initSwitch"] = arg4
+	var arg5 string
+	if tmp, ok := rawArgs["authOption"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authOption"))
+		arg5, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["authOption"] = arg5
+	var arg6 *string
+	if tmp, ok := rawArgs["userName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userName"))
+		arg6, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userName"] = arg6
+	var arg7 *string
+	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+		arg7, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg7
 	return args, nil
 }
 
@@ -1830,7 +1857,7 @@ func (ec *executionContext) _Mutation_addRepo(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddRepo(rctx, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["repoURL"].(*string), args["initSwitch"].(bool))
+		return ec.resolvers.Mutation().AddRepo(rctx, args["repoName"].(string), args["repoPath"].(string), args["cloneSwitch"].(bool), args["repoURL"].(*string), args["initSwitch"].(bool), args["authOption"].(string), args["userName"].(*string), args["password"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

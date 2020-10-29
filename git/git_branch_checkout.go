@@ -7,6 +7,8 @@ import (
 	"github.com/neel1996/gitconvex-server/global"
 )
 
+// CheckoutBranch checks out the branchName received as argument
+
 func CheckoutBranch(repo *git.Repository, branchName string) string {
 	logger := global.Logger{}
 

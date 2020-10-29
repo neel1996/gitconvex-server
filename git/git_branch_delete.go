@@ -8,6 +8,10 @@ import (
 	"github.com/neel1996/gitconvex-server/graph/model"
 )
 
+// DeleteBranch deleted a branch from the repo
+// If forceFlag is true then it will forcefully delete a branch
+// If forceFlag is false, then the branch status will be checked for unmerged changes and then it will be removed from the repo
+
 func DeleteBranch(repo *git.Repository, branchName string, forceFlag bool) *model.BranchDeleteStatus {
 	var branchErr error
 	logger := global.Logger{}

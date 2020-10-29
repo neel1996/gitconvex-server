@@ -122,12 +122,22 @@ func repoDataFileWriter(repoId string, repoName string, repoPath string, repoAdd
 // If initSwitch is 'true' then the git repo init function will be invoked to initialize a new repo
 // If cloneSwitch is 'true' then the repo will be cloned to the file system using the repoURL field
 
-func AddRepo(repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool) *model.AddRepoParams {
+func AddRepo(inputs model.NewRepoInputs) *model.AddRepoParams {
 	var repoIdChannel = make(chan string)
+
+	repoName := inputs.RepoName
+	repoPath := inputs.RepoPath
+	cloneSwitch := inputs.CloneSwitch
+	repoURL := inputs.RepoURL
+	initSwitch := inputs.InitSwitch
+	authOption := inputs.AuthOption
+	userName := inputs.UserName
+	password := inputs.Password
 
 	if cloneSwitch && len(*repoURL) > 0 {
 		repoPath = repoPath + "/" + repoName
-		_, err := git.CloneHandler(repoPath, *repoURL)
+
+		_, err := git.CloneHandler(repoPath, *repoURL, authOption, userName, password)
 		if err != nil {
 			localLogger(fmt.Sprintf("%v", err), global.StatusError)
 			return &model.AddRepoParams{

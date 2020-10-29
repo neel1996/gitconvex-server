@@ -67,9 +67,6 @@ func commitOrganizer(repo *git.Repository, commits []object.Commit) []*model.Git
 				})
 			}
 
-			// Shortening commit hash
-			//commitHash = commitHash[0:7]
-
 			commitList = append(commitList, &model.GitCommits{
 				Hash:               &commitHash,
 				Author:             &commitAuthor,
