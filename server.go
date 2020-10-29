@@ -53,7 +53,7 @@ func main() {
 	router.Handle("/gitconvexapi", srv)
 
 	// Static file supplier for hosting the react application
-	
+
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./build/")))
 
 	if Port != "" && len(Port) > 0 {
