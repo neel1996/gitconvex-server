@@ -11,6 +11,9 @@ import (
 	"io"
 )
 
+// FetchFromRemote performs a git fetch for the supplied remote and branch (e.g. `git fetch origin main`)
+// If the remoteBranch is empty, then a fetch is performed with no branch name (similar to `git fetch`)
+
 func FetchFromRemote(repo *git.Repository, remoteURL string, remoteBranch string) *model.FetchResult {
 	remoteName := GetRemoteName(repo, remoteURL)
 	logger := global.Logger{}

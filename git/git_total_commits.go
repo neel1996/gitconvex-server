@@ -13,6 +13,8 @@ type AllCommitData struct {
 	LatestCommit string
 }
 
+// AllCommits function returns the total number of commits from the repo and commit message of the most recent commit
+
 func AllCommits(repo *git.Repository, commitChan chan AllCommitData) {
 	logIter, _ := repo.Log(&git.LogOptions{})
 	logger := global.Logger{}

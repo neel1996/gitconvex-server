@@ -24,6 +24,9 @@ func main() {
 	logger := global.Logger{}
 	logger.Log("Starting Gitconvex server modules", global.StatusInfo)
 
+	// checks if the env_config file is accessible. If not then the EnvConfigFileGenerator will be invoked
+	// to generate a default env_config file
+
 	if envError := utils.EnvConfigValidator(); envError == nil {
 		logger.Log("Using available env config file", global.StatusInfo)
 		envConfig := *utils.EnvConfigFileReader()
@@ -43,9 +46,14 @@ func main() {
 
 	router := mux.NewRouter()
 
+	// http route handler for provisioning graphql playground UI when the API is directly opened from the browser
+
 	router.Path("/gitconvexapi/graph").Handler(playground.Handler("GraphQL", "/query"))
 	router.Handle("/query", srv)
 	router.Handle("/gitconvexapi", srv)
+
+	// Static file supplier for hosting the react application
+	
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./build/")))
 
 	if Port != "" && len(Port) > 0 {

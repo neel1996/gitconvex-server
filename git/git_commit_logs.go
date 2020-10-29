@@ -10,7 +10,9 @@ import (
 	"time"
 )
 
-func commitOrganizer(repo *git.Repository, commits []object.Commit) []*model.GitCommits {
+// commitOrganizer collects and organizes the commit related information in the commit GitCommits struct
+
+func commitOrganizer(commits []object.Commit) []*model.GitCommits {
 	logger := global.Logger{}
 	var commitList []*model.GitCommits
 	for _, commit := range commits {
@@ -81,21 +83,8 @@ func commitOrganizer(repo *git.Repository, commits []object.Commit) []*model.Git
 	return commitList
 }
 
-func getTrackedFiles(repo *git.Repository) []string {
-	var fileList []string
-	head, _ := repo.Head()
-	hash := head.Hash()
-
-	treeItr, _ := repo.CommitObject(hash)
-	t, _ := treeItr.Tree()
-
-	_ = t.Files().ForEach(func(file *object.File) error {
-		fileList = append(fileList, file.Name)
-		return nil
-	})
-
-	return fileList
-}
+// CommitLogs fetches the structured commit logs list for the target repo
+// The skipCount limit is set to limit the number of commit logs returned per invokation
 
 func CommitLogs(repo *git.Repository, skipCount int) *model.GitCommitLogResults {
 	var commitLogs []object.Commit
@@ -127,7 +116,7 @@ func CommitLogs(repo *git.Repository, skipCount int) *model.GitCommitLogResults 
 	}
 
 	if len(commitLogs) <= 10 {
-		refinedCommits := commitOrganizer(repo, commitLogs)
+		refinedCommits := commitOrganizer(commitLogs)
 		return &model.GitCommitLogResults{
 			TotalCommits: &totalCommits,
 			Commits:      refinedCommits,
@@ -142,7 +131,7 @@ func CommitLogs(repo *git.Repository, skipCount int) *model.GitCommitLogResults 
 		} else {
 			commitSlice = commitLogs[skipCount:commitLimit]
 		}
-		refinedCommits := commitOrganizer(repo, commitSlice)
+		refinedCommits := commitOrganizer(commitSlice)
 		return &model.GitCommitLogResults{
 			TotalCommits: &totalCommits,
 			Commits:      refinedCommits,

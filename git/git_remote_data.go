@@ -12,6 +12,9 @@ type RemoteDataModel struct {
 	RemoteURL  []*string
 }
 
+// GetRemoteHost returns the remote repository host name based on the remote URL
+// e.g. github.com/test.git => returns github
+
 func GetRemoteHost(remoteURL string) *string {
 	var remoteHostReference []string
 	remoteHostReference = []string{"github", "gitlab", "bitbucket", "azure", "codecommit"}
@@ -23,6 +26,8 @@ func GetRemoteHost(remoteURL string) *string {
 	}
 	return nil
 }
+
+// RemoteData returns the remote host name and the remote URL of the target repo
 
 func RemoteData(repo *git.Repository, remoteChan chan RemoteDataModel) {
 	logger := global.Logger{}

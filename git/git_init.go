@@ -7,6 +7,8 @@ import (
 	"go/types"
 )
 
+// InitHandler initializes a new git repo in the target directory
+
 func InitHandler(repoPath string) (*ResponseModel, error) {
 	_, err := git.PlainInit(repoPath, false)
 

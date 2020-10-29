@@ -1,8 +1,11 @@
 package global
 
-import ("log"
-"github.com/TwinProduction/go-color"
+import (
+	"github.com/TwinProduction/go-color"
+	"log"
 )
+
+// Global logger module for displaying the logs to the terminal
 
 type LoggerInterface interface {
 	LogInfo()
@@ -20,20 +23,23 @@ const (
 	StatusWarning = "StatusWarning"
 )
 
+// Log gets the log message and the status selector
+// The log flag is chosen and color coded based on the status received
+
 func (logger *Logger) Log(message string, status string) {
 	logger.Message = message
 	switch status {
-		case StatusInfo:
-			logger.LogInfo()
-			break
-		case StatusWarning:
-			logger.LogWarning()
-			break
-		case StatusError:
-			logger.LogError()
-			break
-		default:
-			logger.LogInfo()
+	case StatusInfo:
+		logger.LogInfo()
+		break
+	case StatusWarning:
+		logger.LogWarning()
+		break
+	case StatusError:
+		logger.LogError()
+		break
+	default:
+		logger.LogInfo()
 	}
 }
 

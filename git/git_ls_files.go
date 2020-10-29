@@ -24,12 +24,16 @@ type dirCommitDataModel struct {
 
 var selectedDir string
 
+// pathFilterCheck validates if the path held by the log iterator is tracked by the repo
+
 func pathFilterCheck(filterPath string) bool {
 	if strings.Contains(filterPath, selectedDir) {
 		return true
 	}
 	return false
 }
+
+// dirCommitHandler collects the commit messages for the directories present in the target repo
 
 func dirCommitHandler(repo *git.Repository, dirList []*string, dirCommitChan chan dirCommitDataModel) {
 	var fileFilterList []*string
@@ -67,6 +71,8 @@ func dirCommitHandler(repo *git.Repository, dirList []*string, dirCommitChan cha
 	close(dirCommitChan)
 }
 
+// TrackedFileCount returns the total number of files tracked by the target git repo
+
 func TrackedFileCount(repo *git.Repository, trackedFileCountChan chan int) {
 	var totalFileCount int
 	logger := global.Logger{}
@@ -96,6 +102,9 @@ func TrackedFileCount(repo *git.Repository, trackedFileCountChan chan int) {
 	}
 	close(trackedFileCountChan)
 }
+
+// ListFiles collects the list of tracked files and their latest respective commit messages
+// Used to visualize the git repo in the front-end file explorer in a github explorer based fashion
 
 func ListFiles(repo *git.Repository, repoPath string) *model.GitFolderContentResults {
 	logger := global.Logger{}

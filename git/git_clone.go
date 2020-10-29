@@ -12,14 +12,13 @@ import (
 	"io"
 )
 
+// CloneHandler clones the remote repo to the target directory
+// It supports options for SSH and HTTPS authentications
+
 func CloneHandler(repoPath string, repoURL string, authOption string, userName *string, password *string) (*ResponseModel, error) {
 	logger := global.Logger{}
 
 	gitSSHAuth, authErr := ssh.NewSSHAgentAuth("git")
-	//httpsAuth := http.BasicAuth{
-	//	Username: *userName,
-	//	Password: *password,
-	//}
 
 	if authOption == "ssh" && authErr != nil {
 		logger.Log(authErr.Error(), global.StatusError)
