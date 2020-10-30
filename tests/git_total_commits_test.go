@@ -41,13 +41,14 @@ func TestTotalCommitLogs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert := assert2.New(t)
+			zeroValue := float64(0)
 			go git2.AllCommits(tt.args.repo, tt.args.commitChan)
 			commits := <-logChan
 			commitLength := commits.TotalCommits
 
 			fmt.Printf("Total commits : %v", commitLength)
 
-			assert.Greater(commitLength, 0, "No commit logs received")
+			assert.Greater(commitLength, zeroValue, "No commit logs received")
 		})
 	}
 }

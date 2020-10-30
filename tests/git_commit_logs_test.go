@@ -5,6 +5,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	git2 "github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/model"
+	assert2 "github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
@@ -40,9 +41,10 @@ func TestCommitLogs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := git2.CommitLogs(tt.args.repo, tt.args.skipCount); tt.want.TotalCommits != got.TotalCommits {
-				t.Errorf("CommitLogs() = %v, want %v", got, tt.want)
-			}
+			assert := assert2.New(t)
+			cLogs := git2.CommitLogs(tt.args.repo, tt.args.skipCount)
+			gotTotal := *cLogs.TotalCommits
+			assert.Equal(expectedTotalCommits, gotTotal, "Total commit count are mis-matching")
 		})
 	}
 }

@@ -5,9 +5,9 @@ import (
 	"github.com/go-git/go-git/v5"
 	git2 "github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/model"
+	assert2 "github.com/stretchr/testify/assert"
 	"os"
 	"path"
-	"reflect"
 	"testing"
 )
 
@@ -44,9 +44,9 @@ func TestCommitFileList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := git2.CommitFileList(tt.args.repo, tt.args.commitHash); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CommitFileList() = %v, want %v", got, tt.want)
-			}
+			assert := assert2.New(t)
+			fileList := git2.CommitFileList(tt.args.repo, tt.args.commitHash)
+			assert.Equal(fileList[0].FileName, tt.want[0].FileName)
 		})
 	}
 }
