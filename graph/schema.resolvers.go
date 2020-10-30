@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/generated"
@@ -13,7 +12,6 @@ import (
 )
 
 func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool, authOption string, userName *string, password *string) (*model.AddRepoParams, error) {
-
 	return api.AddRepo(model.NewRepoInputs{
 		RepoName:    repoName,
 		RepoPath:    repoPath,
@@ -106,6 +104,14 @@ func (r *queryResolver) GitCommitFiles(ctx context.Context, repoID string, commi
 	repo := <-repoChan
 
 	return git.CommitFileList(repo.GitRepo, commitHash), nil
+}
+
+func (r *queryResolver) SearchCommitLogs(ctx context.Context, repoID string, searchType string, searchKey string) ([]*model.GitCommits, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+
+	return git.SearchCommitLogs(repo.GitRepo, searchType, searchKey), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

@@ -44,6 +44,8 @@ func commitOrganizer(commits []object.Commit) []*model.GitCommits {
 
 					if strings.Contains(tempDate, "+") {
 						tempDate = strings.TrimSpace(strings.Split(tempDate, "+")[0])
+					} else if strings.Contains(tempDate, "-") {
+						tempDate = strings.TrimSpace(strings.Split(tempDate, "-")[0])
 					}
 
 					cTime, convErr := time.Parse(time.ANSIC, tempDate)

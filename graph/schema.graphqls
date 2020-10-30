@@ -63,6 +63,7 @@ type Query {
     gitFolderContent(repoId: String!): GitFolderContentResults!
     gitCommitLogs(repoId: String!, skipLimit: Int!): gitCommitLogResults!
     gitCommitFiles(repoId: String!, commitHash: String!): [gitCommitFileResult]!
+    searchCommitLogs(repoId: String!, searchType: String!, searchKey: String!): [gitCommits]!
 }
 
 type BranchDeleteStatus{
