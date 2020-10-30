@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
 	git2 "github.com/neel1996/gitconvex-server/git"
+	assert2 "github.com/stretchr/testify/assert"
 	"os"
 	"path"
 	"testing"
 )
 
 func TestListFiles(t *testing.T) {
+	assert := assert2.New(t)
 	lsFileChan := make(chan *git2.LsFileInfo)
 	var repoPath string
 
@@ -46,9 +48,8 @@ func TestListFiles(t *testing.T) {
 			trackedFiles := repoContent.TrackedFiles
 			commits := repoContent.FileBasedCommits
 
-			if len(trackedFiles) == 0 || len(commits) == 0 {
-				t.Error("Expected repo file data not received")
-			}
+			assert.Greater(len(trackedFiles), 0, "Repo has no files")
+			assert.Greater(len(commits), 0, "File based commit list is empty")
 		})
 	}
 }

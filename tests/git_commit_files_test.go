@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
 	git2 "github.com/neel1996/gitconvex-server/git"
-	assert2 "github.com/stretchr/testify/assert"
+	"github.com/neel1996/gitconvex-server/graph/model"
 	"os"
 	"path"
+	"reflect"
 	"testing"
 )
 
-func TestTotalCommitLogs(t *testing.T) {
+func TestCommitFileList(t *testing.T) {
 	var repoPath string
 	var r *git.Repository
 	currentEnv := os.Getenv("GOTESTENV")
@@ -23,31 +24,29 @@ func TestTotalCommitLogs(t *testing.T) {
 		cwd, _ := os.Getwd()
 		r, _ = git.PlainOpen(path.Join(cwd, ".."))
 	}
-	logChan := make(chan git2.AllCommitData)
 
 	type args struct {
 		repo       *git.Repository
-		commitChan chan git2.AllCommitData
+		commitHash string
 	}
 	tests := []struct {
 		name string
 		args args
+		want []*model.GitCommitFileResult
 	}{
-		{name: "Git logs test case", args: struct {
+		{name: "Git commit file list test case", args: struct {
 			repo       *git.Repository
-			commitChan chan git2.AllCommitData
-		}{repo: r, commitChan: logChan}},
+			commitHash string
+		}{repo: r, commitHash: "46aa56e78f2a26d23f604f8e9bbdc240a0a5dbbe"}, want: []*model.GitCommitFileResult{{
+			Type:     "A",
+			FileName: ".github/workflows/codeql-analysis.yml",
+		}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert := assert2.New(t)
-			go git2.AllCommits(tt.args.repo, tt.args.commitChan)
-			commits := <-logChan
-			commitLength := commits.TotalCommits
-
-			fmt.Printf("Total commits : %v", commitLength)
-
-			assert.Greater(commitLength, 0, "No commit logs received")
+			if got := git2.CommitFileList(tt.args.repo, tt.args.commitHash); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CommitFileList() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

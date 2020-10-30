@@ -18,6 +18,7 @@ func TestHealthCheckApi(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
 			if got := api.HealthCheckApi(); strings.Contains(got.Os, tt.want.Os) {
 				t.Errorf("HealthCheckApi() = %v, want %v", got, tt.want)
 			}
