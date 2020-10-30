@@ -1,5 +1,11 @@
 package model
 
+type ResponseModel struct {
+	Status    string
+	Message   string
+	HasFailed bool
+}
+
 type NewRepoInputs struct {
 	RepoName    string
 	RepoPath    string

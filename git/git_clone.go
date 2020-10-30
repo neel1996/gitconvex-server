@@ -8,6 +8,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/neel1996/gitconvex-server/global"
+	"github.com/neel1996/gitconvex-server/graph/model"
 	"go/types"
 	"io"
 )
@@ -15,7 +16,7 @@ import (
 // CloneHandler clones the remote repo to the target directory
 // It supports options for SSH and HTTPS authentications
 
-func CloneHandler(repoPath string, repoURL string, authOption string, userName *string, password *string) (*ResponseModel, error) {
+func CloneHandler(repoPath string, repoURL string, authOption string, userName *string, password *string) (*model.ResponseModel, error) {
 	logger := global.Logger{}
 
 	gitSSHAuth, authErr := ssh.NewSSHAgentAuth("git")
@@ -65,7 +66,7 @@ func CloneHandler(repoPath string, repoURL string, authOption string, userName *
 		fmt.Println(b.String())
 		logger.Log(fmt.Sprintf("Reop %v - Cloned to target directory", r), global.StatusInfo)
 
-		return &ResponseModel{
+		return &model.ResponseModel{
 			Status:    "success",
 			Message:   "Git clone completed",
 			HasFailed: false,
