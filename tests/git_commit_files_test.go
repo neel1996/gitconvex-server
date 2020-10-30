@@ -39,7 +39,7 @@ func TestCommitFileList(t *testing.T) {
 			commitHash string
 		}{repo: r, commitHash: "46aa56e78f2a26d23f604f8e9bbdc240a0a5dbbe"}, want: []*model.GitCommitFileResult{{
 			Type:     "A",
-			FileName: ".github/workflows/codeql-analysis.yml",
+			FileName: "codeql-analysis.yml",
 		}}},
 	}
 	for _, tt := range tests {
