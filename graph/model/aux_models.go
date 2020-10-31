@@ -1,5 +1,7 @@
 package model
 
+// Go file to hold common response models for APIs
+
 type ResponseModel struct {
 	Status    string
 	Message   string

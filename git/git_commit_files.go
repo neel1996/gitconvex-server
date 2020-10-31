@@ -45,6 +45,9 @@ func CommitFileList(repo *git.Repository, commitHash string) []*model.GitCommitF
 	prevTree, _ := prev.Tree()
 	diff, diffErr := prevTree.Diff(currentTree)
 
+	pDiff, _ := prevTree.Patch(currentTree)
+	fileFullName := pDiff.FilePatches()
+
 	if diffErr != nil {
 		logger.Log(diffErr.Error(), global.StatusError)
 		res = append(res, &model.GitCommitFileResult{
@@ -53,9 +56,9 @@ func CommitFileList(repo *git.Repository, commitHash string) []*model.GitCommitF
 		})
 		return res
 	} else {
-		for _, change := range diff {
+		for i, change := range diff {
 			action, _ := change.Action()
-			_, file, _ := change.Files()
+			file, _ := fileFullName[i].Files()
 
 			actionType := action.String()
 
@@ -65,7 +68,7 @@ func CommitFileList(repo *git.Repository, commitHash string) []*model.GitCommitF
 
 			res = append(res, &model.GitCommitFileResult{
 				Type:     actionType[:1],
-				FileName: file.Name,
+				FileName: file.Path(),
 			})
 		}
 		return res
