@@ -7,6 +7,8 @@ import (
 	"regexp"
 )
 
+// SearchCommitLogs searches for the required commits matching the searchKey with the respective searchType
+
 func SearchCommitLogs(repo *git.Repository, searchType string, searchKey string) []*model.GitCommits {
 	var searchResult []*model.GitCommits
 
