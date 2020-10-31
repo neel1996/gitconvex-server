@@ -3,6 +3,7 @@ package tests
 import (
 	"fmt"
 	"github.com/neel1996/gitconvex-server/git"
+	"github.com/neel1996/gitconvex-server/graph/model"
 	"os"
 	"path"
 	"reflect"
@@ -22,13 +23,13 @@ func TestCloneHandler(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *git.ResponseModel
+		want    *model.ResponseModel
 		wantErr bool
 	}{
 		{name: "Git clone test case", args: struct {
 			repoPath string
 			repoURL  string
-		}{repoPath: testRepoPath, repoURL: testURL}, want: &git.ResponseModel{
+		}{repoPath: testRepoPath, repoURL: testURL}, want: &model.ResponseModel{
 			Status:    "success",
 			Message:   "Git clone completed",
 			HasFailed: false,
