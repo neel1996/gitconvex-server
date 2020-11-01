@@ -42,6 +42,7 @@ func CommitFileList(repo *git.Repository, commitHash string) []*model.GitCommitF
 
 		return res
 	}
+
 	prevTree, _ := prev.Tree()
 	diff, diffErr := prevTree.Diff(currentTree)
 
@@ -66,10 +67,19 @@ func CommitFileList(repo *git.Repository, commitHash string) []*model.GitCommitF
 				actionType = "Add"
 			}
 
-			res = append(res, &model.GitCommitFileResult{
-				Type:     actionType[:1],
-				FileName: file.Path(),
-			})
+			if file != nil {
+				res = append(res, &model.GitCommitFileResult{
+					Type:     actionType[:1],
+					FileName: file.Path(),
+				})
+			} else {
+				_, changedFile, _ := change.Files()
+
+				res = append(res, &model.GitCommitFileResult{
+					Type:     actionType[:1],
+					FileName: changedFile.Name,
+				})
+			}
 		}
 		return res
 	}
