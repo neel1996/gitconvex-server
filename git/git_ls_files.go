@@ -60,18 +60,10 @@ func DirCommitHandler(repo *git.Repository, dirList []*string, dirCommitChan cha
 		} else {
 			if idx, _ := dirIter.Next(); idx != nil {
 				if idx.Message != "" {
-					var dirEntry string
 					logger.Log(fmt.Sprintf("Fetching commits for dir -> %v", *dirName), global.StatusInfo)
 
 					commitMsg := idx.Message
-
-					if strings.Contains(*dirName, "/") {
-						splitEntry := strings.Split(*dirName, "/")
-						dirEntry = splitEntry[len(splitEntry)-1] + ":directory"
-					} else {
-						dirEntry = *dirName + ":directory"
-					}
-
+					dirEntry := *dirName + ":directory"
 					fileFilterList = append(fileFilterList, &dirEntry)
 
 					if strings.Contains(commitMsg, "\n") {
@@ -120,7 +112,6 @@ func FileCommitHandler(repo *git.Repository, fileList []*string, fileCommitChan 
 				if strings.Contains(*file, "/") {
 					splitEntry := strings.Split(*file, "/")
 					fileStr = splitEntry[len(splitEntry)-1] + ":File"
-					fmt.Println(fileStr)
 				} else {
 					fileStr = *file + ":File"
 				}
