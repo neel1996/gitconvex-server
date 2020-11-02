@@ -105,7 +105,7 @@ type ComplexityRoot struct {
 		FetchRepo        func(childComplexity int) int
 		GitCommitFiles   func(childComplexity int, repoID string, commitHash string) int
 		GitCommitLogs    func(childComplexity int, repoID string, skipLimit int) int
-		GitFolderContent func(childComplexity int, repoID string) int
+		GitFolderContent func(childComplexity int, repoID string, directoryName *string) int
 		GitRepoStatus    func(childComplexity int, repoID string) int
 		HealthCheck      func(childComplexity int) int
 		SearchCommitLogs func(childComplexity int, repoID string, searchType string, searchKey string) int
@@ -144,7 +144,7 @@ type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
 	FetchRepo(ctx context.Context) (*model.FetchRepoParams, error)
 	GitRepoStatus(ctx context.Context, repoID string) (*model.GitRepoStatusResults, error)
-	GitFolderContent(ctx context.Context, repoID string) (*model.GitFolderContentResults, error)
+	GitFolderContent(ctx context.Context, repoID string, directoryName *string) (*model.GitFolderContentResults, error)
 	GitCommitLogs(ctx context.Context, repoID string, skipLimit int) (*model.GitCommitLogResults, error)
 	GitCommitFiles(ctx context.Context, repoID string, commitHash string) ([]*model.GitCommitFileResult, error)
 	SearchCommitLogs(ctx context.Context, repoID string, searchType string, searchKey string) ([]*model.GitCommits, error)
@@ -458,7 +458,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GitFolderContent(childComplexity, args["repoId"].(string)), true
+		return e.complexity.Query.GitFolderContent(childComplexity, args["repoId"].(string), args["directoryName"].(*string)), true
 
 	case "Query.gitRepoStatus":
 		if e.complexity.Query.GitRepoStatus == nil {
@@ -687,7 +687,7 @@ type Query {
     healthCheck: HealthCheckParams!
     fetchRepo: FetchRepoParams!
     gitRepoStatus(repoId: String!): GitRepoStatusResults!
-    gitFolderContent(repoId: String!): GitFolderContentResults!
+    gitFolderContent(repoId: String!, directoryName: String): GitFolderContentResults!
     gitCommitLogs(repoId: String!, skipLimit: Int!): gitCommitLogResults!
     gitCommitFiles(repoId: String!, commitHash: String!): [gitCommitFileResult]!
     searchCommitLogs(repoId: String!, searchType: String!, searchKey: String!): [gitCommits]!
@@ -1057,6 +1057,15 @@ func (ec *executionContext) field_Query_gitFolderContent_args(ctx context.Contex
 		}
 	}
 	args["repoId"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["directoryName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("directoryName"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["directoryName"] = arg1
 	return args, nil
 }
 
@@ -2381,7 +2390,7 @@ func (ec *executionContext) _Query_gitFolderContent(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GitFolderContent(rctx, args["repoId"].(string))
+		return ec.resolvers.Query().GitFolderContent(rctx, args["repoId"].(string), args["directoryName"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

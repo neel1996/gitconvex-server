@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/generated"
@@ -78,7 +79,7 @@ func (r *queryResolver) GitRepoStatus(ctx context.Context, repoID string) (*mode
 	return api.RepoStatus(repoID), nil
 }
 
-func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string) (*model.GitFolderContentResults, error) {
+func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string, directoryName *string) (*model.GitFolderContentResults, error) {
 	repoChan := make(chan git.RepoDetails)
 	go git.Repo(repoID, repoChan)
 	repo := <-repoChan
@@ -87,7 +88,7 @@ func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string) (*m
 	tmp.FileBasedCommits = nil
 	tmp.TrackedFiles = nil
 
-	return git.ListFiles(repo.GitRepo, repo.RepoPath), nil
+	return git.ListFiles(repo.GitRepo, repo.RepoPath, *directoryName), nil
 }
 
 func (r *queryResolver) GitCommitLogs(ctx context.Context, repoID string, skipLimit int) (*model.GitCommitLogResults, error) {

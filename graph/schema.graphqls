@@ -60,7 +60,7 @@ type Query {
     healthCheck: HealthCheckParams!
     fetchRepo: FetchRepoParams!
     gitRepoStatus(repoId: String!): GitRepoStatusResults!
-    gitFolderContent(repoId: String!): GitFolderContentResults!
+    gitFolderContent(repoId: String!, directoryName: String): GitFolderContentResults!
     gitCommitLogs(repoId: String!, skipLimit: Int!): gitCommitLogResults!
     gitCommitFiles(repoId: String!, commitHash: String!): [gitCommitFileResult]!
     searchCommitLogs(repoId: String!, searchType: String!, searchKey: String!): [gitCommits]!

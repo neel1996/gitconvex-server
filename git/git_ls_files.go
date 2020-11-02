@@ -40,34 +40,48 @@ func pathFilterCheck(filterPath string) bool {
 
 // dirCommitHandler collects the commit messages for the directories present in the target repo
 
-func dirCommitHandler(repo *git.Repository, dirList []*string, dirCommitChan chan dirCommitDataModel) {
+func DirCommitHandler(repo *git.Repository, dirList []*string, dirCommitChan chan dirCommitDataModel) {
 	var fileFilterList []*string
 	var commitList []*string
 	logger := global.Logger{}
 
 	for _, dirName := range dirList {
-		selectedDir = *dirName
-		dirIter, _ := repo.Log(&git.LogOptions{
+		logOptions := git.LogOptions{
 			Order:      git.LogOrderDFSPost,
 			PathFilter: pathFilterCheck,
 			All:        true,
-		})
+		}
+		selectedDir = *dirName
 
-		if idx, _ := dirIter.Next(); idx != nil {
-			if idx.Message != "" {
-				logger.Log(fmt.Sprintf("Fetching commits for dir -> %v", *dirName), global.StatusInfo)
+		dirIter, itrErr := repo.Log(&logOptions)
 
-				commitMsg := idx.Message
-				dirEntry := *dirName + ": directory"
-				fileFilterList = append(fileFilterList, &dirEntry)
+		if itrErr != nil {
+			logger.Log(fmt.Sprintf("Failed while fetching commit for -> %s --> %s", *dirName, itrErr.Error()), global.StatusError)
+		} else {
+			if idx, _ := dirIter.Next(); idx != nil {
+				if idx.Message != "" {
+					var dirEntry string
+					logger.Log(fmt.Sprintf("Fetching commits for dir -> %v", *dirName), global.StatusInfo)
 
-				if strings.Contains(commitMsg, "\n") {
-					commitMsg = strings.Split(commitMsg, "\n")[0]
+					commitMsg := idx.Message
+
+					if strings.Contains(*dirName, "/") {
+						splitEntry := strings.Split(*dirName, "/")
+						dirEntry = splitEntry[len(splitEntry)-1] + ":directory"
+					} else {
+						dirEntry = *dirName + ":directory"
+					}
+
+					fileFilterList = append(fileFilterList, &dirEntry)
+
+					if strings.Contains(commitMsg, "\n") {
+						commitMsg = strings.Split(commitMsg, "\n")[0]
+					}
+					commitList = append(commitList, &commitMsg)
 				}
-				commitList = append(commitList, &commitMsg)
+				dirIter.Close()
+				continue
 			}
-			dirIter.Close()
-			continue
 		}
 	}
 
@@ -81,29 +95,41 @@ func dirCommitHandler(repo *git.Repository, dirList []*string, dirCommitChan cha
 
 // fileCommitHandler collects the commit messages for the files present in the target repo
 
-func fileCommitHandler(repo *git.Repository, fileList []*string, fileCommitChan chan fileCommitDataModel) {
+func FileCommitHandler(repo *git.Repository, fileList []*string, fileCommitChan chan fileCommitDataModel) {
 	var fileFilterList []*string
 	var commitList []*string
 	logger := global.Logger{}
 
-	head, _ := repo.Head()
-	hash := head.Hash()
-
 	for _, file := range fileList {
-		logger.Log(fmt.Sprintf("Fetching commits for file -> %v", *file), global.StatusInfo)
-		commitItr, _ := repo.Log(&git.LogOptions{
+		head, _ := repo.Head()
+		hash := head.Hash()
+
+		commitItr, itrErr := repo.Log(&git.LogOptions{
 			From:     hash,
-			Order:    git.LogOrderDFSPost,
 			FileName: file,
+			Order:    git.LogOrderDFSPost,
 			All:      false,
 		})
-		if commit, _ := commitItr.Next(); commit != nil {
-			fileStr := *file + ":File"
-			fileFilterList = append(fileFilterList, &fileStr)
-			trimMsg := strings.TrimSpace(commit.Message)
-			commitList = append(commitList, &trimMsg)
+		if itrErr != nil {
+			logger.Log(fmt.Sprintf("error occurred in commit traversal for -> %s --> %v", *file, itrErr.Error()), global.StatusError)
+		} else {
+			if commit, _ := commitItr.Next(); commit != nil {
+				var fileStr string
+				logger.Log(fmt.Sprintf("Fetching commits for file -> %v", *file), global.StatusInfo)
+
+				if strings.Contains(*file, "/") {
+					splitEntry := strings.Split(*file, "/")
+					fileStr = splitEntry[len(splitEntry)-1] + ":File"
+					fmt.Println(fileStr)
+				} else {
+					fileStr = *file + ":File"
+				}
+				fileFilterList = append(fileFilterList, &fileStr)
+				trimMsg := strings.TrimSpace(commit.Message)
+				commitList = append(commitList, &trimMsg)
+				commitItr.Close()
+			}
 		}
-		commitItr.Close()
 	}
 
 	fileCommitChan <- fileCommitDataModel{
@@ -148,10 +174,11 @@ func TrackedFileCount(repo *git.Repository, trackedFileCountChan chan int) {
 // ListFiles collects the list of tracked files and their latest respective commit messages
 // Used to visualize the git repo in the front-end file explorer in a github explorer based fashion
 
-func ListFiles(repo *git.Repository, repoPath string) *model.GitFolderContentResults {
+func ListFiles(repo *git.Repository, repoPath string, directoryName string) *model.GitFolderContentResults {
 	logger := global.Logger{}
 	logger.Log("Collecting tracked file list from the repo", global.StatusInfo)
 
+	var targetPath string
 	var fileList []*string
 	var dirList []*string
 	var fileFilterList []*string
@@ -160,10 +187,21 @@ func ListFiles(repo *git.Repository, repoPath string) *model.GitFolderContentRes
 	fileFilterList = nil
 	commitList = nil
 
-	content, _ := ioutil.ReadDir(repoPath)
+	if directoryName != "" {
+		targetPath = repoPath + "/" + directoryName
+	} else {
+		targetPath = repoPath
+	}
+
+	content, _ := ioutil.ReadDir(targetPath)
 
 	for _, files := range content {
-		fileName := files.Name()
+		var fileName string
+		if directoryName != "" {
+			fileName = directoryName + "/" + files.Name()
+		} else {
+			fileName = files.Name()
+		}
 		if files.IsDir() && fileName != ".git" {
 			dirName := fileName
 			dirList = append(dirList, &dirName)
@@ -176,20 +214,27 @@ func ListFiles(repo *git.Repository, repoPath string) *model.GitFolderContentRes
 	content = nil
 
 	var fileCommitChan = make(chan fileCommitDataModel)
-	go fileCommitHandler(repo, fileList, fileCommitChan)
+	var dirCommitChan = make(chan dirCommitDataModel)
 
+	go FileCommitHandler(repo, fileList, fileCommitChan)
 	repoFileContent := <-fileCommitChan
 
 	fileFilterList = append(fileFilterList, repoFileContent.fileNameList...)
 	commitList = append(commitList, repoFileContent.fileCommitList...)
 
-	var dirCommitChan = make(chan dirCommitDataModel)
-	go dirCommitHandler(repo, dirList, dirCommitChan)
-
+	go DirCommitHandler(repo, dirList, dirCommitChan)
 	repoDirContent := <-dirCommitChan
 
 	fileFilterList = append(fileFilterList, repoDirContent.dirNameList...)
 	commitList = append(commitList, repoDirContent.dirCommitList...)
+
+	if len(fileFilterList) == 0 {
+		noFilesMsg := "NO_TRACKED_FILES"
+		return &model.GitFolderContentResults{
+			TrackedFiles:     []*string{&noFilesMsg},
+			FileBasedCommits: []*string{&noFilesMsg},
+		}
+	}
 
 	return &model.GitFolderContentResults{
 		TrackedFiles:     fileFilterList,
