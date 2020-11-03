@@ -15,7 +15,7 @@ func getOs() string {
 }
 
 func getGitVersion() string {
-	gitPath, err := exec.LookPath("git")
+	gitPath, err := exec.LookPath("./gitclient")
 
 	if err != nil {
 		logger := global.Logger{Message: fmt.Sprintf("Git cannot be lovated \n %v", err)}
