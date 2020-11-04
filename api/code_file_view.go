@@ -9,16 +9,21 @@ import (
 	"os"
 )
 
-func CodeFileView(repo *git.Repository, targetFile string) *model.CodeFileType {
+func CodeFileView(repo *git.Repository, repoPath string, fileName string) *model.CodeFileType {
 	var codeLines []*string
 	var fileCommit string
 	fileCommit = ""
 
+	targetFile := repoPath + "/" + fileName
 	logger := global.Logger{}
 	file, err := os.Open(targetFile)
 
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
+		return &model.CodeFileType{
+			FileCommit: "",
+			FileData:   nil,
+		}
 	} else {
 		scanner := bufio.NewScanner(file)
 		scanner.Split(bufio.ScanLines)
@@ -26,12 +31,13 @@ func CodeFileView(repo *git.Repository, targetFile string) *model.CodeFileType {
 			line := scanner.Text()
 			codeLines = append(codeLines, &line)
 		}
+		_ = file.Close()
 	}
 
 	commitLog, commitErr := repo.Log(&git.LogOptions{
 		From:     plumbing.Hash{},
 		Order:    git.LogOrderDFSPost,
-		FileName: &targetFile,
+		FileName: &fileName,
 		All:      false,
 	})
 

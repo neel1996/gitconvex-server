@@ -119,7 +119,7 @@ func (r *queryResolver) CodeFileDetails(ctx context.Context, repoID string, file
 	go git.Repo(repoID, repoChan)
 	repo := <-repoChan
 
-	return api.CodeFileView(repo.GitRepo, fileName), nil
+	return api.CodeFileView(repo.GitRepo, repo.RepoPath, fileName), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
