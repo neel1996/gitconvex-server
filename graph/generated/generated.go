@@ -102,6 +102,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		CodeFileDetails  func(childComplexity int, repoID string, fileName string) int
 		FetchRepo        func(childComplexity int) int
 		GitCommitFiles   func(childComplexity int, repoID string, commitHash string) int
 		GitCommitLogs    func(childComplexity int, repoID string, skipLimit int) int
@@ -109,6 +110,11 @@ type ComplexityRoot struct {
 		GitRepoStatus    func(childComplexity int, repoID string) int
 		HealthCheck      func(childComplexity int) int
 		SearchCommitLogs func(childComplexity int, repoID string, searchType string, searchKey string) int
+	}
+
+	CodeFileType struct {
+		FileCommit func(childComplexity int) int
+		FileData   func(childComplexity int) int
 	}
 
 	GitCommitFileResult struct {
@@ -148,6 +154,7 @@ type QueryResolver interface {
 	GitCommitLogs(ctx context.Context, repoID string, skipLimit int) (*model.GitCommitLogResults, error)
 	GitCommitFiles(ctx context.Context, repoID string, commitHash string) ([]*model.GitCommitFileResult, error)
 	SearchCommitLogs(ctx context.Context, repoID string, searchType string, searchKey string) ([]*model.GitCommits, error)
+	CodeFileDetails(ctx context.Context, repoID string, fileName string) (*model.CodeFileType, error)
 }
 
 type executableSchema struct {
@@ -417,6 +424,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PullResult.Status(childComplexity), true
 
+	case "Query.codeFileDetails":
+		if e.complexity.Query.CodeFileDetails == nil {
+			break
+		}
+
+		args, err := ec.field_Query_codeFileDetails_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CodeFileDetails(childComplexity, args["repoId"].(string), args["fileName"].(string)), true
+
 	case "Query.fetchRepo":
 		if e.complexity.Query.FetchRepo == nil {
 			break
@@ -490,6 +509,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.SearchCommitLogs(childComplexity, args["repoId"].(string), args["searchType"].(string), args["searchKey"].(string)), true
+
+	case "codeFileType.fileCommit":
+		if e.complexity.CodeFileType.FileCommit == nil {
+			break
+		}
+
+		return e.complexity.CodeFileType.FileCommit(childComplexity), true
+
+	case "codeFileType.fileData":
+		if e.complexity.CodeFileType.FileData == nil {
+			break
+		}
+
+		return e.complexity.CodeFileType.FileData(childComplexity), true
 
 	case "gitCommitFileResult.fileName":
 		if e.complexity.GitCommitFileResult.FileName == nil {
@@ -683,6 +716,11 @@ type gitCommitFileResult{
     fileName: String!
 }
 
+type codeFileType{
+    fileCommit: String!
+    fileData: [String]!
+}
+
 type Query {
     healthCheck: HealthCheckParams!
     fetchRepo: FetchRepoParams!
@@ -691,6 +729,7 @@ type Query {
     gitCommitLogs(repoId: String!, skipLimit: Int!): gitCommitLogResults!
     gitCommitFiles(repoId: String!, commitHash: String!): [gitCommitFileResult]!
     searchCommitLogs(repoId: String!, searchType: String!, searchKey: String!): [gitCommits]!
+    codeFileDetails(repoId: String!, fileName: String!): codeFileType!
 }
 
 type BranchDeleteStatus{
@@ -994,6 +1033,30 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_codeFileDetails_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["fileName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fileName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["fileName"] = arg1
 	return args, nil
 }
 
@@ -2533,6 +2596,48 @@ func (ec *executionContext) _Query_searchCommitLogs(ctx context.Context, field g
 	return ec.marshalNgitCommits2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitCommits(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_codeFileDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_codeFileDetails_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CodeFileDetails(rctx, args["repoId"].(string), args["fileName"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CodeFileType)
+	fc.Result = res
+	return ec.marshalNcodeFileType2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐCodeFileType(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3687,6 +3792,76 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _codeFileType_fileCommit(ctx context.Context, field graphql.CollectedField, obj *model.CodeFileType) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "codeFileType",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileCommit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _codeFileType_fileData(ctx context.Context, field graphql.CollectedField, obj *model.CodeFileType) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "codeFileType",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileData, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _gitCommitFileResult_type(ctx context.Context, field graphql.CollectedField, obj *model.GitCommitFileResult) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4459,6 +4634,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "codeFileDetails":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_codeFileDetails(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -4704,6 +4893,38 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec.___Type_inputFields(ctx, field, obj)
 		case "ofType":
 			out.Values[i] = ec.___Type_ofType(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var codeFileTypeImplementors = []string{"codeFileType"}
+
+func (ec *executionContext) _codeFileType(ctx context.Context, sel ast.SelectionSet, obj *model.CodeFileType) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, codeFileTypeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("codeFileType")
+		case "fileCommit":
+			out.Values[i] = ec._codeFileType_fileCommit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fileData":
+			out.Values[i] = ec._codeFileType_fileData(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5225,6 +5446,20 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNcodeFileType2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐCodeFileType(ctx context.Context, sel ast.SelectionSet, v model.CodeFileType) graphql.Marshaler {
+	return ec._codeFileType(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNcodeFileType2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐCodeFileType(ctx context.Context, sel ast.SelectionSet, v *model.CodeFileType) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._codeFileType(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNgitCommitFileResult2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitCommitFileResult(ctx context.Context, sel ast.SelectionSet, v []*model.GitCommitFileResult) graphql.Marshaler {

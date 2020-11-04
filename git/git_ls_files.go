@@ -199,6 +199,16 @@ func ListFiles(repo *git.Repository, repoPath string, directoryName string) *mod
 	waitGroup.Wait()
 	close(fileListChan)
 	close(commitListChan)
+
+	if len(fileFilterList) == 0 || len(commitList) == 0 {
+		msg := "NO_TRACKED_FILES"
+		noFileList := []*string{&msg}
+		return &model.GitFolderContentResults{
+			TrackedFiles:     noFileList,
+			FileBasedCommits: commitList,
+		}
+	}
+
 	return &model.GitFolderContentResults{
 		TrackedFiles:     fileFilterList,
 		FileBasedCommits: commitList,

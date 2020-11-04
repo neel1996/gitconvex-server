@@ -50,6 +50,11 @@ type PullResult struct {
 	PulledItems []*string `json:"pulledItems"`
 }
 
+type CodeFileType struct {
+	FileCommit string    `json:"fileCommit"`
+	FileData   []*string `json:"fileData"`
+}
+
 type GitCommitFileResult struct {
 	Type     string `json:"type"`
 	FileName string `json:"fileName"`
