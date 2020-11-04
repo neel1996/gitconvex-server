@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"os/exec"
+	"github.com/neel1996/gitconvex-server/utils"
 	"runtime"
 	"strings"
 
@@ -15,19 +15,7 @@ func getOs() string {
 }
 
 func getGitVersion() string {
-	gitPath, err := exec.LookPath("./gitclient")
-
-	if err != nil {
-		logger := global.Logger{Message: fmt.Sprintf("Git cannot be lovated \n %v", err)}
-		logger.LogError()
-		panic(err)
-	}
-
-	gitCmd := &exec.Cmd{
-		Path: gitPath,
-		Args: []string{gitPath, "version"},
-	}
-
+	gitCmd := utils.GetGitClient(".", []string{"version"})
 	gitVersion, err := gitCmd.Output()
 
 	if err != nil {

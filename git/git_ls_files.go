@@ -6,10 +6,9 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
+	"github.com/neel1996/gitconvex-server/utils"
 	"go/types"
 	"io/ioutil"
-	"os/exec"
-	"runtime"
 	"strings"
 	"sync"
 )
@@ -30,6 +29,7 @@ type fileCommitDataModel struct {
 	fileCommitList []*string
 }
 
+var logger global.Logger
 var selectedDir string
 var waitGroup sync.WaitGroup
 
@@ -45,29 +45,19 @@ func pathFilterCheck(filterPath string) bool {
 // dirCommitHandler collects the commit messages for the directories present in the target repo
 
 func DirCommitHandler(dirName *string, repoPath string, fileChan chan string, commitChan chan string, waitGroup *sync.WaitGroup) {
-	var gitPath string
-	platform := runtime.GOOS
-	logger := global.Logger{}
+	args := []string{"log", "--oneline", "-1", "--pretty=format:%s", *dirName}
+	cmd := utils.GetGitClient(repoPath, args)
 
-	if strings.Contains(platform, "windows") {
-		gitPath, _ = exec.LookPath("./gitclient.exe")
-	}
-
-	gitPath, _ = exec.LookPath("./gitclient")
-
-	if gitPath != "" {
+	if cmd.String() != "" {
 		dirStr := *dirName + ":directory"
 
-		cmd := exec.Cmd{
-			Path: gitPath,
-			Args: []string{gitPath, "-C", repoPath, "log", "--oneline", "-1", "--pretty=format:%s", *dirName},
-		}
 		commitLog, err := cmd.Output()
 		if err != nil {
-			logger.Log(err.Error(), global.StatusError)
+			logger.Log(fmt.Sprintf("Command execution for -> {{%s}} failed with error %v", cmd.String(), err.Error()), global.StatusError)
+			fmt.Println(commitLog)
 		} else {
 			commitMsg := string(commitLog)
-			logger.Log(fmt.Sprintf("Fetching commits for file -> %v --> %s", *dirName, commitLog), global.StatusInfo)
+			logger.Log(fmt.Sprintf("Fetching commits for file -> %s --> %s", *dirName, commitLog), global.StatusInfo)
 			fileChan <- dirStr
 			commitChan <- commitMsg
 			waitGroup.Done()
@@ -78,17 +68,10 @@ func DirCommitHandler(dirName *string, repoPath string, fileChan chan string, co
 // fileCommitHandler collects the commit messages for the files present in the target repo
 
 func FileCommitHandler(file *string, repoPath string, fileChan chan string, commitChan chan string, waitGroup *sync.WaitGroup) {
-	var gitPath string
-	platform := runtime.GOOS
-	logger := global.Logger{}
+	args := []string{"log", "--oneline", "-1", "--pretty=format:%s", *file}
+	cmd := utils.GetGitClient(repoPath, args)
 
-	if strings.Contains(platform, "windows") {
-		gitPath, _ = exec.LookPath("./gitclient.exe")
-	}
-
-	gitPath, _ = exec.LookPath("./gitclient")
-
-	if gitPath != "" {
+	if cmd.String() != "" {
 		var fileStr string
 
 		if strings.Contains(*file, "/") {
@@ -98,10 +81,6 @@ func FileCommitHandler(file *string, repoPath string, fileChan chan string, comm
 			fileStr = *file + ":File"
 		}
 
-		cmd := exec.Cmd{
-			Path: gitPath,
-			Args: []string{gitPath, "-C", repoPath, "log", "--oneline", "-1", "--pretty=format:%s", *file},
-		}
 		commitLog, err := cmd.Output()
 		if err != nil {
 			logger.Log(err.Error(), global.StatusError)
