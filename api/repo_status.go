@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
@@ -10,6 +9,8 @@ import (
 
 func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	logger := global.Logger{}
+	logger.Log("Collecting repo status information", global.StatusInfo)
+
 	repoChan := make(chan git.RepoDetails)
 	remoteChan := make(chan git.RemoteDataModel)
 	branchChan := make(chan git.Branch)
@@ -46,8 +47,6 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	currentBranch := &branchList.CurrentBranch
 	branches := branchList.BranchList
 	allBranches := branchList.AllBranchList
-
-	logger.Log(fmt.Sprintf("Obtained branch info -- \n%v -- %v\n", branchList.CurrentBranch, branchList.BranchList), global.StatusInfo)
 
 	var latestCommit *string
 

@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/neel1996/gitconvex-server/global"
@@ -24,6 +25,8 @@ func commitOrganizer(commits []object.Commit) []*model.GitCommits {
 			commitFileCount := 0
 			commitDate := ""
 			commitRelativeTime := ""
+
+			logger.Log(fmt.Sprintf("Fetching commit details for -> %s", commitHash), global.StatusInfo)
 
 			var prevTree *object.Tree
 			prevCommit, parentErr := commit.Parents().Next()
@@ -58,6 +61,10 @@ func commitOrganizer(commits []object.Commit) []*model.GitCommits {
 							logger.Log(gTimeErr.Error(), global.StatusError)
 						} else {
 							commitRelativeTime = gTime.FromNow()
+
+							if strings.Contains(commitRelativeTime, "in") {
+								commitRelativeTime = "recent commit"
+							}
 						}
 					}
 				}

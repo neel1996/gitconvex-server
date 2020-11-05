@@ -16,9 +16,10 @@ func AddBranch(repo *git.Repository, branchName string) string {
 	branchErr := repo.Storer.SetReference(ref)
 
 	if branchErr != nil {
-		logger.Log(branchErr.Error(), global.StatusError)
+		logger.Log(fmt.Sprintf("Failed to add branch - %s - %s", branchName, branchErr.Error()), global.StatusError)
 		return "BRANCH_ADD_FAILED"
 	}
 
+	logger.Log(fmt.Sprintf("Added new branch - %s to the repo", branchName), global.StatusInfo)
 	return "BRANCH_CREATION_SUCCESS"
 }
