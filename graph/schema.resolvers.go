@@ -122,6 +122,14 @@ func (r *queryResolver) CodeFileDetails(ctx context.Context, repoID string, file
 	return api.CodeFileView(repo.GitRepo, repo.RepoPath, fileName), nil
 }
 
+func (r *queryResolver) GitChanges(ctx context.Context, repoID string) (*model.GitChangeResults, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+
+	return git.ChangedFiles(repo.GitRepo), nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

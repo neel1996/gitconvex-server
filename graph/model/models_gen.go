@@ -55,6 +55,12 @@ type CodeFileType struct {
 	FileData   []*string `json:"fileData"`
 }
 
+type GitChangeResults struct {
+	GitUntrackedFiles []*string `json:"gitUntrackedFiles"`
+	GitChangedFiles   []*string `json:"gitChangedFiles"`
+	GitStagedFiles    []*string `json:"gitStagedFiles"`
+}
+
 type GitCommitFileResult struct {
 	Type     string `json:"type"`
 	FileName string `json:"fileName"`

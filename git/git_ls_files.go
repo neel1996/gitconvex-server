@@ -13,6 +13,9 @@ import (
 	"sync"
 )
 
+// This go file relies on git installed on the host or the git client packed with the build application -> ./gitclient{.exe}
+// Git client dependency was induced as the go-git based log traversal was highly time consuming
+
 type LsFileInfo struct {
 	Content           []*string
 	Commits           []*string
