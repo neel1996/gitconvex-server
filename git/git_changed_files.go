@@ -29,6 +29,7 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 	}
 
 	logger.Log(fmt.Sprintf("Fetching latest commit object for -> %s", hash), global.StatusInfo)
+
 	commit, commitErr := repo.CommitObject(hash)
 	w, _ := repo.Worktree()
 	stat, _ := w.Status()
@@ -38,12 +39,44 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 	var statusIndicator string
 	var filePath string
 
+	if commitErr != nil {
+		logger.Log(fmt.Sprintf("Unable to fetch commit at HEAD for %s --> %s", hash, commitErr.Error()), global.StatusError)
+	} else {
+		fileItr, _ := commit.Files()
+
+		_ = fileItr.ForEach(func(file *object.File) error {
+			stagesStat := string(stat.File(file.Name).Staging)
+
+			if stagesStat == "M" {
+				logger.Log(fmt.Sprintf("Staged entry -> %v", file.Name), global.StatusInfo)
+				stagedFiles = append(stagedFiles, &file.Name)
+			}
+			return nil
+		})
+	}
+
 	for _, statEntry := range statLines {
+		if len(statEntry) == 0 {
+			continue
+		}
 		statEntry := strings.TrimSpace(statEntry)
 		if strings.Contains(statEntry, " ") {
 			splitEntry := strings.Split(statEntry, " ")
 			statusIndicator = splitEntry[0]
-			filePath = strings.Join(splitEntry[1:], " ")
+			filePath = strings.TrimSpace(strings.Join(splitEntry[1:], " "))
+
+			// Conditional logic to filter out staged entries from modified file list
+			var isStaged bool
+			for _, stagedItem := range stagedFiles {
+				if *stagedItem == filePath {
+					isStaged = true
+					break
+				}
+			}
+
+			if isStaged {
+				continue
+			}
 
 			switch statusIndicator {
 			case "?", "??":
@@ -74,22 +107,6 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 			logger.Log(fmt.Sprintf("Status indicator cannot be obtained for -> %s", statEntry), global.StatusError)
 			break
 		}
-	}
-
-	if commitErr != nil {
-		logger.Log(fmt.Sprintf("Unable to fetch commit at HEAD for %s --> %s", hash, commitErr.Error()), global.StatusError)
-	} else {
-		fileItr, _ := commit.Files()
-
-		_ = fileItr.ForEach(func(file *object.File) error {
-			stagesStat := string(stat.File(file.Name).Staging)
-
-			if stagesStat == "M" {
-				logger.Log(fmt.Sprintf("Staged entry -> %v", file.Name), global.StatusInfo)
-				stagedFiles = append(stagedFiles, &file.Name)
-			}
-			return nil
-		})
 	}
 
 	return &model.GitChangeResults{

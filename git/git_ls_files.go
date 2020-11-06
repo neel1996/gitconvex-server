@@ -212,10 +212,6 @@ func ListFiles(repo *git.Repository, repoPath string, directoryName string) *mod
 		}
 	}
 
-	// REMOVE
-	ChangedFiles(repo)
-	//
-
 	return &model.GitFolderContentResults{
 		TrackedFiles:     fileFilterList,
 		FileBasedCommits: commitList,
