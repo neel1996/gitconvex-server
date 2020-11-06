@@ -94,6 +94,7 @@ type ComplexityRoot struct {
 		DeleteBranch    func(childComplexity int, repoID string, branchName string, forceFlag bool) int
 		FetchFromRemote func(childComplexity int, repoID string, remoteURL *string, remoteBranch *string) int
 		PullFromRemote  func(childComplexity int, repoID string, remoteURL *string, remoteBranch *string) int
+		StageItem       func(childComplexity int, repoID string, item string) int
 	}
 
 	PullResult struct {
@@ -152,6 +153,7 @@ type MutationResolver interface {
 	AddRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (string, error)
 	FetchFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.FetchResult, error)
 	PullFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.PullResult, error)
+	StageItem(ctx context.Context, repoID string, item string) (string, error)
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
@@ -417,6 +419,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.PullFromRemote(childComplexity, args["repoId"].(string), args["remoteUrl"].(*string), args["remoteBranch"].(*string)), true
+
+	case "Mutation.stageItem":
+		if e.complexity.Mutation.StageItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_stageItem_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.StageItem(childComplexity, args["repoId"].(string), args["item"].(string)), true
 
 	case "PullResult.pulledItems":
 		if e.complexity.PullResult.PulledItems == nil {
@@ -802,6 +816,7 @@ type Mutation {
     addRemote(repoId: String!, remoteName: String!, remoteUrl: String!): String!
     fetchFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): FetchResult!
     pullFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): PullResult!
+    stageItem(repoId: String!, item: String!): String!
 }
 `, BuiltIn: false},
 }
@@ -1066,6 +1081,30 @@ func (ec *executionContext) field_Mutation_pullFromRemote_args(ctx context.Conte
 		}
 	}
 	args["remoteBranch"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_stageItem_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["item"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("item"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["item"] = arg1
 	return args, nil
 }
 
@@ -2307,6 +2346,48 @@ func (ec *executionContext) _Mutation_pullFromRemote(ctx context.Context, field 
 	res := resTmp.(*model.PullResult)
 	fc.Result = res
 	return ec.marshalNPullResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐPullResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_stageItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_stageItem_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().StageItem(rctx, args["repoId"].(string), args["item"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PullResult_status(ctx context.Context, field graphql.CollectedField, obj *model.PullResult) (ret graphql.Marshaler) {
@@ -4685,6 +4766,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "pullFromRemote":
 			out.Values[i] = ec._Mutation_pullFromRemote(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "stageItem":
+			out.Values[i] = ec._Mutation_stageItem(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

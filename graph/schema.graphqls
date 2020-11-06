@@ -101,4 +101,5 @@ type Mutation {
     addRemote(repoId: String!, remoteName: String!, remoteUrl: String!): String!
     fetchFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): FetchResult!
     pullFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): PullResult!
+    stageItem(repoId: String!, item: String!): String!
 }

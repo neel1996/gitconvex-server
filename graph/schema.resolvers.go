@@ -66,6 +66,13 @@ func (r *mutationResolver) PullFromRemote(ctx context.Context, repoID string, re
 	return git.PullFromRemote(repo.GitRepo, *remoteURL, *remoteBranch), nil
 }
 
+func (r *mutationResolver) StageItem(ctx context.Context, repoID string, item string) (string, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+	return git.StageItem(repo.GitRepo, item), nil
+}
+
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {
 	return api.HealthCheckApi(), nil
 }

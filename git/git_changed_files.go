@@ -18,6 +18,7 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 	var stagedFiles []*string
 	var unTrackedFiles []*string
 	var modifiedFiles []*string
+	var newStagedItems []string
 
 	logger := global.Logger{}
 	head, headErr := repo.Head()
@@ -83,7 +84,7 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 				logger.Log(fmt.Sprintf("Untracked entry -> %v", filePath), global.StatusInfo)
 				if strings.Contains(filePath, "/") {
 					splitPath := strings.Split(filePath, "/")
-					fileName := splitPath[len(splitEntry)]
+					fileName := splitPath[len(splitEntry)-1]
 					dirPath := strings.Join(splitPath[0:len(splitPath)-1], "/")
 					changeStr := dirPath + "/," + fileName
 					unTrackedFiles = append(unTrackedFiles, &changeStr)
@@ -93,20 +94,29 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 				}
 				break
 			case "M":
-				logger.Log(fmt.Sprintf("Modified entry -> %v", filePath), global.StatusInfo)
+				logger.Log(fmt.Sprintf("Modified entry - %s -> %v", statusIndicator, filePath), global.StatusInfo)
 				changeStr := "M," + filePath
 				modifiedFiles = append(modifiedFiles, &changeStr)
 				break
 			case "D":
-				logger.Log(fmt.Sprintf("Removed entry -> %v", filePath), global.StatusInfo)
+				logger.Log(fmt.Sprintf("Removed entry - %s -> %v", statusIndicator, filePath), global.StatusInfo)
 				changeStr := "D," + filePath
 				modifiedFiles = append(modifiedFiles, &changeStr)
+				break
+			case "A":
+				logger.Log(fmt.Sprintf("New Staged entry - %s -> %v", statusIndicator, filePath), global.StatusInfo)
+				newStagedItems = append(newStagedItems, filePath)
 				break
 			}
 		} else {
 			logger.Log(fmt.Sprintf("Status indicator cannot be obtained for -> %s", statEntry), global.StatusError)
 			break
 		}
+	}
+
+	// Loop to iterate and append untracked staged files to staged item list
+	for _, entry := range newStagedItems {
+		stagedFiles = append(stagedFiles, &entry)
 	}
 
 	return &model.GitChangeResults{
