@@ -8,7 +8,7 @@ import (
 
 func removeErr(fileItem string, errMsg string) string {
 	logger := global.Logger{}
-	logger.Log(fmt.Sprintf("Error occurred while staging %s -> %s", fileItem, errMsg), global.StatusError)
+	logger.Log(fmt.Sprintf("Error occurred while removeing item %s -> %s", fileItem, errMsg), global.StatusError)
 	return "STAGE_REMOVE_FAILED"
 }
 
@@ -16,13 +16,11 @@ func removeErr(fileItem string, errMsg string) string {
 // Used the gitclient module as go-git does not support selective reset
 
 func RemoveItem(repoPath string, fileItem string) string {
-	logger := global.Logger{}
-
 	args := []string{"reset", fileItem}
 	cmd := utils.GetGitClient(repoPath, args)
 
 	if cmd.String() == "" {
-		return removeErr(fileItem, "Error occurred while fetching gie client")
+		return removeErr(fileItem, "Error occurred while fetching git client")
 	} else {
 		removeMsg, err := cmd.Output()
 
@@ -33,5 +31,4 @@ func RemoveItem(repoPath string, fileItem string) string {
 			return "STAGE_REMOVE_SUCCESS"
 		}
 	}
-
 }
