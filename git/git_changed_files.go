@@ -48,7 +48,7 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 		_ = fileItr.ForEach(func(file *object.File) error {
 			stagedStat := string(stat.File(file.Name).Staging)
 
-			if stagedStat == "M" {
+			if stagedStat == "M" || stagedStat == "D" {
 				logger.Log(fmt.Sprintf("Staged entry -> %v", file.Name), global.StatusInfo)
 				stagedFiles = append(stagedFiles, &file.Name)
 			}
@@ -113,14 +113,24 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 		}
 	}
 
-	// Loop to iterate and append untracked staged files to staged item list
+	// Loop to iterate and append untracked and deleted staged files to staged item list
 	for _, entry := range newStagedItems {
 		stagedFiles = append(stagedFiles, &entry)
+	}
+
+	var refMap = make(map[string]bool)
+	var refinedStagedFiles []*string
+
+	for _, entry := range stagedFiles {
+		if mapEntry := refMap[*entry]; !mapEntry {
+			refMap[*entry] = true
+			refinedStagedFiles = append(refinedStagedFiles, entry)
+		}
 	}
 
 	return &model.GitChangeResults{
 		GitUntrackedFiles: unTrackedFiles,
 		GitChangedFiles:   modifiedFiles,
-		GitStagedFiles:    stagedFiles,
+		GitStagedFiles:    refinedStagedFiles,
 	}
 }
