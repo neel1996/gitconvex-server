@@ -46,9 +46,9 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 		fileItr, _ := commit.Files()
 
 		_ = fileItr.ForEach(func(file *object.File) error {
-			stagesStat := string(stat.File(file.Name).Staging)
+			stagedStat := string(stat.File(file.Name).Staging)
 
-			if stagesStat == "M" {
+			if stagedStat == "M" {
 				logger.Log(fmt.Sprintf("Staged entry -> %v", file.Name), global.StatusInfo)
 				stagedFiles = append(stagedFiles, &file.Name)
 			}
@@ -61,6 +61,7 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 			continue
 		}
 		statEntry := strings.TrimSpace(statEntry)
+
 		if strings.Contains(statEntry, " ") {
 			splitEntry := strings.Split(statEntry, " ")
 			statusIndicator = splitEntry[0]
@@ -82,16 +83,8 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 			switch statusIndicator {
 			case "?", "??":
 				logger.Log(fmt.Sprintf("Untracked entry -> %v", filePath), global.StatusInfo)
-				if strings.Contains(filePath, "/") {
-					splitPath := strings.Split(filePath, "/")
-					fileName := splitPath[len(splitEntry)-1]
-					dirPath := strings.Join(splitPath[0:len(splitPath)-1], "/")
-					changeStr := dirPath + "/," + fileName
-					unTrackedFiles = append(unTrackedFiles, &changeStr)
-				} else {
-					changeStr := "NO_DIR," + filePath
-					unTrackedFiles = append(unTrackedFiles, &changeStr)
-				}
+				changeStr := filePath
+				unTrackedFiles = append(unTrackedFiles, &changeStr)
 				break
 			case "M":
 				logger.Log(fmt.Sprintf("Modified entry - %s -> %v", statusIndicator, filePath), global.StatusInfo)
@@ -106,6 +99,12 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 			case "A":
 				logger.Log(fmt.Sprintf("New Staged entry - %s -> %v", statusIndicator, filePath), global.StatusInfo)
 				newStagedItems = append(newStagedItems, filePath)
+				break
+			case "AM":
+				logger.Log(fmt.Sprintf("New Staged entry - %s -> %v", statusIndicator, filePath), global.StatusInfo)
+				newStagedItems = append(newStagedItems, filePath)
+				changeStr := "M," + filePath
+				modifiedFiles = append(modifiedFiles, &changeStr)
 				break
 			}
 		} else {
