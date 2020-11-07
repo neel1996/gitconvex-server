@@ -23,7 +23,7 @@ func StageItem(repo *git.Repository, fileItem string) string {
 			return addError(fileItem, addErr.Error())
 		} else {
 			logger.Log(fmt.Sprintf("New item -> %s added to the repo worktree --> %s", fileItem, itemHash.String()), global.StatusInfo)
-			return "ADD_ITEM_SUCCES"
+			return "ADD_ITEM_SUCCESS"
 		}
 	}
 

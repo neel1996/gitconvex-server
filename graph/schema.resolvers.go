@@ -73,6 +73,13 @@ func (r *mutationResolver) StageItem(ctx context.Context, repoID string, item st
 	return git.StageItem(repo.GitRepo, item), nil
 }
 
+func (r *mutationResolver) StageAllItems(ctx context.Context, repoID string) (string, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+	return git.StageAllItems(repo.GitRepo), nil
+}
+
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {
 	return api.HealthCheckApi(), nil
 }
