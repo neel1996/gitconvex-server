@@ -73,6 +73,13 @@ func (r *mutationResolver) StageItem(ctx context.Context, repoID string, item st
 	return git.StageItem(repo.GitRepo, item), nil
 }
 
+func (r *mutationResolver) RemoveStagedItem(ctx context.Context, repoID string, item string) (string, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+	return git.RemoveItem(repo.RepoPath, item), nil
+}
+
 func (r *mutationResolver) StageAllItems(ctx context.Context, repoID string) (string, error) {
 	repoChan := make(chan git.RepoDetails)
 	go git.Repo(repoID, repoChan)
