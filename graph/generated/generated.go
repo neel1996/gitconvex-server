@@ -91,6 +91,7 @@ type ComplexityRoot struct {
 		AddRemote        func(childComplexity int, repoID string, remoteName string, remoteURL string) int
 		AddRepo          func(childComplexity int, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool, authOption string, userName *string, password *string) int
 		CheckoutBranch   func(childComplexity int, repoID string, branchName string) int
+		CommitChanges    func(childComplexity int, repoID string, commitMessage string) int
 		DeleteBranch     func(childComplexity int, repoID string, branchName string, forceFlag bool) int
 		FetchFromRemote  func(childComplexity int, repoID string, remoteURL *string, remoteBranch *string) int
 		PullFromRemote   func(childComplexity int, repoID string, remoteURL *string, remoteBranch *string) int
@@ -158,6 +159,7 @@ type MutationResolver interface {
 	StageItem(ctx context.Context, repoID string, item string) (string, error)
 	RemoveStagedItem(ctx context.Context, repoID string, item string) (string, error)
 	StageAllItems(ctx context.Context, repoID string) (string, error)
+	CommitChanges(ctx context.Context, repoID string, commitMessage string) (string, error)
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
@@ -387,6 +389,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CheckoutBranch(childComplexity, args["repoId"].(string), args["branchName"].(string)), true
+
+	case "Mutation.commitChanges":
+		if e.complexity.Mutation.CommitChanges == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_commitChanges_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CommitChanges(childComplexity, args["repoId"].(string), args["commitMessage"].(string)), true
 
 	case "Mutation.deleteBranch":
 		if e.complexity.Mutation.DeleteBranch == nil {
@@ -847,6 +861,7 @@ type Mutation {
     stageItem(repoId: String!, item: String!): String!
     removeStagedItem(repoId: String!, item: String!): String!
     stageAllItems(repoId: String!): String!
+    commitChanges(repoId: String!, commitMessage: String!): String!
 }
 `, BuiltIn: false},
 }
@@ -1012,6 +1027,30 @@ func (ec *executionContext) field_Mutation_checkoutBranch_args(ctx context.Conte
 		}
 	}
 	args["branchName"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_commitChanges_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["commitMessage"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commitMessage"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["commitMessage"] = arg1
 	return args, nil
 }
 
@@ -2527,6 +2566,48 @@ func (ec *executionContext) _Mutation_stageAllItems(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().StageAllItems(rctx, args["repoId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_commitChanges(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_commitChanges_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CommitChanges(rctx, args["repoId"].(string), args["commitMessage"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4934,6 +5015,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "stageAllItems":
 			out.Values[i] = ec._Mutation_stageAllItems(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "commitChanges":
+			out.Values[i] = ec._Mutation_commitChanges(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

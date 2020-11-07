@@ -104,4 +104,5 @@ type Mutation {
     stageItem(repoId: String!, item: String!): String!
     removeStagedItem(repoId: String!, item: String!): String!
     stageAllItems(repoId: String!): String!
+    commitChanges(repoId: String!, commitMessage: String!): String!
 }
