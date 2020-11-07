@@ -14,7 +14,7 @@ func StageAllItems(repo *git.Repository) string {
 	logger.Log(fmt.Sprintf("Staging all changes from repo"), global.StatusInfo)
 
 	if wErr != nil {
-		logger.Log(fmt.Sprintf("Error occurred while fetching repo status -> %s", wErr.Error()), global.StatusError)
+		logger.Log(fmt.Sprintf("Error occurred while fetching worktree -> %s", wErr.Error()), global.StatusError)
 		return "ALL_STAGE_FAILED"
 	} else {
 		status, statErr := w.Status()

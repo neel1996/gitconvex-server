@@ -118,6 +118,7 @@ func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
 		stagedFiles = append(stagedFiles, &entry)
 	}
 
+	// Conditional logic to remove duplicate items from staged files list
 	var refMap = make(map[string]bool)
 	var refinedStagedFiles []*string
 

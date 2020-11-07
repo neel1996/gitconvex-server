@@ -103,6 +103,7 @@ type Mutation {
     pullFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): PullResult!
     stageItem(repoId: String!, item: String!): String!
     removeStagedItem(repoId: String!, item: String!): String!
+    removeAllStagedItem(repoId: String!): String!
     stageAllItems(repoId: String!): String!
     commitChanges(repoId: String!, commitMessage: String!): String!
 }

@@ -11,7 +11,7 @@ func CommitChanges(repo *git.Repository, commitMessage string) string {
 	w, wErr := repo.Worktree()
 
 	if wErr != nil {
-		logger.Log(fmt.Sprintf("Error occurred while fetching repo status -> %s", wErr.Error()), global.StatusError)
+		logger.Log(fmt.Sprintf("Error occurred while fetching repo worktree -> %s", wErr.Error()), global.StatusError)
 		return "COMMIT_FAILED"
 	} else {
 		hash, err := w.Commit(commitMessage, &git.CommitOptions{
