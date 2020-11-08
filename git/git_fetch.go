@@ -6,6 +6,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"io"
@@ -21,10 +22,12 @@ func FetchFromRemote(repo *git.Repository, remoteURL string, remoteBranch string
 	targetRefPsec := "refs/heads/" + remoteBranch + ":refs/remotes/" + remoteBranch
 	b := new(bytes.Buffer)
 	var fetchErr error
+	gitSSHAuth, _ := ssh.NewSSHAgentAuth("git")
 
 	if remoteURL != "" && remoteBranch != "" {
 		fetchErr = repo.Fetch(&git.FetchOptions{
 			RemoteName: remoteName,
+			Auth:       gitSSHAuth,
 			RefSpecs:   []config.RefSpec{config.RefSpec(targetRefPsec)},
 			Progress: sideband.Progress(func(f io.Writer) io.Writer {
 				return f
@@ -33,6 +36,7 @@ func FetchFromRemote(repo *git.Repository, remoteURL string, remoteBranch string
 	} else {
 		fetchErr = repo.Fetch(&git.FetchOptions{
 			RemoteName: git.DefaultRemoteName,
+			Auth:       gitSSHAuth,
 			Progress: sideband.Progress(func(f io.Writer) io.Writer {
 				return f
 			}(b)),

@@ -6,6 +6,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"go/types"
@@ -29,8 +30,10 @@ func PullFromRemote(repo *git.Repository, remoteURL string, remoteBranch string)
 		fmt.Println(refErr.Error())
 		pullErr = types.Error{Msg: "branch reference does not exist"}
 	} else {
+		gitSSHAuth, _ := ssh.NewSSHAgentAuth("git")
 		pullErr = w.Pull(&git.PullOptions{
 			RemoteName:    remoteName,
+			Auth:          gitSSHAuth,
 			ReferenceName: ref.Name(),
 			Progress: sideband.Progress(func(f io.Writer) io.Writer {
 				return f
