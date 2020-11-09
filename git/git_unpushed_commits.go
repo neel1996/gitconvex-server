@@ -34,15 +34,22 @@ func commitModel(commit object.Commit) string {
 			if convErr != nil {
 				logger.Log(convErr.Error(), global.StatusError)
 			} else {
-				commitDate = cTime.String()
+				tempDate = cTime.String()
+				if strings.Contains(tempDate, "+") {
+					tempDate = strings.TrimSpace(strings.Split(tempDate, "+")[0])
+				} else if strings.Contains(tempDate, "-") {
+					tempDate = strings.TrimSpace(strings.Split(tempDate, "-")[0])
+				}
+				commitDate = tempDate
 			}
 		}
 	}
 
-	commitString := commitHash + "||" + commitAuthor + "||" + commitDate + "||" + commitMessage
+	commitString := commitHash[:7] + "||" + commitAuthor + "||" + commitDate + "||" + commitMessage
 	return commitString
 }
 
+// UnPushedCommits compares the local branch and the remote branch to extract the commits which are not pushed to the remote
 func UnPushedCommits(repo *git.Repository, remoteRef string) []*string {
 	var commitArray []*string
 	var isAncestor bool
