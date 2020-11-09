@@ -24,6 +24,8 @@ func FetchFromRemote(repo *git.Repository, remoteURL string, remoteBranch string
 	var fetchErr error
 	gitSSHAuth, _ := ssh.NewSSHAgentAuth("git")
 
+	logger.Log(fmt.Sprintf("Fetching changes from -> %s : %s", remoteURL, targetRefPsec), global.StatusInfo)
+
 	if remoteURL != "" && remoteBranch != "" {
 		fetchErr = repo.Fetch(&git.FetchOptions{
 			RemoteName: remoteName,
@@ -60,6 +62,7 @@ func FetchFromRemote(repo *git.Repository, remoteURL string, remoteBranch string
 
 	} else {
 		logger.Log(b.String(), global.StatusInfo)
+		logger.Log("Changes fetched from remote", global.StatusInfo)
 		msg := fmt.Sprintf("Changes fetched from %v", git.DefaultRemoteName)
 		return &model.FetchResult{
 			Status:       "CHANGES FETCHED FROM REMOTE",

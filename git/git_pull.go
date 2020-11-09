@@ -30,6 +30,7 @@ func PullFromRemote(repo *git.Repository, remoteURL string, remoteBranch string)
 		fmt.Println(refErr.Error())
 		pullErr = types.Error{Msg: "branch reference does not exist"}
 	} else {
+		logger.Log(fmt.Sprintf("Pulling changes from -> %s : %s", remoteURL, ref.Name()), global.StatusInfo)
 		gitSSHAuth, _ := ssh.NewSSHAgentAuth("git")
 		pullErr = w.Pull(&git.PullOptions{
 			RemoteName:    remoteName,
