@@ -107,4 +107,5 @@ type Mutation {
     removeAllStagedItem(repoId: String!): String!
     stageAllItems(repoId: String!): String!
     commitChanges(repoId: String!, commitMessage: String!): String!
+    pushToRemote(repoId: String!, remoteHost: String!, branch: String!): String!
 }
