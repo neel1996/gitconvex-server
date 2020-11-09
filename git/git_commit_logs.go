@@ -40,6 +40,9 @@ func commitOrganizer(commits []object.Commit) []*model.GitCommits {
 				commitFileCount = diff.Len()
 			}
 
+			// Logic to extract commit timestamp from commit string
+			// go-git commit iterator does not provide an option to extract the timestamp directly
+
 			for _, cString := range strings.Split(commit.String(), "\n") {
 				if strings.Contains(cString, "Date:") {
 					str := strings.Split(cString, "Date:")[1]

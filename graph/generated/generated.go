@@ -107,15 +107,16 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CodeFileDetails  func(childComplexity int, repoID string, fileName string) int
-		FetchRepo        func(childComplexity int) int
-		GitChanges       func(childComplexity int, repoID string) int
-		GitCommitFiles   func(childComplexity int, repoID string, commitHash string) int
-		GitCommitLogs    func(childComplexity int, repoID string, skipLimit int) int
-		GitFolderContent func(childComplexity int, repoID string, directoryName *string) int
-		GitRepoStatus    func(childComplexity int, repoID string) int
-		HealthCheck      func(childComplexity int) int
-		SearchCommitLogs func(childComplexity int, repoID string, searchType string, searchKey string) int
+		CodeFileDetails    func(childComplexity int, repoID string, fileName string) int
+		FetchRepo          func(childComplexity int) int
+		GitChanges         func(childComplexity int, repoID string) int
+		GitCommitFiles     func(childComplexity int, repoID string, commitHash string) int
+		GitCommitLogs      func(childComplexity int, repoID string, skipLimit int) int
+		GitFolderContent   func(childComplexity int, repoID string, directoryName *string) int
+		GitRepoStatus      func(childComplexity int, repoID string) int
+		GitUnPushedCommits func(childComplexity int, repoID string, remoteURL string, remoteBranch string) int
+		HealthCheck        func(childComplexity int) int
+		SearchCommitLogs   func(childComplexity int, repoID string, searchType string, searchKey string) int
 	}
 
 	CodeFileType struct {
@@ -173,6 +174,7 @@ type QueryResolver interface {
 	SearchCommitLogs(ctx context.Context, repoID string, searchType string, searchKey string) ([]*model.GitCommits, error)
 	CodeFileDetails(ctx context.Context, repoID string, fileName string) (*model.CodeFileType, error)
 	GitChanges(ctx context.Context, repoID string) (*model.GitChangeResults, error)
+	GitUnPushedCommits(ctx context.Context, repoID string, remoteURL string, remoteBranch string) ([]*string, error)
 }
 
 type executableSchema struct {
@@ -581,6 +583,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GitRepoStatus(childComplexity, args["repoId"].(string)), true
 
+	case "Query.gitUnPushedCommits":
+		if e.complexity.Query.GitUnPushedCommits == nil {
+			break
+		}
+
+		args, err := ec.field_Query_gitUnPushedCommits_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GitUnPushedCommits(childComplexity, args["repoId"].(string), args["remoteURL"].(string), args["remoteBranch"].(string)), true
+
 	case "Query.healthCheck":
 		if e.complexity.Query.HealthCheck == nil {
 			break
@@ -848,6 +862,7 @@ type Query {
     searchCommitLogs(repoId: String!, searchType: String!, searchKey: String!): [gitCommits]!
     codeFileDetails(repoId: String!, fileName: String!): codeFileType!
     gitChanges(repoId: String!): gitChangeResults!
+    gitUnPushedCommits(repoId: String!, remoteURL: String!, remoteBranch: String!): [String]!
 }
 
 type BranchDeleteStatus{
@@ -1384,6 +1399,39 @@ func (ec *executionContext) field_Query_gitRepoStatus_args(ctx context.Context, 
 		}
 	}
 	args["repoId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_gitUnPushedCommits_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["remoteURL"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteURL"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["remoteURL"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["remoteBranch"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteBranch"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["remoteBranch"] = arg2
 	return args, nil
 }
 
@@ -3128,6 +3176,48 @@ func (ec *executionContext) _Query_gitChanges(ctx context.Context, field graphql
 	res := resTmp.(*model.GitChangeResults)
 	fc.Result = res
 	return ec.marshalNgitChangeResults2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitChangeResults(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_gitUnPushedCommits(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_gitUnPushedCommits_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GitUnPushedCommits(rctx, args["repoId"].(string), args["remoteURL"].(string), args["remoteBranch"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5279,6 +5369,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_gitChanges(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "gitUnPushedCommits":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_gitUnPushedCommits(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

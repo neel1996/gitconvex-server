@@ -13,8 +13,6 @@ import (
 // The function organizes the tracked, untracked and staged files in separate slices and returns the struct *model.GitChangeResults
 
 func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
-	UnPushedCommits(repo)
-
 	var hash plumbing.Hash
 	var stagedFiles []*string
 	var unTrackedFiles []*string

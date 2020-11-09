@@ -77,6 +77,7 @@ type Query {
     searchCommitLogs(repoId: String!, searchType: String!, searchKey: String!): [gitCommits]!
     codeFileDetails(repoId: String!, fileName: String!): codeFileType!
     gitChanges(repoId: String!): gitChangeResults!
+    gitUnPushedCommits(repoId: String!, remoteURL: String!, remoteBranch: String!): [String]!
 }
 
 type BranchDeleteStatus{
