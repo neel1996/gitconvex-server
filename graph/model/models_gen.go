@@ -13,9 +13,10 @@ type BranchDeleteStatus struct {
 }
 
 type FetchRepoParams struct {
-	RepoID   []string `json:"repoId"`
-	RepoName []string `json:"repoName"`
-	RepoPath []string `json:"repoPath"`
+	RepoID    []*string `json:"repoId"`
+	RepoName  []*string `json:"repoName"`
+	RepoPath  []*string `json:"repoPath"`
+	TimeStamp []*string `json:"timeStamp"`
 }
 
 type FetchResult struct {
@@ -83,4 +84,9 @@ type GitCommits struct {
 	CommitMessage      *string `json:"commitMessage"`
 	CommitRelativeTime *string `json:"commitRelativeTime"`
 	CommitFilesCount   *int    `json:"commitFilesCount"`
+}
+
+type SettingsDataResults struct {
+	SettingsDatabasePath string `json:"settingsDatabasePath"`
+	SettingsPortDetails  string `json:"settingsPortDetails"`
 }

@@ -8,9 +8,10 @@ type HealthCheckParams{
 }
 
 type FetchRepoParams{
-    repoId: [String!]
-    repoName: [String!]
-    repoPath: [String!]
+    repoId: [String]!
+    repoName: [String]!
+    repoPath: [String]!
+    timeStamp: [String]!
 }
 
 type AddRepoParams{
@@ -72,6 +73,11 @@ type fileLineChangeResult{
     fileDiff: [String]!
 }
 
+type settingsDataResults{
+    settingsDatabasePath: String!
+    settingsPortDetails: String!
+}
+
 type Query {
     healthCheck: HealthCheckParams!
     fetchRepo: FetchRepoParams!
@@ -84,6 +90,7 @@ type Query {
     gitChanges(repoId: String!): gitChangeResults!
     gitUnPushedCommits(repoId: String!, remoteURL: String!, remoteBranch: String!): [String]!
     gitFileLineChanges(repoId: String!, fileName: String!): fileLineChangeResult!
+    settingsData: settingsDataResults!
 }
 
 type BranchDeleteStatus{
@@ -114,4 +121,6 @@ type Mutation {
     stageAllItems(repoId: String!): String!
     commitChanges(repoId: String!, commitMessage: String!): String!
     pushToRemote(repoId: String!, remoteHost: String!, branch: String!): String!
+    settingsEditPort(newPort: String!): String!
+    updateRepoDataFile(newDbFile: String!): String!
 }

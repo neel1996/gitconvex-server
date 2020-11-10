@@ -54,9 +54,10 @@ type ComplexityRoot struct {
 	}
 
 	FetchRepoParams struct {
-		RepoID   func(childComplexity int) int
-		RepoName func(childComplexity int) int
-		RepoPath func(childComplexity int) int
+		RepoID    func(childComplexity int) int
+		RepoName  func(childComplexity int) int
+		RepoPath  func(childComplexity int) int
+		TimeStamp func(childComplexity int) int
 	}
 
 	FetchResult struct {
@@ -98,8 +99,10 @@ type ComplexityRoot struct {
 		PushToRemote        func(childComplexity int, repoID string, remoteHost string, branch string) int
 		RemoveAllStagedItem func(childComplexity int, repoID string) int
 		RemoveStagedItem    func(childComplexity int, repoID string, item string) int
+		SettingsEditPort    func(childComplexity int, newPort string) int
 		StageAllItems       func(childComplexity int, repoID string) int
 		StageItem           func(childComplexity int, repoID string, item string) int
+		UpdateRepoDataFile  func(childComplexity int, newDbFile string) int
 	}
 
 	PullResult struct {
@@ -119,6 +122,7 @@ type ComplexityRoot struct {
 		GitUnPushedCommits func(childComplexity int, repoID string, remoteURL string, remoteBranch string) int
 		HealthCheck        func(childComplexity int) int
 		SearchCommitLogs   func(childComplexity int, repoID string, searchType string, searchKey string) int
+		SettingsData       func(childComplexity int) int
 	}
 
 	CodeFileType struct {
@@ -155,6 +159,11 @@ type ComplexityRoot struct {
 		CommitTime         func(childComplexity int) int
 		Hash               func(childComplexity int) int
 	}
+
+	SettingsDataResults struct {
+		SettingsDatabasePath func(childComplexity int) int
+		SettingsPortDetails  func(childComplexity int) int
+	}
 }
 
 type MutationResolver interface {
@@ -171,6 +180,8 @@ type MutationResolver interface {
 	StageAllItems(ctx context.Context, repoID string) (string, error)
 	CommitChanges(ctx context.Context, repoID string, commitMessage string) (string, error)
 	PushToRemote(ctx context.Context, repoID string, remoteHost string, branch string) (string, error)
+	SettingsEditPort(ctx context.Context, newPort string) (string, error)
+	UpdateRepoDataFile(ctx context.Context, newDbFile string) (string, error)
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
@@ -184,6 +195,7 @@ type QueryResolver interface {
 	GitChanges(ctx context.Context, repoID string) (*model.GitChangeResults, error)
 	GitUnPushedCommits(ctx context.Context, repoID string, remoteURL string, remoteBranch string) ([]*string, error)
 	GitFileLineChanges(ctx context.Context, repoID string, fileName string) (*model.FileLineChangeResult, error)
+	SettingsData(ctx context.Context) (*model.SettingsDataResults, error)
 }
 
 type executableSchema struct {
@@ -249,6 +261,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FetchRepoParams.RepoPath(childComplexity), true
+
+	case "FetchRepoParams.timeStamp":
+		if e.complexity.FetchRepoParams.TimeStamp == nil {
+			break
+		}
+
+		return e.complexity.FetchRepoParams.TimeStamp(childComplexity), true
 
 	case "FetchResult.fetchedItems":
 		if e.complexity.FetchResult.FetchedItems == nil {
@@ -487,6 +506,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RemoveStagedItem(childComplexity, args["repoId"].(string), args["item"].(string)), true
 
+	case "Mutation.settingsEditPort":
+		if e.complexity.Mutation.SettingsEditPort == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_settingsEditPort_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SettingsEditPort(childComplexity, args["newPort"].(string)), true
+
 	case "Mutation.stageAllItems":
 		if e.complexity.Mutation.StageAllItems == nil {
 			break
@@ -510,6 +541,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.StageItem(childComplexity, args["repoId"].(string), args["item"].(string)), true
+
+	case "Mutation.updateRepoDataFile":
+		if e.complexity.Mutation.UpdateRepoDataFile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateRepoDataFile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateRepoDataFile(childComplexity, args["newDbFile"].(string)), true
 
 	case "PullResult.pulledItems":
 		if e.complexity.PullResult.PulledItems == nil {
@@ -647,6 +690,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.SearchCommitLogs(childComplexity, args["repoId"].(string), args["searchType"].(string), args["searchKey"].(string)), true
 
+	case "Query.settingsData":
+		if e.complexity.Query.SettingsData == nil {
+			break
+		}
+
+		return e.complexity.Query.SettingsData(childComplexity), true
+
 	case "codeFileType.fileCommit":
 		if e.complexity.CodeFileType.FileCommit == nil {
 			break
@@ -766,6 +816,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GitCommits.Hash(childComplexity), true
 
+	case "settingsDataResults.settingsDatabasePath":
+		if e.complexity.SettingsDataResults.SettingsDatabasePath == nil {
+			break
+		}
+
+		return e.complexity.SettingsDataResults.SettingsDatabasePath(childComplexity), true
+
+	case "settingsDataResults.settingsPortDetails":
+		if e.complexity.SettingsDataResults.SettingsPortDetails == nil {
+			break
+		}
+
+		return e.complexity.SettingsDataResults.SettingsPortDetails(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -840,9 +904,10 @@ type HealthCheckParams{
 }
 
 type FetchRepoParams{
-    repoId: [String!]
-    repoName: [String!]
-    repoPath: [String!]
+    repoId: [String]!
+    repoName: [String]!
+    repoPath: [String]!
+    timeStamp: [String]!
 }
 
 type AddRepoParams{
@@ -904,6 +969,11 @@ type fileLineChangeResult{
     fileDiff: [String]!
 }
 
+type settingsDataResults{
+    settingsDatabasePath: String!
+    settingsPortDetails: String!
+}
+
 type Query {
     healthCheck: HealthCheckParams!
     fetchRepo: FetchRepoParams!
@@ -916,6 +986,7 @@ type Query {
     gitChanges(repoId: String!): gitChangeResults!
     gitUnPushedCommits(repoId: String!, remoteURL: String!, remoteBranch: String!): [String]!
     gitFileLineChanges(repoId: String!, fileName: String!): fileLineChangeResult!
+    settingsData: settingsDataResults!
 }
 
 type BranchDeleteStatus{
@@ -946,6 +1017,8 @@ type Mutation {
     stageAllItems(repoId: String!): String!
     commitChanges(repoId: String!, commitMessage: String!): String!
     pushToRemote(repoId: String!, remoteHost: String!, branch: String!): String!
+    settingsEditPort(newPort: String!): String!
+    updateRepoDataFile(newDbFile: String!): String!
 }
 `, BuiltIn: false},
 }
@@ -1309,6 +1382,21 @@ func (ec *executionContext) field_Mutation_removeStagedItem_args(ctx context.Con
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_settingsEditPort_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["newPort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newPort"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newPort"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_stageAllItems_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1345,6 +1433,21 @@ func (ec *executionContext) field_Mutation_stageItem_args(ctx context.Context, r
 		}
 	}
 	args["item"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateRepoDataFile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["newDbFile"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newDbFile"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newDbFile"] = arg0
 	return args, nil
 }
 
@@ -1782,11 +1885,14 @@ func (ec *executionContext) _FetchRepoParams_repoId(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.([]*string)
 	fc.Result = res
-	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _FetchRepoParams_repoName(ctx context.Context, field graphql.CollectedField, obj *model.FetchRepoParams) (ret graphql.Marshaler) {
@@ -1814,11 +1920,14 @@ func (ec *executionContext) _FetchRepoParams_repoName(ctx context.Context, field
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.([]*string)
 	fc.Result = res
-	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _FetchRepoParams_repoPath(ctx context.Context, field graphql.CollectedField, obj *model.FetchRepoParams) (ret graphql.Marshaler) {
@@ -1846,11 +1955,49 @@ func (ec *executionContext) _FetchRepoParams_repoPath(ctx context.Context, field
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.([]*string)
 	fc.Result = res
-	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FetchRepoParams_timeStamp(ctx context.Context, field graphql.CollectedField, obj *model.FetchRepoParams) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "FetchRepoParams",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TimeStamp, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _FetchResult_status(ctx context.Context, field graphql.CollectedField, obj *model.FetchResult) (ret graphql.Marshaler) {
@@ -2897,6 +3044,90 @@ func (ec *executionContext) _Mutation_pushToRemote(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_settingsEditPort(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_settingsEditPort_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SettingsEditPort(rctx, args["newPort"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateRepoDataFile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateRepoDataFile_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateRepoDataFile(rctx, args["newDbFile"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _PullResult_status(ctx context.Context, field graphql.CollectedField, obj *model.PullResult) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3413,6 +3644,41 @@ func (ec *executionContext) _Query_gitFileLineChanges(ctx context.Context, field
 	res := resTmp.(*model.FileLineChangeResult)
 	fc.Result = res
 	return ec.marshalNfileLineChangeResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFileLineChangeResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_settingsData(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SettingsData(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SettingsDataResults)
+	fc.Result = res
+	return ec.marshalNsettingsDataResults2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐSettingsDataResults(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5140,6 +5406,76 @@ func (ec *executionContext) _gitCommits_commitFilesCount(ctx context.Context, fi
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _settingsDataResults_settingsDatabasePath(ctx context.Context, field graphql.CollectedField, obj *model.SettingsDataResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "settingsDataResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SettingsDatabasePath, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _settingsDataResults_settingsPortDetails(ctx context.Context, field graphql.CollectedField, obj *model.SettingsDataResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "settingsDataResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SettingsPortDetails, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
@@ -5229,10 +5565,24 @@ func (ec *executionContext) _FetchRepoParams(ctx context.Context, sel ast.Select
 			out.Values[i] = graphql.MarshalString("FetchRepoParams")
 		case "repoId":
 			out.Values[i] = ec._FetchRepoParams_repoId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "repoName":
 			out.Values[i] = ec._FetchRepoParams_repoName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "repoPath":
 			out.Values[i] = ec._FetchRepoParams_repoPath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "timeStamp":
+			out.Values[i] = ec._FetchRepoParams_timeStamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5460,6 +5810,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "settingsEditPort":
+			out.Values[i] = ec._Mutation_settingsEditPort(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateRepoDataFile":
+			out.Values[i] = ec._Mutation_updateRepoDataFile(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5667,6 +6027,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_gitFileLineChanges(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "settingsData":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_settingsData(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -6110,6 +6484,38 @@ func (ec *executionContext) _gitCommits(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._gitCommits_commitRelativeTime(ctx, field, obj)
 		case "commitFilesCount":
 			out.Values[i] = ec._gitCommits_commitFilesCount(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var settingsDataResultsImplementors = []string{"settingsDataResults"}
+
+func (ec *executionContext) _settingsDataResults(ctx context.Context, sel ast.SelectionSet, obj *model.SettingsDataResults) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, settingsDataResultsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("settingsDataResults")
+		case "settingsDatabasePath":
+			out.Values[i] = ec._settingsDataResults_settingsDatabasePath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "settingsPortDetails":
+			out.Values[i] = ec._settingsDataResults_settingsPortDetails(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6671,6 +7077,20 @@ func (ec *executionContext) marshalNgitCommits2ᚕᚖgithubᚗcomᚋneel1996ᚋg
 	return ret
 }
 
+func (ec *executionContext) marshalNsettingsDataResults2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐSettingsDataResults(ctx context.Context, sel ast.SelectionSet, v model.SettingsDataResults) graphql.Marshaler {
+	return ec._settingsDataResults(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNsettingsDataResults2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐSettingsDataResults(ctx context.Context, sel ast.SelectionSet, v *model.SettingsDataResults) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._settingsDataResults(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6732,42 +7152,6 @@ func (ec *executionContext) unmarshalOString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	return graphql.MarshalString(v)
-}
-
-func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {

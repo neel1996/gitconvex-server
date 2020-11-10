@@ -112,6 +112,14 @@ func (r *mutationResolver) PushToRemote(ctx context.Context, repoID string, remo
 	return git.PushToRemote(repo.GitRepo, remoteName, branch), nil
 }
 
+func (r *mutationResolver) SettingsEditPort(ctx context.Context, newPort string) (string, error) {
+	return api.UpdatePortNumber(newPort), nil
+}
+
+func (r *mutationResolver) UpdateRepoDataFile(ctx context.Context, newDbFile string) (string, error) {
+	return api.UpdateDBFilePath(newDbFile), nil
+}
+
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {
 	return api.HealthCheckApi(), nil
 }
@@ -194,6 +202,10 @@ func (r *queryResolver) GitFileLineChanges(ctx context.Context, repoID string, f
 
 	fileContent := api.CodeFileView(repo.GitRepo, repo.RepoPath, fileName)
 	return git.FileLineDiff(repo.GitRepo, fileName, fileContent.FileData), nil
+}
+
+func (r *queryResolver) SettingsData(ctx context.Context) (*model.SettingsDataResults, error) {
+	return api.GetSettingsData(), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
