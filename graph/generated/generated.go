@@ -113,6 +113,7 @@ type ComplexityRoot struct {
 		GitChanges         func(childComplexity int, repoID string) int
 		GitCommitFiles     func(childComplexity int, repoID string, commitHash string) int
 		GitCommitLogs      func(childComplexity int, repoID string, skipLimit int) int
+		GitFileLineChanges func(childComplexity int, repoID string, fileName string) int
 		GitFolderContent   func(childComplexity int, repoID string, directoryName *string) int
 		GitRepoStatus      func(childComplexity int, repoID string) int
 		GitUnPushedCommits func(childComplexity int, repoID string, remoteURL string, remoteBranch string) int
@@ -123,6 +124,11 @@ type ComplexityRoot struct {
 	CodeFileType struct {
 		FileCommit func(childComplexity int) int
 		FileData   func(childComplexity int) int
+	}
+
+	FileLineChangeResult struct {
+		DiffStat func(childComplexity int) int
+		FileDiff func(childComplexity int) int
 	}
 
 	GitChangeResults struct {
@@ -177,6 +183,7 @@ type QueryResolver interface {
 	CodeFileDetails(ctx context.Context, repoID string, fileName string) (*model.CodeFileType, error)
 	GitChanges(ctx context.Context, repoID string) (*model.GitChangeResults, error)
 	GitUnPushedCommits(ctx context.Context, repoID string, remoteURL string, remoteBranch string) ([]*string, error)
+	GitFileLineChanges(ctx context.Context, repoID string, fileName string) (*model.FileLineChangeResult, error)
 }
 
 type executableSchema struct {
@@ -573,6 +580,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GitCommitLogs(childComplexity, args["repoId"].(string), args["skipLimit"].(int)), true
 
+	case "Query.gitFileLineChanges":
+		if e.complexity.Query.GitFileLineChanges == nil {
+			break
+		}
+
+		args, err := ec.field_Query_gitFileLineChanges_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GitFileLineChanges(childComplexity, args["repoId"].(string), args["fileName"].(string)), true
+
 	case "Query.gitFolderContent":
 		if e.complexity.Query.GitFolderContent == nil {
 			break
@@ -641,6 +660,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CodeFileType.FileData(childComplexity), true
+
+	case "fileLineChangeResult.diffStat":
+		if e.complexity.FileLineChangeResult.DiffStat == nil {
+			break
+		}
+
+		return e.complexity.FileLineChangeResult.DiffStat(childComplexity), true
+
+	case "fileLineChangeResult.fileDiff":
+		if e.complexity.FileLineChangeResult.FileDiff == nil {
+			break
+		}
+
+		return e.complexity.FileLineChangeResult.FileDiff(childComplexity), true
 
 	case "gitChangeResults.gitChangedFiles":
 		if e.complexity.GitChangeResults.GitChangedFiles == nil {
@@ -866,6 +899,11 @@ type gitChangeResults{
     gitStagedFiles: [String]!
 }
 
+type fileLineChangeResult{
+    diffStat: String!
+    fileDiff: [String]!
+}
+
 type Query {
     healthCheck: HealthCheckParams!
     fetchRepo: FetchRepoParams!
@@ -877,6 +915,7 @@ type Query {
     codeFileDetails(repoId: String!, fileName: String!): codeFileType!
     gitChanges(repoId: String!): gitChangeResults!
     gitUnPushedCommits(repoId: String!, remoteURL: String!, remoteBranch: String!): [String]!
+    gitFileLineChanges(repoId: String!, fileName: String!): fileLineChangeResult!
 }
 
 type BranchDeleteStatus{
@@ -1408,6 +1447,30 @@ func (ec *executionContext) field_Query_gitCommitLogs_args(ctx context.Context, 
 		}
 	}
 	args["skipLimit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_gitFileLineChanges_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["fileName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fileName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["fileName"] = arg1
 	return args, nil
 }
 
@@ -3310,6 +3373,48 @@ func (ec *executionContext) _Query_gitUnPushedCommits(ctx context.Context, field
 	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_gitFileLineChanges(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_gitFileLineChanges_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GitFileLineChanges(rctx, args["repoId"].(string), args["fileName"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.FileLineChangeResult)
+	fc.Result = res
+	return ec.marshalNfileLineChangeResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFileLineChangeResult(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4534,6 +4639,76 @@ func (ec *executionContext) _codeFileType_fileData(ctx context.Context, field gr
 	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _fileLineChangeResult_diffStat(ctx context.Context, field graphql.CollectedField, obj *model.FileLineChangeResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "fileLineChangeResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DiffStat, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _fileLineChangeResult_fileDiff(ctx context.Context, field graphql.CollectedField, obj *model.FileLineChangeResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "fileLineChangeResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FileDiff, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _gitChangeResults_gitUntrackedFiles(ctx context.Context, field graphql.CollectedField, obj *model.GitChangeResults) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5483,6 +5658,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "gitFileLineChanges":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_gitFileLineChanges(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -5757,6 +5946,38 @@ func (ec *executionContext) _codeFileType(ctx context.Context, sel ast.Selection
 			}
 		case "fileData":
 			out.Values[i] = ec._codeFileType_fileData(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var fileLineChangeResultImplementors = []string{"fileLineChangeResult"}
+
+func (ec *executionContext) _fileLineChangeResult(ctx context.Context, sel ast.SelectionSet, obj *model.FileLineChangeResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fileLineChangeResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("fileLineChangeResult")
+		case "diffStat":
+			out.Values[i] = ec._fileLineChangeResult_diffStat(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "fileDiff":
+			out.Values[i] = ec._fileLineChangeResult_fileDiff(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -6332,6 +6553,20 @@ func (ec *executionContext) marshalNcodeFileType2ᚖgithubᚗcomᚋneel1996ᚋgi
 		return graphql.Null
 	}
 	return ec._codeFileType(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNfileLineChangeResult2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFileLineChangeResult(ctx context.Context, sel ast.SelectionSet, v model.FileLineChangeResult) graphql.Marshaler {
+	return ec._fileLineChangeResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNfileLineChangeResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐFileLineChangeResult(ctx context.Context, sel ast.SelectionSet, v *model.FileLineChangeResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._fileLineChangeResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNgitChangeResults2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitChangeResults(ctx context.Context, sel ast.SelectionSet, v model.GitChangeResults) graphql.Marshaler {

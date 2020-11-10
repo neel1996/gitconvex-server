@@ -109,7 +109,6 @@ func (r *mutationResolver) PushToRemote(ctx context.Context, repoID string, remo
 	repo := <-repoChan
 
 	remoteName := git.GetRemoteName(repo.GitRepo, remoteHost)
-	//remoteBranch := remoteName + "/" + branch
 	return git.PushToRemote(repo.GitRepo, remoteName, branch), nil
 }
 
@@ -186,6 +185,15 @@ func (r *queryResolver) GitUnPushedCommits(ctx context.Context, repoID string, r
 	remoteRef := remoteName + "/" + remoteBranch
 
 	return git.UnPushedCommits(repo.GitRepo, remoteRef), nil
+}
+
+func (r *queryResolver) GitFileLineChanges(ctx context.Context, repoID string, fileName string) (*model.FileLineChangeResult, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+
+	fileContent := api.CodeFileView(repo.GitRepo, repo.RepoPath, fileName)
+	return git.FileLineDiff(repo.GitRepo, fileName, fileContent.FileData), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

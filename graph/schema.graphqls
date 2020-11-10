@@ -67,6 +67,11 @@ type gitChangeResults{
     gitStagedFiles: [String]!
 }
 
+type fileLineChangeResult{
+    diffStat: String!
+    fileDiff: [String]!
+}
+
 type Query {
     healthCheck: HealthCheckParams!
     fetchRepo: FetchRepoParams!
@@ -78,6 +83,7 @@ type Query {
     codeFileDetails(repoId: String!, fileName: String!): codeFileType!
     gitChanges(repoId: String!): gitChangeResults!
     gitUnPushedCommits(repoId: String!, remoteURL: String!, remoteBranch: String!): [String]!
+    gitFileLineChanges(repoId: String!, fileName: String!): fileLineChangeResult!
 }
 
 type BranchDeleteStatus{
