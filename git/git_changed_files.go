@@ -3,7 +3,6 @@ package git
 import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"strings"
@@ -13,23 +12,14 @@ import (
 // The function organizes the tracked, untracked and staged files in separate slices and returns the struct *model.GitChangeResults
 
 func ChangedFiles(repo *git.Repository) *model.GitChangeResults {
-	var hash plumbing.Hash
 	var stagedFiles []*string
 	var unTrackedFiles []*string
 	var modifiedFiles []*string
 	var newStagedItems []string
 
 	logger := global.Logger{}
-	head, headErr := repo.Head()
 
-	if headErr != nil {
-		logger.Log(headErr.Error(), global.StatusError)
-	} else {
-		hash = head.Hash()
-	}
-
-	logger.Log(fmt.Sprintf("Fetching latest commit object for -> %s", hash), global.StatusInfo)
-
+	logger.Log("Fetching the current status of the repo", global.StatusInfo)
 	w, _ := repo.Worktree()
 	stat, _ := w.Status()
 
