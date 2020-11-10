@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+// FileLineDiff function compares the current version of the target file with the recently comitted version of the file
+// and returns the line wise difference. Similar to git diff <filename>
 func FileLineDiff(repo *git.Repository, fileName string, data []*string) *model.FileLineChangeResult {
 	var (
 		currentFileLines []string
@@ -102,5 +104,4 @@ func FileLineDiff(repo *git.Repository, fileName string, data []*string) *model.
 		DiffStat: diffStat,
 		FileDiff: fileDiff,
 	}
-
 }

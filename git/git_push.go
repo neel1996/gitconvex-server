@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/neel1996/gitconvex-server/global"
@@ -11,13 +12,20 @@ import (
 )
 
 func PushToRemote(repo *git.Repository, remoteName string, remoteBranch string) string {
-	targetRefPsec := "refs/remotes/" + remoteName + "/" + remoteBranch + ":refs/heads/" + remoteBranch
+	targetRefPsec := "refs/heads/" + remoteBranch + ":refs/heads/" + remoteBranch
 	b := new(bytes.Buffer)
 	sshAuth, _ := ssh.NewSSHAgentAuth("git")
 	logger.Log(fmt.Sprintf("Pushing changes to remote -> %s : %s", remoteName, targetRefPsec), global.StatusInfo)
 
-	err := repo.Push(&git.PushOptions{
+	remote, remoteErr := repo.Remote(remoteName)
+	if remoteErr != nil {
+		logger.Log(remoteErr.Error(), global.StatusError)
+		return "PUSH_FAILED"
+	}
+
+	err := remote.Push(&git.PushOptions{
 		RemoteName: remoteName,
+		RefSpecs:   []config.RefSpec{config.RefSpec(targetRefPsec)},
 		Auth:       sshAuth,
 		Progress: sideband.Progress(func(f io.Writer) io.Writer {
 			return f
