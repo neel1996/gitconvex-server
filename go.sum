@@ -68,6 +68,8 @@ github.com/libgit2/git2go v0.28.4 h1:xfXnDnt31R2p7Yea7023C//NglM/1v+w87peBBwLZ3U
 github.com/libgit2/git2go v0.28.4/go.mod h1:4bKN42efkbNYMZlvDfxGDxzl066GhpvIircZDsm8Y+Y=
 github.com/libgit2/git2go/v31 v31.1.1 h1:E88vnQQZzkVNaml/9n7Ejtc2a/3aq9QLUn7XtWM45cA=
 github.com/libgit2/git2go/v31 v31.1.1/go.mod h1:mnc0hPGPs0nDi9INrurTpioeRzje9DvSXqON/+JEhwY=
+github.com/libgit2/git2go/v31 v31.3.0 h1:d8ciyYVKir+gKwra3KuNxTyVvbgGKn4admdt1PNNAOg=
+github.com/libgit2/git2go/v31 v31.3.0/go.mod h1:mnc0hPGPs0nDi9INrurTpioeRzje9DvSXqON/+JEhwY=
 github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381/go.mod h1:7rIyQOR62GCctdiQpZ/zOJlFyk6y+94wXzv6RNZgaR4=
 github.com/matryer/moq v0.0.0-20200106131100-75d0ddfc0007 h1:reVOUXwnhsYv/8UqjvhrMOu5CNT9UapHFLbQ2JcXsmg=
 github.com/matryer/moq v0.0.0-20200106131100-75d0ddfc0007/go.mod h1:9ELz6aaclSIGnZBoaSLZ3NAl1VTufbOrXBPvtcy6WiQ=
