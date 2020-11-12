@@ -30,8 +30,9 @@ func GetUntrackedFiles(repoPath string, untrackedChan chan []*string) {
 		logger.Log(fmt.Sprintf("Untracked files --> %v", splitLines), global.StatusInfo)
 		var fileList []*string
 		for _, file := range splitLines {
+			untrackedFile := file
 			if file != "" {
-				fileList = append(fileList, &file)
+				fileList = append(fileList, &untrackedFile)
 			}
 		}
 		untrackedChan <- fileList
