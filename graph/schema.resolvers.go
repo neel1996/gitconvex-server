@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/generated"
@@ -118,6 +119,10 @@ func (r *mutationResolver) SettingsEditPort(ctx context.Context, newPort string)
 
 func (r *mutationResolver) UpdateRepoDataFile(ctx context.Context, newDbFile string) (string, error) {
 	return api.UpdateDBFilePath(newDbFile), nil
+}
+
+func (r *mutationResolver) DeleteRepo(ctx context.Context, repoID string) (*model.DeleteStatus, error) {
+	return api.DeleteRepo(repoID), nil
 }
 
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {

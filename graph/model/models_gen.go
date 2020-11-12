@@ -56,6 +56,11 @@ type CodeFileType struct {
 	FileData   []*string `json:"fileData"`
 }
 
+type DeleteStatus struct {
+	Status string `json:"status"`
+	RepoID string `json:"repoId"`
+}
+
 type FileLineChangeResult struct {
 	DiffStat string    `json:"diffStat"`
 	FileDiff []*string `json:"fileDiff"`

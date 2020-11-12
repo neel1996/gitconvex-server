@@ -107,6 +107,11 @@ type PullResult{
     pulledItems: [String]!
 }
 
+type deleteStatus{
+    status: String!
+    repoId: String!
+}
+
 type Mutation {
     addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!, authOption: String!, userName: String, password: String): AddRepoParams!
     addBranch(repoId: String!, branchName: String!): String!
@@ -123,4 +128,5 @@ type Mutation {
     pushToRemote(repoId: String!, remoteHost: String!, branch: String!): String!
     settingsEditPort(newPort: String!): String!
     updateRepoDataFile(newDbFile: String!): String!
+    deleteRepo(repoId: String!): deleteStatus!
 }
