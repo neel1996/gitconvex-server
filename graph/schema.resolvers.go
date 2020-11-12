@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/generated"
@@ -211,6 +210,14 @@ func (r *queryResolver) GitFileLineChanges(ctx context.Context, repoID string, f
 
 func (r *queryResolver) SettingsData(ctx context.Context) (*model.SettingsDataResults, error) {
 	return api.GetSettingsData(), nil
+}
+
+func (r *queryResolver) CommitCompare(ctx context.Context, repoID string, baseCommit string, compareCommit string) ([]*model.GitCommitFileResult, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+
+	return git.CompareCommit(repo.GitRepo, baseCommit, compareCommit), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

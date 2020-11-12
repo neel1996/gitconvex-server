@@ -91,6 +91,7 @@ type Query {
     gitUnPushedCommits(repoId: String!, remoteURL: String!, remoteBranch: String!): [String]!
     gitFileLineChanges(repoId: String!, fileName: String!): fileLineChangeResult!
     settingsData: settingsDataResults!
+    commitCompare(repoId: String!,baseCommit: String!, compareCommit: String!): [gitCommitFileResult]!
 }
 
 type BranchDeleteStatus{

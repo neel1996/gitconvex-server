@@ -113,6 +113,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		CodeFileDetails    func(childComplexity int, repoID string, fileName string) int
+		CommitCompare      func(childComplexity int, repoID string, baseCommit string, compareCommit string) int
 		FetchRepo          func(childComplexity int) int
 		GitChanges         func(childComplexity int, repoID string) int
 		GitCommitFiles     func(childComplexity int, repoID string, commitHash string) int
@@ -203,6 +204,7 @@ type QueryResolver interface {
 	GitUnPushedCommits(ctx context.Context, repoID string, remoteURL string, remoteBranch string) ([]*string, error)
 	GitFileLineChanges(ctx context.Context, repoID string, fileName string) (*model.FileLineChangeResult, error)
 	SettingsData(ctx context.Context) (*model.SettingsDataResults, error)
+	CommitCompare(ctx context.Context, repoID string, baseCommit string, compareCommit string) ([]*model.GitCommitFileResult, error)
 }
 
 type executableSchema struct {
@@ -598,6 +600,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.CodeFileDetails(childComplexity, args["repoId"].(string), args["fileName"].(string)), true
+
+	case "Query.commitCompare":
+		if e.complexity.Query.CommitCompare == nil {
+			break
+		}
+
+		args, err := ec.field_Query_commitCompare_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CommitCompare(childComplexity, args["repoId"].(string), args["baseCommit"].(string), args["compareCommit"].(string)), true
 
 	case "Query.fetchRepo":
 		if e.complexity.Query.FetchRepo == nil {
@@ -1020,6 +1034,7 @@ type Query {
     gitUnPushedCommits(repoId: String!, remoteURL: String!, remoteBranch: String!): [String]!
     gitFileLineChanges(repoId: String!, fileName: String!): fileLineChangeResult!
     settingsData: settingsDataResults!
+    commitCompare(repoId: String!,baseCommit: String!, compareCommit: String!): [gitCommitFileResult]!
 }
 
 type BranchDeleteStatus{
@@ -1541,6 +1556,39 @@ func (ec *executionContext) field_Query_codeFileDetails_args(ctx context.Context
 		}
 	}
 	args["fileName"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_commitCompare_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["baseCommit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseCommit"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["baseCommit"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["compareCommit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("compareCommit"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["compareCommit"] = arg2
 	return args, nil
 }
 
@@ -3775,6 +3823,48 @@ func (ec *executionContext) _Query_settingsData(ctx context.Context, field graph
 	res := resTmp.(*model.SettingsDataResults)
 	fc.Result = res
 	return ec.marshalNsettingsDataResults2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐSettingsDataResults(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_commitCompare(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_commitCompare_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CommitCompare(rctx, args["repoId"].(string), args["baseCommit"].(string), args["compareCommit"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.GitCommitFileResult)
+	fc.Result = res
+	return ec.marshalNgitCommitFileResult2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitCommitFileResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6212,6 +6302,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_settingsData(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "commitCompare":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_commitCompare(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
