@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-type repoData struct {
+type RepoData struct {
 	Id        string `json:"id"`
 	RepoName  string `json:"repoName"`
 	RepoPath  string `json:"repoPath"`
@@ -53,17 +53,16 @@ func repoDataCreator(dbFile string) error {
 		localLogger(fmt.Sprintf("Error occurred creating database directory \n%v", dirErr), global.StatusError)
 		return types.Error{Msg: dirErr.Error()}
 	}
-
 	localLogger("New repo datastore created successfully", global.StatusInfo)
 	return nil
 }
 
-func dataFileWriteHandler(dbFile string, repoDataArray []repoData) error {
+func dataFileWriteHandler(dbFile string, repoDataArray []RepoData) error {
 	repoDataJSON, _ := json.Marshal(repoDataArray)
 	osRead, _ := os.Open(dbFile)
 	readFileStat, _ := ioutil.ReadAll(osRead)
 
-	var existingData []repoData
+	var existingData []RepoData
 
 	if readFileStat != nil && json.Unmarshal(readFileStat, &existingData) == nil {
 		appendData := append(existingData, repoDataArray[0])
@@ -77,9 +76,9 @@ func dataFileWriteHandler(dbFile string, repoDataArray []repoData) error {
 // repoDataFileWriter writes the new repo details to the repo_datastore.json file
 
 func repoDataFileWriter(repoId string, repoName string, repoPath string, repoAddStatus chan string) {
-	rArray := make([]repoData, 1)
+	rArray := make([]RepoData, 1)
 
-	rArray[0] = repoData{
+	rArray[0] = RepoData{
 		Id:        repoId,
 		RepoName:  repoName,
 		RepoPath:  repoPath,
