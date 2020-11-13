@@ -51,6 +51,11 @@ type PullResult struct {
 	PulledItems []*string `json:"pulledItems"`
 }
 
+type BranchCompareResults struct {
+	Date    string        `json:"date"`
+	Commits []*GitCommits `json:"commits"`
+}
+
 type CodeFileType struct {
 	FileCommit string    `json:"fileCommit"`
 	FileData   []*string `json:"fileData"`

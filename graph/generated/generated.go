@@ -112,6 +112,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		BranchCompare      func(childComplexity int, repoID string, baseBranch string, compareBranch string) int
 		CodeFileDetails    func(childComplexity int, repoID string, fileName string) int
 		CommitCompare      func(childComplexity int, repoID string, baseCommit string, compareCommit string) int
 		FetchRepo          func(childComplexity int) int
@@ -125,6 +126,11 @@ type ComplexityRoot struct {
 		HealthCheck        func(childComplexity int) int
 		SearchCommitLogs   func(childComplexity int, repoID string, searchType string, searchKey string) int
 		SettingsData       func(childComplexity int) int
+	}
+
+	BranchCompareResults struct {
+		Commits func(childComplexity int) int
+		Date    func(childComplexity int) int
 	}
 
 	CodeFileType struct {
@@ -205,6 +211,7 @@ type QueryResolver interface {
 	GitFileLineChanges(ctx context.Context, repoID string, fileName string) (*model.FileLineChangeResult, error)
 	SettingsData(ctx context.Context) (*model.SettingsDataResults, error)
 	CommitCompare(ctx context.Context, repoID string, baseCommit string, compareCommit string) ([]*model.GitCommitFileResult, error)
+	BranchCompare(ctx context.Context, repoID string, baseBranch string, compareBranch string) ([]*model.BranchCompareResults, error)
 }
 
 type executableSchema struct {
@@ -589,6 +596,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PullResult.Status(childComplexity), true
 
+	case "Query.branchCompare":
+		if e.complexity.Query.BranchCompare == nil {
+			break
+		}
+
+		args, err := ec.field_Query_branchCompare_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.BranchCompare(childComplexity, args["repoId"].(string), args["baseBranch"].(string), args["compareBranch"].(string)), true
+
 	case "Query.codeFileDetails":
 		if e.complexity.Query.CodeFileDetails == nil {
 			break
@@ -729,6 +748,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.SettingsData(childComplexity), true
+
+	case "branchCompareResults.commits":
+		if e.complexity.BranchCompareResults.Commits == nil {
+			break
+		}
+
+		return e.complexity.BranchCompareResults.Commits(childComplexity), true
+
+	case "branchCompareResults.date":
+		if e.complexity.BranchCompareResults.Date == nil {
+			break
+		}
+
+		return e.complexity.BranchCompareResults.Date(childComplexity), true
 
 	case "codeFileType.fileCommit":
 		if e.complexity.CodeFileType.FileCommit == nil {
@@ -1021,6 +1054,11 @@ type settingsDataResults{
     settingsPortDetails: String!
 }
 
+type branchCompareResults{
+    date: String!
+    commits: [gitCommits]!
+}
+
 type Query {
     healthCheck: HealthCheckParams!
     fetchRepo: FetchRepoParams!
@@ -1035,6 +1073,7 @@ type Query {
     gitFileLineChanges(repoId: String!, fileName: String!): fileLineChangeResult!
     settingsData: settingsDataResults!
     commitCompare(repoId: String!,baseCommit: String!, compareCommit: String!): [gitCommitFileResult]!
+    branchCompare(repoId: String!, baseBranch: String!, compareBranch: String!): [branchCompareResults]!
 }
 
 type BranchDeleteStatus{
@@ -1532,6 +1571,39 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_branchCompare_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["baseBranch"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseBranch"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["baseBranch"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["compareBranch"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("compareBranch"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["compareBranch"] = arg2
 	return args, nil
 }
 
@@ -3867,6 +3939,48 @@ func (ec *executionContext) _Query_commitCompare(ctx context.Context, field grap
 	return ec.marshalNgitCommitFileResult2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitCommitFileResult(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_branchCompare(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_branchCompare_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().BranchCompare(rctx, args["repoId"].(string), args["baseBranch"].(string), args["compareBranch"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.BranchCompareResults)
+	fc.Result = res
+	return ec.marshalNbranchCompareResults2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐBranchCompareResults(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5019,6 +5133,76 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 	res := resTmp.(*introspection.Type)
 	fc.Result = res
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _branchCompareResults_date(ctx context.Context, field graphql.CollectedField, obj *model.BranchCompareResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "branchCompareResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Date, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _branchCompareResults_commits(ctx context.Context, field graphql.CollectedField, obj *model.BranchCompareResults) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "branchCompareResults",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Commits, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.GitCommits)
+	fc.Result = res
+	return ec.marshalNgitCommits2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitCommits(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _codeFileType_fileCommit(ctx context.Context, field graphql.CollectedField, obj *model.CodeFileType) (ret graphql.Marshaler) {
@@ -6321,6 +6505,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "branchCompare":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_branchCompare(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -6566,6 +6764,38 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec.___Type_inputFields(ctx, field, obj)
 		case "ofType":
 			out.Values[i] = ec.___Type_ofType(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var branchCompareResultsImplementors = []string{"branchCompareResults"}
+
+func (ec *executionContext) _branchCompareResults(ctx context.Context, sel ast.SelectionSet, obj *model.BranchCompareResults) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, branchCompareResultsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("branchCompareResults")
+		case "date":
+			out.Values[i] = ec._branchCompareResults_date(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "commits":
+			out.Values[i] = ec._branchCompareResults_commits(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7254,6 +7484,43 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) marshalNbranchCompareResults2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐBranchCompareResults(ctx context.Context, sel ast.SelectionSet, v []*model.BranchCompareResults) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalObranchCompareResults2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐBranchCompareResults(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) marshalNcodeFileType2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐCodeFileType(ctx context.Context, sel ast.SelectionSet, v model.CodeFileType) graphql.Marshaler {
 	return ec._codeFileType(ctx, sel, &v)
 }
@@ -7698,6 +7965,13 @@ func (ec *executionContext) marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 		return graphql.Null
 	}
 	return ec.___Type(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalObranchCompareResults2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐBranchCompareResults(ctx context.Context, sel ast.SelectionSet, v *model.BranchCompareResults) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._branchCompareResults(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOgitCommitFileResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitCommitFileResult(ctx context.Context, sel ast.SelectionSet, v *model.GitCommitFileResult) graphql.Marshaler {

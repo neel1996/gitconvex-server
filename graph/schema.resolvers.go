@@ -220,6 +220,14 @@ func (r *queryResolver) CommitCompare(ctx context.Context, repoID string, baseCo
 	return git.CompareCommit(repo.GitRepo, baseCommit, compareCommit), nil
 }
 
+func (r *queryResolver) BranchCompare(ctx context.Context, repoID string, baseBranch string, compareBranch string) ([]*model.BranchCompareResults, error) {
+	repoChan := make(chan git.RepoDetails)
+	go git.Repo(repoID, repoChan)
+	repo := <-repoChan
+
+	return git.CompareBranch(repo.GitRepo, baseBranch, compareBranch), nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
