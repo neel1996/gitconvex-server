@@ -12,3 +12,6 @@ build:
 	npm run build:tailwind
 	npm run build
 	mkdir -p ./dist
+	go build -o ./dist
+test:
+	go test -v ./...
