@@ -7,6 +7,7 @@ import (
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 	"testing"
 )
@@ -20,6 +21,11 @@ func TestChangedFiles(t *testing.T) {
 	if currentEnv == "ci" {
 		repoPath = "/home/runner/work/gitconvex-go-server/starfleet"
 		r, _ = git.PlainOpen(repoPath)
+	}
+
+	if r == nil {
+		cwd, _ := os.Getwd()
+		r, _ = git.PlainOpen(path.Join(cwd, ".."))
 	}
 
 	untrackedResult := "untracked.txt"
