@@ -32,10 +32,12 @@ func TestChangedFiles(t *testing.T) {
 		GitStagedFiles:    []*string{&stagedResult},
 	}
 
-	_ = ioutil.WriteFile(untrackedResult, []byte{byte(63)}, 0755)
-	_ = ioutil.WriteFile(changedResult, []byte{byte(65)}, 0755)
-	git2.StageItem(r, changedResult)
-	_ = ioutil.WriteFile(changedResult, []byte{byte(70)}, 0755)
+	uErr := ioutil.WriteFile(repoPath+"/"+untrackedResult, []byte{byte(63)}, 0755)
+	cErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(65)}, 0755)
+	git2.StageItem(r, repoPath+"/"+changedResult)
+	sErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(70)}, 0755)
+
+	fmt.Println(uErr, cErr, sErr)
 
 	type args struct {
 		repo *git.Repository
