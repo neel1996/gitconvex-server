@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+// CompareBranch compares two branches and returns the commits which are different from each other
+// The function uses the git client to fetch the results as go-git lacks this feature
 func CompareBranch(repo *git.Repository, baseBranch string, compareBranch string) []*model.BranchCompareResults {
 	var diffCommits []*model.BranchCompareResults
 	var commits []model.GitCommits
