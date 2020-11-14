@@ -7,10 +7,8 @@ import (
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"io/ioutil"
 	"os"
-	"path"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestChangedFiles(t *testing.T) {
@@ -20,29 +18,20 @@ func TestChangedFiles(t *testing.T) {
 	fmt.Println("Environment : " + currentEnv)
 
 	if currentEnv == "ci" {
-		repoPath = "/home/runner/work/gitconvex-go-server/starfleet"
+		repoPath = "/home/runner/work/gitconvex-server/starfleet"
 		r, _ = git.PlainOpen(repoPath)
-	}
-
-	if r == nil {
-		cwd, _ := os.Getwd()
-		repoPath = ".."
-		r, _ = git.PlainOpen(path.Join(cwd, ".."))
 	}
 
 	untrackedResult := "untracked.txt"
 	changedResult := "README.md"
 	stagedResult := "README.md"
 
-	time.Sleep(time.Second * 2)
 	uErr := ioutil.WriteFile(repoPath+"/"+untrackedResult, []byte{byte(63)}, 0755)
 	cErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(65)}, 0755)
 	sErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(70)}, 0755)
-	time.Sleep(time.Second * 2)
+	fmt.Println(uErr, cErr, sErr)
 
 	git2.StageItem(r, repoPath+"/"+changedResult)
-
-	fmt.Println(uErr, cErr, sErr)
 
 	expectedResults := &model.GitChangeResults{
 		GitUntrackedFiles: []*string{&untrackedResult},

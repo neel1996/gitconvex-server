@@ -17,7 +17,7 @@ func TestTotalCommitLogs(t *testing.T) {
 	fmt.Println("Environment : " + currentEnv)
 
 	if currentEnv == "ci" {
-		repoPath = "/home/runner/work/gitconvex-go-server/starfleet"
+		repoPath = "/home/runner/work/gitconvex-server/starfleet"
 		r, _ = git.PlainOpen(repoPath)
 	} else {
 		cwd, _ := os.Getwd()
