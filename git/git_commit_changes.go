@@ -19,10 +19,13 @@ func CommitChanges(repo *git.Repository, commitMessage string) string {
 	var author string
 
 	if gCfgErr == nil && lCfgErr == nil {
-		if globalConfig.Author.Name != "" {
-			author = globalConfig.Author.Name
-		} else if localConfig.Author.Name != "" {
-			author = localConfig.Author.Name
+		fmt.Println(localConfig.User)
+		fmt.Println(globalConfig.User)
+
+		if globalConfig.User.Name != "" {
+			author = globalConfig.User.Name
+		} else if localConfig.User.Name != "" {
+			author = localConfig.User.Name
 		}
 	}
 
