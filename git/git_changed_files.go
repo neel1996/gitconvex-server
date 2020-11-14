@@ -83,7 +83,12 @@ func GetModifiedFiles(repoPath string, modifiedFileChan chan []*string) {
 			}
 			fileName := strings.Fields(change)
 			logger.Log(fmt.Sprintf("Changed file --> %v", fileName), global.StatusInfo)
-			changeStr := "M," + fileName[5]
+			var changeStr string
+			if fileName[4] == "D" {
+				changeStr = "D," + fileName[5]
+			} else {
+				changeStr = "M," + fileName[5]
+			}
 			fileList = append(fileList, &changeStr)
 		}
 		modifiedFileChan <- fileList
