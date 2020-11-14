@@ -10,6 +10,7 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestChangedFiles(t *testing.T) {
@@ -25,6 +26,7 @@ func TestChangedFiles(t *testing.T) {
 
 	if r == nil {
 		cwd, _ := os.Getwd()
+		repoPath = ".."
 		r, _ = git.PlainOpen(path.Join(cwd, ".."))
 	}
 
@@ -32,18 +34,21 @@ func TestChangedFiles(t *testing.T) {
 	changedResult := "README.md"
 	stagedResult := "README.md"
 
+	time.Sleep(time.Second * 2000)
+	uErr := ioutil.WriteFile(repoPath+"/"+untrackedResult, []byte{byte(63)}, 0755)
+	cErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(65)}, 0755)
+	sErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(70)}, 0755)
+	time.Sleep(time.Second * 2000)
+
+	git2.StageItem(r, repoPath+"/"+changedResult)
+
+	fmt.Println(uErr, cErr, sErr)
+
 	expectedResults := &model.GitChangeResults{
 		GitUntrackedFiles: []*string{&untrackedResult},
 		GitChangedFiles:   []*string{&changedResult},
 		GitStagedFiles:    []*string{&stagedResult},
 	}
-
-	uErr := ioutil.WriteFile(repoPath+"/"+untrackedResult, []byte{byte(63)}, 0755)
-	cErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(65)}, 0755)
-	git2.StageItem(r, repoPath+"/"+changedResult)
-	sErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(70)}, 0755)
-
-	fmt.Println(uErr, cErr, sErr)
 
 	type args struct {
 		repo *git.Repository
