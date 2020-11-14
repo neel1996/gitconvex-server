@@ -7,7 +7,6 @@ import (
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"testing"
 )
 
@@ -51,7 +50,7 @@ func TestChangedFiles(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := git2.ChangedFiles(tt.args.repo); !reflect.DeepEqual(got, tt.want) {
+			if got := git2.ChangedFiles(tt.args.repo); *got.GitStagedFiles[0] != *tt.want.GitStagedFiles[0] || *got.GitChangedFiles[0] != *tt.want.GitChangedFiles[0] || *got.GitUntrackedFiles[0] != *tt.want.GitUntrackedFiles[0] {
 				t.Errorf("ChangedFiles() = %v, want %v", got, tt.want)
 			}
 		})

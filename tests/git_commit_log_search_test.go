@@ -47,7 +47,7 @@ func TestSearchCommitLogs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := git2.SearchCommitLogs(tt.args.repo, tt.args.searchType, tt.args.searchKey); got[0].Hash != tt.want[0].Hash {
+			if got := git2.SearchCommitLogs(tt.args.repo, tt.args.searchType, tt.args.searchKey); *got[0].Hash != *tt.want[0].Hash {
 				t.Errorf("SearchCommitLogs() = %v, want %v", got, tt.want)
 			}
 		})
