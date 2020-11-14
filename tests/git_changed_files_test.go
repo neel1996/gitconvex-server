@@ -7,6 +7,7 @@ import (
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -55,6 +56,7 @@ func TestChangedFiles(t *testing.T) {
 			stagedFile := *got.GitStagedFiles[0]
 			untrackedFile := *got.GitUntrackedFiles[0]
 			changedFile := *got.GitChangedFiles[0]
+			changedFile = strings.Split(changedFile, ",")[1]
 
 			fmt.Println(stagedFile)
 			fmt.Println(untrackedFile)
