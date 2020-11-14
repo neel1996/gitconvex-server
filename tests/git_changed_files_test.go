@@ -34,11 +34,11 @@ func TestChangedFiles(t *testing.T) {
 	changedResult := "README.md"
 	stagedResult := "README.md"
 
-	time.Sleep(time.Second * 2000)
+	time.Sleep(time.Second * 2)
 	uErr := ioutil.WriteFile(repoPath+"/"+untrackedResult, []byte{byte(63)}, 0755)
 	cErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(65)}, 0755)
 	sErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(70)}, 0755)
-	time.Sleep(time.Second * 2000)
+	time.Sleep(time.Second * 2)
 
 	git2.StageItem(r, repoPath+"/"+changedResult)
 
