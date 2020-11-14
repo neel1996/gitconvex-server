@@ -6,11 +6,10 @@ import (
 	git2 "github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"os"
-	"reflect"
 	"testing"
 )
 
-func TestCommitFileList(t *testing.T) {
+func TestSearchCommitLogs(t *testing.T) {
 	var repoPath string
 	var r *git.Repository
 	currentEnv := os.Getenv("GOTESTENV")
@@ -23,25 +22,33 @@ func TestCommitFileList(t *testing.T) {
 
 	type args struct {
 		repo       *git.Repository
-		commitHash string
+		searchType string
+		searchKey  string
 	}
+
+	hash := "46aa56e78f2a26d23f604f8e9bbdc240a0a5dbbe"
+	author := "Neel"
+
+	expectedResult := &model.GitCommits{
+		Hash:   &hash,
+		Author: &author,
+	}
+
 	tests := []struct {
 		name string
 		args args
-		want []*model.GitCommitFileResult
+		want []*model.GitCommits
 	}{
-		{name: "Git commit file list test case", args: struct {
+		{name: "Git commit log search test case", args: struct {
 			repo       *git.Repository
-			commitHash string
-		}{repo: r, commitHash: "46aa56e78f2a26d23f604f8e9bbdc240a0a5dbbe"}, want: []*model.GitCommitFileResult{&model.GitCommitFileResult{
-			Type:     "A",
-			FileName: "codeql-analysis.yml",
-		}}},
+			searchType string
+			searchKey  string
+		}{repo: r, searchType: "hash", searchKey: "46aa56e"}, want: []*model.GitCommits{expectedResult}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := git2.CommitFileList(tt.args.repo, tt.args.commitHash); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CommitFileList() = %v, want %v", got, tt.want)
+			if got := git2.SearchCommitLogs(tt.args.repo, tt.args.searchType, tt.args.searchKey); got[0].Hash != tt.want[0].Hash {
+				t.Errorf("SearchCommitLogs() = %v, want %v", got, tt.want)
 			}
 		})
 	}
