@@ -1,13 +1,13 @@
-name: Gitconvex Server Pipeline
+name: Gitconvex Collaboration Server Pipeline
 
 on:
-  push:
+  pull_request:
     branches: [ main ]
 
 jobs:
 
   build:
-    name: Gitconvex Server Main Pipeline
+    name: Gitconvex Server Collaboration Pipeline
     runs-on: ubuntu-latest
     steps:
 
@@ -29,13 +29,3 @@ jobs:
 
       - name: Build
         run: go build -v .
-
-      - name: Droplet commands
-          uses: appleboy/ssh-action@master
-          with:
-            host: ${{ secrets.DROPLET_HOST }}
-            username: ${{ secrets.DROPLET_USERNAME }}
-            key: ${{ secrets.DROPLET_PRIVATE_KEY }}
-            port: ${{ secrets.DROPLET_PORT }}
-            script: |
-              /opt/workroom/gitconvex-deploy.sh gitconvex-server
