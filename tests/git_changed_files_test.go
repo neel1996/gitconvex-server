@@ -50,8 +50,20 @@ func TestChangedFiles(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := git2.ChangedFiles(tt.args.repo); *got.GitStagedFiles[0] != *tt.want.GitStagedFiles[0] || *got.GitChangedFiles[0] != *tt.want.GitChangedFiles[0] || *got.GitUntrackedFiles[0] != *tt.want.GitUntrackedFiles[0] {
-				t.Errorf("ChangedFiles() = %v, want %v", got, tt.want)
+			got := git2.ChangedFiles(tt.args.repo)
+
+			stagedFile := *got.GitStagedFiles[0]
+			untrackedFile := *got.GitUntrackedFiles[0]
+			changedFile := *got.GitChangedFiles[0]
+
+			fmt.Println(stagedFile)
+			fmt.Println(untrackedFile)
+			fmt.Println(changedFile)
+
+			if stagedFile == *tt.want.GitStagedFiles[0] && untrackedFile == *tt.want.GitUntrackedFiles[0] && changedFile == *tt.want.GitChangedFiles[0] {
+				fmt.Println("Test Passed")
+			} else {
+				t.Errorf("ChangedFiles() = %v, want %v", *got.GitStagedFiles[0], *tt.want.GitStagedFiles[0])
 			}
 		})
 	}
