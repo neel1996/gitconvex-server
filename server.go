@@ -63,6 +63,7 @@ func main() {
 
 	// Static file supplier for hosting the react static assets and scripts
 	router.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("./build/static/"))))
+	router.PathPrefix("/gitconvex.png").Handler(http.StripPrefix("/gitconvex.png", http.FileServer(http.Dir("./build/gitconvex.png"))))
 
 	// A default fallback route for handling all routes with '/' prefix.
 	// For making it compatible with react router
