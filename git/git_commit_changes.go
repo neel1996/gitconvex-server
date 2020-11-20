@@ -46,6 +46,8 @@ func CommitChanges(repo *git.Repository, commitMessage string) string {
 		if strings.Contains(commitMessage, "||") {
 			splitMessage := strings.Split(commitMessage, "||")
 			formattedMessage = strings.Join(splitMessage, "\n")
+		} else {
+			formattedMessage = commitMessage
 		}
 
 		// Checking OS platform for switching to git client for Windows systems
