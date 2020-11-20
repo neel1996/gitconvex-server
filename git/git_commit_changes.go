@@ -9,6 +9,7 @@ import (
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/utils"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -33,14 +34,21 @@ func windowsCommit(repoPath string, msg string) string {
 // The function falls back to the native git client for Windows platform due to an existing bug in the go-git library which
 // blocks commits in windows platform
 func CommitChanges(repo *git.Repository, commitMessage string) string {
+	var formattedMessage string
 	logger := global.Logger{}
 	w, wErr := repo.Worktree()
+
+	//Checking and splitting multi-line commit messages
+	if strings.Contains(commitMessage, "||") {
+		splitMessage := strings.Split(commitMessage, "||")
+		formattedMessage = strings.Join(splitMessage, "\n")
+	}
 
 	// Checking OS platform for switching to git client for Windows systems
 	platform := runtime.GOOS
 	if platform == "windows" && w != nil {
 		logger.Log(fmt.Sprintf("OS is %s -- Switching to native git client", platform), global.StatusWarning)
-		return windowsCommit(w.Filesystem.Root(), commitMessage)
+		return windowsCommit(w.Filesystem.Root(), formattedMessage)
 	}
 
 	// Logic to check if the repo / global config has proper user information setup
@@ -95,7 +103,7 @@ func CommitChanges(repo *git.Repository, commitMessage string) string {
 				Parents: []plumbing.Hash{parentHash},
 			}
 		}
-		hash, err := w.Commit(commitMessage, commitOptions)
+		hash, err := w.Commit(formattedMessage, commitOptions)
 		if err != nil {
 			logger.Log(fmt.Sprintf("Error occurred while committing changes -> %s\n%v", err.Error(), err), global.StatusError)
 			return "COMMIT_FAILED"
