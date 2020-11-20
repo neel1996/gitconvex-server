@@ -38,43 +38,51 @@ func CommitChanges(repo *git.Repository, commitMessage string) string {
 	logger := global.Logger{}
 	w, wErr := repo.Worktree()
 
-	//Checking and splitting multi-line commit messages
-	if strings.Contains(commitMessage, "||") {
-		splitMessage := strings.Split(commitMessage, "||")
-		formattedMessage = strings.Join(splitMessage, "\n")
-	}
-
-	// Checking OS platform for switching to git client for Windows systems
-	platform := runtime.GOOS
-	if platform == "windows" && w != nil {
-		logger.Log(fmt.Sprintf("OS is %s -- Switching to native git client", platform), global.StatusWarning)
-		return windowsCommit(w.Filesystem.Root(), formattedMessage)
-	}
-
-	// Logic to check if the repo / global config has proper user information setup
-	// Commit will be signed by default user if no user config is present
-	globalConfig, gCfgErr := repo.ConfigScoped(config.GlobalScope)
-	localConfig, lCfgErr := repo.ConfigScoped(config.LocalScope)
-	var author string
-
-	if gCfgErr == nil && lCfgErr == nil {
-		fmt.Println(localConfig.User)
-		fmt.Println(globalConfig.User)
-
-		if globalConfig.User.Name != "" {
-			author = globalConfig.User.Name
-		} else if localConfig.User.Name != "" {
-			author = localConfig.User.Name
-		}
-	} else {
-		logger.Log(fmt.Sprintf("Unable to fetch repo config -> %v || %v", gCfgErr, lCfgErr), global.StatusError)
-		return "COMMIT_FAILED"
-	}
-
 	if wErr != nil {
 		logger.Log(fmt.Sprintf("Error occurred while fetching repo worktree -> %s", wErr.Error()), global.StatusError)
 		return "COMMIT_FAILED"
 	} else {
+		//Checking and splitting multi-line commit messages
+		if strings.Contains(commitMessage, "||") {
+			splitMessage := strings.Split(commitMessage, "||")
+			formattedMessage = strings.Join(splitMessage, "\n")
+		}
+
+		// Checking OS platform for switching to git client for Windows systems
+		platform := runtime.GOOS
+		if platform == "windows" && w != nil {
+			logger.Log(fmt.Sprintf("OS is %s -- Switching to native git client", platform), global.StatusWarning)
+			return windowsCommit(w.Filesystem.Root(), formattedMessage)
+		}
+
+		// Checking if repo is a fresh repo with no branches
+		// fallback function will be used to commit with git if no branches are present
+		head, _ := repo.Head()
+		if head == nil {
+			logger.Log("Repo with no HEAD", global.StatusWarning)
+			return windowsCommit(w.Filesystem.Root(), formattedMessage)
+		}
+
+		// Logic to check if the repo / global config has proper user information setup
+		// Commit will be signed by default user if no user config is present
+		globalConfig, gCfgErr := repo.ConfigScoped(config.GlobalScope)
+		localConfig, lCfgErr := repo.ConfigScoped(config.LocalScope)
+		var author string
+
+		if gCfgErr == nil && lCfgErr == nil {
+			fmt.Println(localConfig.User)
+			fmt.Println(globalConfig.User)
+
+			if globalConfig.User.Name != "" {
+				author = globalConfig.User.Name
+			} else if localConfig.User.Name != "" {
+				author = localConfig.User.Name
+			}
+		} else {
+			logger.Log(fmt.Sprintf("Unable to fetch repo config -> %v || %v", gCfgErr, lCfgErr), global.StatusError)
+			return "COMMIT_FAILED"
+		}
+
 		var commitOptions *git.CommitOptions
 		var parentHash plumbing.Hash
 		head, headErr := repo.Head()
