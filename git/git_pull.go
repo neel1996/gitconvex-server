@@ -102,7 +102,7 @@ func PullFromRemote(repo *git.Repository, remoteURL string, remoteBranch string)
 			}
 		} else {
 			if strings.Contains(pullErr.Error(), "ssh: handshake failed: ssh:") {
-				logger.Log("Pull failed. Retrying fetch with git client", global.StatusWarning)
+				logger.Log("Pull failed. Retrying pull with git client", global.StatusWarning)
 				return windowsPull(w.Filesystem.Root(), remoteName, remoteBranch)
 			}
 			logger.Log(pullErr.Error(), global.StatusError)
