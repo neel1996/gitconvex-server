@@ -56,12 +56,6 @@ func PullFromRemote(repo *git.Repository, remoteURL string, remoteBranch string)
 	w, _ := repo.Worktree()
 	b := new(bytes.Buffer)
 
-	///
-	if w != nil {
-		return windowsPull(w.Filesystem.Root(), remoteName, remoteBranch)
-	}
-	///
-
 	refName := fmt.Sprintf("refs/heads/%s", remoteBranch)
 
 	ref, refErr := repo.Storer.Reference(plumbing.ReferenceName(refName))
