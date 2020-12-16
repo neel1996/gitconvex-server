@@ -47,6 +47,8 @@ jobs:
           cp -rp * $HOME/gitconvex/
           cd $HOME/gitconvex/
           echo "Commit Message --> $LATEST_COMMIT"
+          git status
           git add --all
           git commit -m "$LATEST_COMMIT"
+          pwd
           git log -1
