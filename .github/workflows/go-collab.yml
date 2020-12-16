@@ -42,8 +42,8 @@ jobs:
           git checkout $TARGET_BRANCH
           cd $GITHUB_WORKSPACE
           rm README.md
-          rm -rf .git/ .github/ .gitignore
-          for i in `ls -1 $GITHUB_WORKSPACE`; do if [[ -d $i ]]; then rm -rf $HOME/gitconvex/$i; fi; done
+          rm -rf .git/ .github/ tests/ .gitignore
+          for i in `ls -1 $GITHUB_WORKSPACE`; do if [[ -d $i ]]; then mv ./$i/* $HOME/gitconvex/$i/ && echo "Moved content of $i"; fi; done
           mv * $HOME/gitconvex/
           cd $HOME/gitconvex/
           echo "Commit Message --> $LATEST_COMMIT"
