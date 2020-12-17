@@ -35,7 +35,6 @@ jobs:
           cd $HOME/gitconvex-server
           git checkout ${{ github.head_ref }}
           export LATEST_COMMIT=$(git log --oneline -1 --pretty=format:%s)
-          cd $GITHUB_WORKSPACE
           git clone https://github.com/neel1996/gitconvex.git $HOME/gitconvex
           git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
           cd $HOME/gitconvex
@@ -44,12 +43,13 @@ jobs:
           pwd 
           ls -ltrh
           rm README.md
-          rm -rf .git/ .github/ tests/ .gitignore
+          rm -rf .git/ .github/ .gitignore
           cp -rp * $HOME/gitconvex/
           cd $HOME/gitconvex/
           echo "Commit Message --> $LATEST_COMMIT"
           git status
           git add --all
           git commit -m "$LATEST_COMMIT"
+          ls -ltrh
           pwd
           git log -1
