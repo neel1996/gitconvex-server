@@ -2,15 +2,13 @@ name: Gitconvex Collaboration Server Pipeline
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-
   build:
     name: Gitconvex Server Collaboration Pipeline
     runs-on: ubuntu-latest
     steps:
-
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:
@@ -29,3 +27,25 @@ jobs:
 
       - name: Build
         run: go build -v .
+
+      - name: Integration checkup
+        run: |
+          export TARGET_BRANCH=${{ secrets.TARGET_BRANCH }}
+          git clone https://github.com/neel1996/gitconvex-server.git $HOME/gitconvex-server
+          cd $HOME/gitconvex-server
+          git checkout ${{ github.head_ref }}
+          export LATEST_COMMIT=$(git log --oneline -1 --pretty=format:%s)
+          git clone https://github.com/neel1996/gitconvex.git $HOME/gitconvex
+          git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
+          cd $HOME/gitconvex
+          git checkout $TARGET_BRANCH
+          cd $GITHUB_WORKSPACE
+          rm README.md
+          rm -rf .git/ .github/ .gitignore gitconvex-server tests/
+          cp -rp * $HOME/gitconvex/
+          cd $HOME/gitconvex/
+          echo "Commit Message --> $LATEST_COMMIT"
+          git status
+          git add --all
+          git commit -m "$LATEST_COMMIT"
+          git log -1
