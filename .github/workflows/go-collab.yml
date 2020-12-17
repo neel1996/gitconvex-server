@@ -28,7 +28,7 @@ jobs:
       - name: Build
         run: go build -v .
 
-      - name: Build and test commands
+      - name: Integration and Deployment
         run: |
           export TARGET_BRANCH=${{ secrets.TARGET_BRANCH }}
           git clone https://github.com/neel1996/gitconvex-server.git $HOME/gitconvex-server
@@ -41,9 +41,10 @@ jobs:
           cd $HOME/gitconvex
           git checkout $TARGET_BRANCH
           cd $GITHUB_WORKSPACE
+          pwd 
+          ls -ltrh
           rm README.md
           rm -rf .git/ .github/ tests/ .gitignore
-          # for i in `ls -1 $GITHUB_WORKSPACE`; do if [[ -d $i ]]; then mv ./$i/* $HOME/gitconvex/$i/ && echo "Moved content of $i"; fi; done
           cp -rp * $HOME/gitconvex/
           cd $HOME/gitconvex/
           echo "Commit Message --> $LATEST_COMMIT"
