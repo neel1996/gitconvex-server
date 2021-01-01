@@ -22,7 +22,7 @@ func TestUpdateRepoName(t *testing.T) {
 		{name: "test script for rename repo API", args: struct {
 			repoId   string
 			repoName string
-		}{repoId: "test", repoName: "NewTest"}, want: "Repo name updated successfully", wantErr: nil},
+		}{repoId: "test", repoName: "NewTest"}, want: "Repo name updated successfully", wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
