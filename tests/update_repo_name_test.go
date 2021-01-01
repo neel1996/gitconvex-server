@@ -2,10 +2,13 @@ package tests
 
 import (
 	"github.com/neel1996/gitconvex-server/api"
+	"github.com/neel1996/gitconvex-server/utils"
 	"testing"
 )
 
 func TestUpdateRepoName(t *testing.T) {
+	utils.DataFileWriter([]utils.RepoData{{RepoId: "test", RepoName: "test", RepoPath: "", TimeStamp: ""}})
+
 	type args struct {
 		repoId   string
 		repoName string
@@ -16,7 +19,10 @@ func TestUpdateRepoName(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "test script for rename repo API", args: struct {
+			repoId   string
+			repoName string
+		}{repoId: "test", repoName: "NewTest"}, want: "Repo name updated successfully", wantErr: nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
