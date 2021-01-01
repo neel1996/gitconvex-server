@@ -7,6 +7,7 @@ import (
 )
 
 func TestUpdateRepoName(t *testing.T) {
+	utils.EnvConfigFileGenerator()
 	utils.DataFileWriter([]utils.RepoData{{RepoId: "test", RepoName: "test", RepoPath: "", TimeStamp: ""}})
 
 	type args struct {
