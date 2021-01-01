@@ -41,7 +41,7 @@ jobs:
           git checkout $TARGET_BRANCH
           cd $GITHUB_WORKSPACE
           rm README.md
-          rm -rf .git/ .github/ .gitignore gitconvex-server tests/
+          rm -rf .git/ .github/ .gitignore gitconvex-server
           cp -rp * $HOME/gitconvex/
           cd $HOME/gitconvex/
           echo "Commit Message --> $LATEST_COMMIT"
