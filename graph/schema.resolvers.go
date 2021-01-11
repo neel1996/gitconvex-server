@@ -327,7 +327,12 @@ func (r *queryResolver) CodeFileDetails(ctx context.Context, repoID string, file
 			FileData: nil,
 		}, nil
 	}
-	return api.CodeFileView(repo.RepoPath, fileName), nil
+	var codeFileViewObject api.CodeViewInterface
+	codeFileViewObject = api.CodeViewInputs{
+		RepoPath: repo.RepoPath,
+		FileName: fileName,
+	}
+	return codeFileViewObject.CodeFileView(), nil
 }
 
 func (r *queryResolver) GitChanges(ctx context.Context, repoID string) (*model.GitChangeResults, error) {
@@ -379,7 +384,12 @@ func (r *queryResolver) GitFileLineChanges(ctx context.Context, repoID string, f
 		}, nil
 	}
 
-	fileContent := api.CodeFileView(repo.RepoPath, fileName)
+	var codeFileViewObject api.CodeViewInterface
+	codeFileViewObject = api.CodeViewInputs{
+		RepoPath: repo.RepoPath,
+		FileName: fileName,
+	}
+	fileContent := codeFileViewObject.CodeFileView()
 	return git.FileLineDiff(repo.GitRepo, fileName, fileContent.FileData), nil
 }
 
