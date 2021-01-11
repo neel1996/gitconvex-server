@@ -183,14 +183,8 @@ func (inputs NewRepoInputs) AddRepo() *model.AddRepoParams {
 	go repoIdGenerator(repoIdChannel)
 	repoId := <-repoIdChannel
 
-	var obj AddRepoInterface
-	obj = NewRepoInputs{
-		RepoName: inputs.RepoName,
-		RepoPath: inputs.RepoPath,
-	}
-
 	var repoAddStatusChannel = make(chan string)
-	go obj.repoDataFileWriter(repoId, repoAddStatusChannel)
+	go inputs.repoDataFileWriter(repoId, repoAddStatusChannel)
 	status := <-repoAddStatusChannel
 
 	close(repoIdChannel)

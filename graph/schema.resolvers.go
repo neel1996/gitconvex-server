@@ -56,7 +56,12 @@ func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, br
 		return global.BranchCheckoutError, nil
 	}
 
-	return git.CheckoutBranch(repo.GitRepo, branchName), nil
+	var checkoutObject git.BranchCheckoutInterface
+	checkoutObject = git.BranchCheckoutInputs{
+		Repo:       repo.GitRepo,
+		BranchName: branchName,
+	}
+	return checkoutObject.CheckoutBranch(), nil
 }
 
 func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, branchName string, forceFlag bool) (*model.BranchDeleteStatus, error) {

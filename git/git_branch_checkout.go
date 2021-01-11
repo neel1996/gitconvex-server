@@ -8,8 +8,21 @@ import (
 	"strings"
 )
 
+type BranchCheckoutInterface interface {
+	intermediateFetch()
+	CheckoutBranch() string
+}
+
+type BranchCheckoutInputs struct {
+	Repo       *git.Repository
+	BranchName string
+}
+
 // intermediateFetch performs a remote fetch if the selected checkout branch is a remote branch
-func intermediateFetch(repo *git.Repository, branchName string) {
+func (inputs BranchCheckoutInputs) intermediateFetch() {
+	repo := inputs.Repo
+	branchName := inputs.BranchName
+
 	logger.Log("Fetching from remote for remote branch -> "+branchName, global.StatusInfo)
 	remoteChan := make(chan RemoteDataModel)
 	go RemoteData(repo, remoteChan)
@@ -19,9 +32,12 @@ func intermediateFetch(repo *git.Repository, branchName string) {
 }
 
 // CheckoutBranch checks out the branchName received as argument
-func CheckoutBranch(repo *git.Repository, branchName string) string {
+func (inputs BranchCheckoutInputs) CheckoutBranch() string {
 	var isRemoteBranch bool
 	var referenceBranchName string
+
+	repo := inputs.Repo
+	branchName := inputs.BranchName
 
 	logger := global.Logger{}
 	w, _ := repo.Worktree()
@@ -38,7 +54,7 @@ func CheckoutBranch(repo *git.Repository, branchName string) string {
 	// If the branch is a remote branch then a remote fetch will be performed and then the branch checkout will be initiated
 	if isRemoteBranch {
 		logger.Log(fmt.Sprintf("Branch - %s is a remote branch\nTrying with intermediate remote fetch!", branchName), global.StatusWarning)
-		intermediateFetch(repo, branchName)
+		inputs.intermediateFetch()
 
 		checkoutErr := w.Checkout(&git.CheckoutOptions{
 			Branch: plumbing.ReferenceName(referenceBranchName),
