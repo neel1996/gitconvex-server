@@ -13,7 +13,8 @@ import (
 )
 
 func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool, authOption string, userName *string, password *string) (*model.AddRepoParams, error) {
-	return api.AddRepo(model.NewRepoInputs{
+	var addRepoObject api.AddRepoInterface
+	addRepoObject = api.NewRepoInputs{
 		RepoName:    repoName,
 		RepoPath:    repoPath,
 		CloneSwitch: cloneSwitch,
@@ -22,7 +23,8 @@ func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPat
 		AuthOption:  authOption,
 		UserName:    userName,
 		Password:    password,
-	}), nil
+	}
+	return addRepoObject.AddRepo(), nil
 }
 
 func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchName string) (string, error) {

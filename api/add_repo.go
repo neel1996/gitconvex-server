@@ -15,11 +15,26 @@ import (
 	"time"
 )
 
+type AddRepoInterface interface {
+	AddRepo() *model.AddRepoParams
+}
+
 type RepoData struct {
 	Id        string `json:"id"`
 	RepoName  string `json:"repoName"`
 	RepoPath  string `json:"repoPath"`
 	TimeStamp string `json:"timestamp"`
+}
+
+type NewRepoInputs struct {
+	RepoName    string
+	RepoPath    string
+	CloneSwitch bool
+	RepoURL     *string
+	InitSwitch  bool
+	AuthOption  string
+	UserName    *string
+	Password    *string
 }
 
 // localLogger logs messages to the global logger module
@@ -116,7 +131,7 @@ func repoDataFileWriter(repoId string, repoName string, repoPath string, repoAdd
 // AddRepo function gets the repository details and includes a record to the gitconvex repo datastore file
 // If initSwitch is 'true' then the git repo init function will be invoked to initialize a new repo
 // If cloneSwitch is 'true' then the repo will be cloned to the file system using the repoURL field
-func AddRepo(inputs model.NewRepoInputs) *model.AddRepoParams {
+func (inputs NewRepoInputs) AddRepo() *model.AddRepoParams {
 	var repoIdChannel = make(chan string)
 
 	repoName := inputs.RepoName
