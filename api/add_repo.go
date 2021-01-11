@@ -17,6 +17,7 @@ import (
 
 type AddRepoInterface interface {
 	AddRepo() *model.AddRepoParams
+	repoDataFileWriter(repoId string, repoAddStatus chan string)
 }
 
 type RepoData struct {
@@ -86,13 +87,13 @@ func dataFileWriteHandler(dbFile string, repoDataArray []RepoData) error {
 }
 
 // repoDataFileWriter writes the new repo details to the repo_datastore.json file
-func repoDataFileWriter(repoId string, repoName string, repoPath string, repoAddStatus chan string) {
+func (inputs NewRepoInputs) repoDataFileWriter(repoId string, repoAddStatus chan string) {
 	rArray := make([]RepoData, 1)
 
 	rArray[0] = RepoData{
 		Id:        repoId,
-		RepoName:  repoName,
-		RepoPath:  repoPath,
+		RepoName:  inputs.RepoName,
+		RepoPath:  inputs.RepoPath,
 		TimeStamp: time.Now().String(),
 	}
 
@@ -132,8 +133,6 @@ func repoDataFileWriter(repoId string, repoName string, repoPath string, repoAdd
 // If initSwitch is 'true' then the git repo init function will be invoked to initialize a new repo
 // If cloneSwitch is 'true' then the repo will be cloned to the file system using the repoURL field
 func (inputs NewRepoInputs) AddRepo() *model.AddRepoParams {
-	var repoIdChannel = make(chan string)
-
 	repoName := inputs.RepoName
 	repoPath := inputs.RepoPath
 	cloneSwitch := inputs.CloneSwitch
@@ -180,11 +179,18 @@ func (inputs NewRepoInputs) AddRepo() *model.AddRepoParams {
 		}
 	}
 
+	var repoIdChannel = make(chan string)
 	go repoIdGenerator(repoIdChannel)
 	repoId := <-repoIdChannel
 
+	var obj AddRepoInterface
+	obj = NewRepoInputs{
+		RepoName: inputs.RepoName,
+		RepoPath: inputs.RepoPath,
+	}
+
 	var repoAddStatusChannel = make(chan string)
-	go repoDataFileWriter(repoId, repoName, repoPath, repoAddStatusChannel)
+	go obj.repoDataFileWriter(repoId, repoAddStatusChannel)
 	status := <-repoAddStatusChannel
 
 	close(repoIdChannel)
