@@ -37,7 +37,12 @@ func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchN
 		return global.BranchAddError, nil
 	}
 
-	return git.AddBranch(repo.GitRepo, branchName), nil
+	var addBranchObj git.AddBranchInterface
+	addBranchObj = git.AddBranchInput{
+		Repo:       repo.GitRepo,
+		BranchName: branchName,
+	}
+	return addBranchObj.AddBranch(), nil
 }
 
 func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, branchName string) (string, error) {
