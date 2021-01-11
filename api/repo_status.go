@@ -71,7 +71,10 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		*remoteURL = *remotes[0]
 	}
 
-	go git.GetBranchList(repo, branchChan)
+	var branchListObject git.BranchListInterface
+	branchListObject = git.BranchListInputs{Repo: repo}
+	go branchListObject.GetBranchList(branchChan)
+
 	branchList := <-branchChan
 	currentBranch := &branchList.CurrentBranch
 	branches := branchList.BranchList

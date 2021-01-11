@@ -14,7 +14,7 @@ import (
 
 func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool, authOption string, userName *string, password *string) (*model.AddRepoParams, error) {
 	var addRepoObject api.AddRepoInterface
-	addRepoObject = api.NewRepoInputs{
+	addRepoObject = api.AddRepoInputs{
 		RepoName:    repoName,
 		RepoPath:    repoPath,
 		CloneSwitch: cloneSwitch,
@@ -76,7 +76,14 @@ func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, bran
 			Status: global.BranchDeleteError,
 		}, nil
 	}
-	return git.DeleteBranch(repo.GitRepo, branchName, forceFlag), nil
+
+	var deleteBranchObject git.DeleteBranchInterface
+	deleteBranchObject = git.DeleteBranchInputs{
+		Repo:       repo.GitRepo,
+		BranchName: branchName,
+		ForceFlag:  forceFlag,
+	}
+	return deleteBranchObject.DeleteBranch(), nil
 }
 
 func (r *mutationResolver) AddRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (string, error) {
@@ -185,16 +192,25 @@ func (r *mutationResolver) CommitChanges(ctx context.Context, repoID string, com
 	repoChan := make(chan git.RepoDetails)
 	go git.Repo(repoID, repoChan)
 	repo := <-repoChan
+
+	var commitObject git.CommitInterface
+	commitObject = git.CommitStruct{
+		Repo:          repo.GitRepo,
+		CommitMessage: commitMessage,
+		RepoPath:      repo.RepoPath,
+	}
+
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		w, _ := repo.GitRepo.Worktree()
 		if w != nil {
-			return git.CommitChanges(repo.GitRepo, commitMessage), nil
+
+			return commitObject.CommitChanges(), nil
 		} else {
 			logger.Log("Repo is invalid or worktree is null", global.StatusError)
 			return global.CommitChangeError, nil
 		}
 	}
-	return git.CommitChanges(repo.GitRepo, commitMessage), nil
+	return commitObject.CommitChanges(), nil
 }
 
 func (r *mutationResolver) PushToRemote(ctx context.Context, repoID string, remoteHost string, branch string) (string, error) {
@@ -351,15 +367,23 @@ func (r *queryResolver) GitChanges(ctx context.Context, repoID string) (*model.G
 	repoChan := make(chan git.RepoDetails)
 	go git.Repo(repoID, repoChan)
 	repo := <-repoChan
+	var gitChangeObject git.ChangeInterface
+
 	if repo.GitRepo == nil {
 		logger.Log("Repo is invalid", global.StatusError)
+
 		return &model.GitChangeResults{
 			GitUntrackedFiles: nil,
 			GitChangedFiles:   nil,
 			GitStagedFiles:    nil,
 		}, nil
 	}
-	return git.ChangedFiles(repo.GitRepo), nil
+
+	gitChangeObject = git.ChangedStruct{
+		Repo:     repo.GitRepo,
+		RepoPath: repo.RepoPath,
+	}
+	return gitChangeObject.ChangedFiles(), nil
 }
 
 func (r *queryResolver) GitUnPushedCommits(ctx context.Context, repoID string, remoteURL string, remoteBranch string) ([]*string, error) {
@@ -442,7 +466,14 @@ func (r *queryResolver) BranchCompare(ctx context.Context, repoID string, baseBr
 			},
 		}, nil
 	}
-	return git.CompareBranch(repo.GitRepo, baseBranch, compareBranch), nil
+
+	var branchCompareObject git.BranchCompareInterface
+	branchCompareObject = git.BranchCompareInputs{
+		Repo:       repo.GitRepo,
+		BaseBranch: baseBranch,
+		DiffBranch: compareBranch,
+	}
+	return branchCompareObject.CompareBranch(), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
