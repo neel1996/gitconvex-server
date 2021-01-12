@@ -30,7 +30,10 @@ func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPat
 func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchName string) (string, error) {
 	logger.Log("Initiating branch addition request", global.StatusInfo)
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if repo.GitRepo == nil {
 		logger.Log("Repo is invalid. Branch addition failed", global.StatusError)
@@ -49,7 +52,11 @@ func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, br
 	logger.Log("Initiating branch checkout request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
+
 	repo := <-repoChan
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		logger.Log("Repository is invalid or HEAD is null", global.StatusError)
@@ -68,7 +75,9 @@ func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, bran
 	logger.Log("Initiating branch deletion request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		logger.Log("Repo is invalid or HEAD is null", global.StatusError)
@@ -90,21 +99,33 @@ func (r *mutationResolver) AddRemote(ctx context.Context, repoID string, remoteN
 	logger.Log("Initiating remote addition request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if repo.GitRepo == nil {
 		logger.Log("Repo is invalid", global.StatusError)
 		return global.RemoteAddError, nil
 	}
-	return git.AddRemote(repo.GitRepo, remoteName, remoteURL), nil
+
+	var addRemoteObject git.AddRemoteInterface
+	addRemoteObject = git.AddRemoteStruct{
+		Repo:       repo.GitRepo,
+		RemoteName: remoteName,
+		RemoteURL:  remoteURL,
+	}
+	return addRemoteObject.AddRemote(), nil
 }
 
 func (r *mutationResolver) FetchFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.FetchResult, error) {
 	logger.Log("Initiating fetch from remote request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
+
 	if repo.GitRepo == nil {
 		logger.Log("Repo is invalid", global.StatusError)
 
@@ -113,14 +134,31 @@ func (r *mutationResolver) FetchFromRemote(ctx context.Context, repoID string, r
 			FetchedItems: nil,
 		}, nil
 	}
-	return git.FetchFromRemote(repo.GitRepo, *remoteURL, *remoteBranch), nil
+
+	var remoteDataObject git.RemoteDataInterface
+	remoteDataObject = git.RemoteDataStruct{
+		Repo:      repo.GitRepo,
+		RemoteURL: *remoteURL,
+	}
+
+	var fetchObject git.FetchInterface
+	fetchObject = git.FetchStruct{
+		Repo:         repo.GitRepo,
+		RemoteName:   remoteDataObject.GetRemoteName(),
+		RepoPath:     repo.RepoPath,
+		RemoteURL:    *remoteURL,
+		RemoteBranch: *remoteBranch,
+	}
+	return fetchObject.FetchFromRemote(), nil
 }
 
 func (r *mutationResolver) PullFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.PullResult, error) {
 	logger.Log("Initiating pull from remote request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		logger.Log("Repo is invalid", global.StatusError)
@@ -130,67 +168,101 @@ func (r *mutationResolver) PullFromRemote(ctx context.Context, repoID string, re
 		}, nil
 	}
 
-	return git.PullFromRemote(repo.GitRepo, *remoteURL, *remoteBranch), nil
+	var pullObject git.PullInterface
+	pullObject = git.PullStruct{
+		Repo:         repo.GitRepo,
+		RemoteURL:    *remoteURL,
+		RemoteBranch: *remoteBranch,
+		RepoPath:     repo.RepoPath,
+	}
+	return pullObject.PullFromRemote(), nil
 }
 
 func (r *mutationResolver) StageItem(ctx context.Context, repoID string, item string) (string, error) {
 	logger.Log("Initiating stage item request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if repo.GitRepo == nil {
 		logger.Log("Repo is invalid", global.StatusError)
 		return global.StageItemError, nil
 	}
 
-	return git.StageItem(repo.GitRepo, item), nil
+	var stageItemObject git.StageItemInterface
+	stageItemObject = git.StageItemStruct{
+		Repo:     repo.GitRepo,
+		FileItem: item,
+	}
+	return stageItemObject.StageItem(), nil
 }
 
 func (r *mutationResolver) RemoveStagedItem(ctx context.Context, repoID string, item string) (string, error) {
 	logger.Log("Initiating remove item request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if repo.GitRepo == nil {
 		logger.Log("Repo is invalid", global.StatusError)
 		return global.RemoveItemError, nil
 	}
-	return git.RemoveItem(repo.RepoPath, item), nil
+
+	var resetObject git.ResetInterface
+	resetObject = git.ResetStruct{
+		RepoPath: repo.RepoPath,
+		FileItem: item,
+	}
+	return resetObject.RemoveItem(), nil
 }
 
 func (r *mutationResolver) RemoveAllStagedItem(ctx context.Context, repoID string) (string, error) {
 	logger.Log("Initiating remove all items request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if repo.GitRepo == nil {
 		logger.Log("Repo is invalid", global.StatusError)
 		return global.RemoveAllItemsError, nil
 	}
-	return git.ResetAllItems(repo.GitRepo), nil
+
+	var resetAllObject git.ResetAllInterface
+	resetAllObject = git.ResetAllStruct{Repo: repo.GitRepo}
+	return resetAllObject.ResetAllItems(), nil
 }
 
 func (r *mutationResolver) StageAllItems(ctx context.Context, repoID string) (string, error) {
 	logger.Log("Initiating stage all items request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if repo.GitRepo == nil {
 		logger.Log("Repo is invalid", global.StatusError)
 		return global.StageAllItemsError, nil
 	}
-	return git.StageAllItems(repo.GitRepo), nil
+
+	var stageAllObject git.StageAllInterface
+	stageAllObject = git.StageAllStruct{Repo: repo.GitRepo}
+	return stageAllObject.StageAllItems(), nil
 }
 
 func (r *mutationResolver) CommitChanges(ctx context.Context, repoID string, commitMessage string) (string, error) {
 	logger.Log("Initiating commit changes request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 
 	var commitObject git.CommitInterface
@@ -217,16 +289,32 @@ func (r *mutationResolver) PushToRemote(ctx context.Context, repoID string, remo
 	logger.Log("Initiating push to remote request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
-	remoteName := git.GetRemoteName(repo.GitRepo, remoteHost)
+
+	var remoteDataObject git.RemoteDataInterface
+	remoteDataObject = git.RemoteDataStruct{
+		Repo:      repo.GitRepo,
+		RemoteURL: remoteHost,
+	}
+
+	remoteName := remoteDataObject.GetRemoteName()
 
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil || remoteName == "" {
 		logger.Log("Repo is invalid or HEAD is nil", global.StatusError)
 		return global.PushToRemoteError, nil
 	}
 
-	return git.PushToRemote(repo.GitRepo, remoteName, branch), nil
+	var pushObject git.PushInterface
+	pushObject = git.PushStruct{
+		Repo:         repo.GitRepo,
+		RemoteName:   remoteName,
+		RemoteBranch: branch,
+		RepoPath:     repo.RepoPath,
+	}
+	return pushObject.PushToRemote(), nil
 }
 
 func (r *mutationResolver) SettingsEditPort(ctx context.Context, newPort string) (string, error) {
@@ -267,7 +355,9 @@ func (r *queryResolver) GitRepoStatus(ctx context.Context, repoID string) (*mode
 func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string, directoryName *string) (*model.GitFolderContentResults, error) {
 	logger.Log("Initiating get folder content request", global.StatusInfo)
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
@@ -282,15 +372,31 @@ func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string, dir
 	tmp.FileBasedCommits = nil
 	tmp.TrackedFiles = nil
 
-	return git.ListFiles(repo.GitRepo, repo.RepoPath, *directoryName), nil
+	var listFileObject git.ListFilesInterface
+	listFileObject = git.ListFilesStruct{
+		Repo:          repo.GitRepo,
+		RepoPath:      repo.RepoPath,
+		DirectoryName: *directoryName,
+		FileName:      nil,
+	}
+
+	return listFileObject.ListFiles(), nil
 }
 
 func (r *queryResolver) GitCommitLogs(ctx context.Context, repoID string, referenceCommit string) (*model.GitCommitLogResults, error) {
 	logger.Log("Initiating get commit logs request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
+
+	var commitLogObject git.CommitLogInterface
+	commitLogObject = git.CommitLogStruct{
+		Repo:            repo.GitRepo,
+		ReferenceCommit: referenceCommit,
+	}
 
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		logger.Log("Repo is invalid or HEAD is nil", global.StatusError)
@@ -299,15 +405,23 @@ func (r *queryResolver) GitCommitLogs(ctx context.Context, repoID string, refere
 			Commits:      nil,
 		}, nil
 	}
-	return git.CommitLogs(repo.GitRepo, referenceCommit), nil
+	return commitLogObject.CommitLogs(), nil
 }
 
 func (r *queryResolver) GitCommitFiles(ctx context.Context, repoID string, commitHash string) ([]*model.GitCommitFileResult, error) {
 	logger.Log("Initiating get commit files request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
+
+	var commitFileListObject git.CommitFileListInterface
+	commitFileListObject = git.CommitFileListStruct{
+		Repo:       repo.GitRepo,
+		CommitHash: commitHash,
+	}
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		logger.Log("Repo is invalid or HEAD is nil", global.StatusError)
 		return []*model.GitCommitFileResult{
@@ -317,15 +431,25 @@ func (r *queryResolver) GitCommitFiles(ctx context.Context, repoID string, commi
 			},
 		}, nil
 	}
-	return git.CommitFileList(repo.GitRepo, commitHash), nil
+	return commitFileListObject.CommitFileList(), nil
 }
 
 func (r *queryResolver) SearchCommitLogs(ctx context.Context, repoID string, searchType string, searchKey string) ([]*model.GitCommits, error) {
 	logger.Log("Initiating search commit logs request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
+
+	var searchCommitObject git.SearchCommitInterface
+	searchCommitObject = git.SearchCommitStruct{
+		Repo:       repo.GitRepo,
+		SearchType: searchType,
+		SearchKey:  searchKey,
+	}
+
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		logger.Log("Repo is invalid or HEAD is nil", global.StatusError)
 		return []*model.GitCommits{
@@ -338,14 +462,16 @@ func (r *queryResolver) SearchCommitLogs(ctx context.Context, repoID string, sea
 			},
 		}, nil
 	}
-	return git.SearchCommitLogs(repo.GitRepo, searchType, searchKey), nil
+	return searchCommitObject.SearchCommitLogs(), nil
 }
 
 func (r *queryResolver) CodeFileDetails(ctx context.Context, repoID string, fileName string) (*model.CodeFileType, error) {
 	logger.Log("Initiating code file view request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		logger.Log("Repo is invalid or HEAD is nil", global.StatusError)
@@ -365,7 +491,9 @@ func (r *queryResolver) GitChanges(ctx context.Context, repoID string) (*model.G
 	logger.Log("Initiating repo changes request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	var gitChangeObject git.ChangeInterface
 
@@ -390,24 +518,37 @@ func (r *queryResolver) GitUnPushedCommits(ctx context.Context, repoID string, r
 	logger.Log("Initiating get un-pushed commits request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		logger.Log("Repo is invalid or HEAD is nil", global.StatusError)
 		return nil, nil
 	}
-
-	remoteName := git.GetRemoteName(repo.GitRepo, remoteURL)
+	var remoteDataObject git.RemoteDataInterface
+	remoteDataObject = git.RemoteDataStruct{
+		Repo:      repo.GitRepo,
+		RemoteURL: remoteURL,
+	}
+	remoteName := remoteDataObject.GetRemoteName()
 	remoteRef := remoteName + "/" + remoteBranch
 
-	return git.UnPushedCommits(repo.GitRepo, remoteRef), nil
+	var unPushedObject git.UnPushedCommitInterface
+	unPushedObject = git.UnPushedCommitStruct{
+		Repo:      repo.GitRepo,
+		RemoteRef: remoteRef,
+	}
+	return unPushedObject.UnPushedCommits(), nil
 }
 
 func (r *queryResolver) GitFileLineChanges(ctx context.Context, repoID string, fileName string) (*model.FileLineChangeResult, error) {
 	logger.Log("Initiating get line by line diff request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
@@ -424,7 +565,14 @@ func (r *queryResolver) GitFileLineChanges(ctx context.Context, repoID string, f
 		FileName: fileName,
 	}
 	fileContent := codeFileViewObject.CodeFileView()
-	return git.FileLineDiff(repo.GitRepo, fileName, fileContent.FileData), nil
+
+	var fileLineDiffObject git.FileLineDiffInterface
+	fileLineDiffObject = git.FileLineDiffStruct{
+		Repo:     repo.GitRepo,
+		FileName: fileName,
+		Data:     fileContent.FileData,
+	}
+	return fileLineDiffObject.FileLineDiff(), nil
 }
 
 func (r *queryResolver) SettingsData(ctx context.Context) (*model.SettingsDataResults, error) {
@@ -436,7 +584,9 @@ func (r *queryResolver) CommitCompare(ctx context.Context, repoID string, baseCo
 	logger.Log("Initiating compare commit request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		logger.Log("Repo is invalid or HEAD is nil", global.StatusError)
@@ -448,14 +598,23 @@ func (r *queryResolver) CommitCompare(ctx context.Context, repoID string, baseCo
 		}, nil
 	}
 
-	return git.CompareCommit(repo.GitRepo, baseCommit, compareCommit), nil
+	var compareCommitObject git.CompareCommitInterface
+	compareCommitObject = git.CompareCommitStruct{
+		Repo:                repo.GitRepo,
+		BaseCommitString:    baseCommit,
+		CompareCommitString: compareCommit,
+	}
+
+	return compareCommitObject.CompareCommit(), nil
 }
 
 func (r *queryResolver) BranchCompare(ctx context.Context, repoID string, baseBranch string, compareBranch string) ([]*model.BranchCompareResults, error) {
 	logger.Log("Initiating compare branch request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	go git.Repo(repoID, repoChan)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
 		logger.Log("Repo is invalid or HEAD is nil", global.StatusError)

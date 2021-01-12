@@ -24,8 +24,22 @@ func TestUnPushedCommits(t *testing.T) {
 	untrackedResult := "untracked.txt"
 
 	_ = ioutil.WriteFile(untrackedResult, []byte{byte(63)}, 0755)
-	git2.StageItem(r, untrackedResult)
-	git2.CommitChanges(r, "Test Commit")
+
+	var stageObject git2.StageItemInterface
+	var commitObject git2.CommitInterface
+
+	stageObject = git2.StageItemStruct{
+		Repo:     r,
+		FileItem: untrackedResult,
+	}
+
+	commitObject = git2.CommitStruct{
+		Repo:          r,
+		CommitMessage: "Test Commit",
+	}
+
+	stageObject.StageItem()
+	commitObject.CommitChanges()
 
 	type args struct {
 		repo      *git.Repository

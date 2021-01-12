@@ -25,10 +25,31 @@ func (inputs BranchCheckoutInputs) intermediateFetch() {
 
 	logger.Log("Fetching from remote for remote branch -> "+branchName, global.StatusInfo)
 	remoteChan := make(chan RemoteDataModel)
-	go RemoteData(repo, remoteChan)
+
+	var remoteDataObject RemoteDataInterface
+	remoteDataObject = RemoteDataStruct{
+		Repo: repo,
+	}
+	go remoteDataObject.RemoteData(remoteChan)
+
 	remoteData := <-remoteChan
 	remoteURL := remoteData.RemoteURL
-	FetchFromRemote(repo, *remoteURL[0], branchName)
+
+	remoteDataObject = RemoteDataStruct{
+		Repo:      repo,
+		RemoteURL: *remoteURL[0],
+	}
+
+	var fetchObject FetchInterface
+	fetchObject = FetchStruct{
+		Repo:         repo,
+		RemoteName:   remoteDataObject.GetRemoteName(),
+		RepoPath:     "",
+		RemoteURL:    *remoteURL[0],
+		RemoteBranch: branchName,
+	}
+
+	fetchObject.FetchFromRemote()
 }
 
 // CheckoutBranch checks out the branchName received as argument
