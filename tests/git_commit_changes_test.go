@@ -23,8 +23,11 @@ func TestCommitChanges(t *testing.T) {
 	sampleFile := "untracked.txt"
 	err := ioutil.WriteFile(repoPath+"/"+sampleFile, []byte{byte(63)}, 0755)
 
+	var stageAllObjects git2.StageAllInterface
+	stageAllObjects = git2.StageAllStruct{Repo: r}
+
 	fmt.Println(err)
-	fmt.Println(git2.StageAllItems(r))
+	fmt.Println(stageAllObjects.StageAllItems())
 
 	type args struct {
 		repo          *git.Repository

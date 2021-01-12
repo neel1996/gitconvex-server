@@ -57,7 +57,12 @@ func TestUnPushedCommits(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := git2.UnPushedCommits(tt.args.repo, tt.args.remoteRef); !strings.Contains(*got[0], "Test Commit") {
+			var testObj git2.UnPushedCommitInterface
+			testObj = git2.UnPushedCommitStruct{
+				Repo:      tt.args.repo,
+				RemoteRef: tt.args.remoteRef,
+			}
+			if got := testObj.UnPushedCommits(); !strings.Contains(*got[0], "Test Commit") {
 				t.Errorf("UnPushedCommits() = %v, want %v", got, tt.want)
 			}
 		})

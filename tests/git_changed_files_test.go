@@ -28,7 +28,13 @@ func TestChangedFiles(t *testing.T) {
 
 	uErr := ioutil.WriteFile(repoPath+"/"+untrackedResult, []byte{byte(63)}, 0755)
 	cErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(83)}, 0755)
-	git2.StageItem(r, repoPath+"/"+changedResult)
+
+	var stageObject git2.StageItemInterface
+	stageObject = git2.StageItemStruct{
+		Repo:     r,
+		FileItem: repoPath + "/" + changedResult,
+	}
+	stageObject.StageItem()
 
 	sErr := ioutil.WriteFile(repoPath+"/"+changedResult, []byte{byte(70)}, 0755)
 	fmt.Println(uErr, cErr, sErr)
