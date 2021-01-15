@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
@@ -393,8 +394,11 @@ func (r *queryResolver) GitCommitLogs(ctx context.Context, repoID string, refere
 	repo := <-repoChan
 
 	var commitLogObject git.CommitLogInterface
+	w, _ := repo.GitRepo.Worktree()
+	git2goRepo, _ := git2go.OpenRepository(w.Filesystem.Root())
+
 	commitLogObject = git.CommitLogStruct{
-		Repo:            repo.GitRepo,
+		Repo:            git2goRepo,
 		ReferenceCommit: referenceCommit,
 	}
 
@@ -444,8 +448,12 @@ func (r *queryResolver) SearchCommitLogs(ctx context.Context, repoID string, sea
 	repo := <-repoChan
 
 	var searchCommitObject git.SearchCommitInterface
+
+	w, _ := repo.GitRepo.Worktree()
+	git2goRepo, _ := git2go.OpenRepository(w.Filesystem.Root())
+
 	searchCommitObject = git.SearchCommitStruct{
-		Repo:       repo.GitRepo,
+		Repo:       git2goRepo,
 		SearchType: searchType,
 		SearchKey:  searchKey,
 	}

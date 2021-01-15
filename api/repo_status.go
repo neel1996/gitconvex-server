@@ -1,6 +1,7 @@
 package api
 
 import (
+	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
@@ -92,7 +93,13 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	var latestCommit *string
 
 	var allCommitObject git.AllCommitInterface
-	allCommitObject = git.AllCommitStruct{Repo: repo}
+
+	//Temporary Statement
+	w, _ := repo.Worktree()
+	git2goRepo, _ := git2go.OpenRepository(w.Filesystem.Root())
+	// Block end
+
+	allCommitObject = git.AllCommitStruct{Repo: git2goRepo}
 	go allCommitObject.AllCommits(commitChan)
 	commitData := <-commitChan
 	latestCommit = &commitData.LatestCommit
