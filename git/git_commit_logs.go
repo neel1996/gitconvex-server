@@ -21,7 +21,6 @@ func commitOrganizer(repo *git2go.Repository, commits []git2go.Commit) []*model.
 	logger := global.Logger{}
 	var commitList []*model.GitCommits
 	for _, commit := range commits {
-
 		if commit.Id().String() != "" {
 			commitHash := commit.Id().String()
 			commitAuthor := strings.Split(commit.Author().Name, " ")[0]
@@ -54,6 +53,7 @@ func commitOrganizer(repo *git2go.Repository, commits []git2go.Commit) []*model.
 				CommitFilesCount: &commitFileCount,
 			})
 		}
+		commit.Free()
 	}
 	return commitList
 }
@@ -88,6 +88,10 @@ func (c CommitLogStruct) CommitLogs() *model.GitCommitLogResults {
 				nxt = nxt.Parent(0)
 				counter++
 			}
+			if nxt != nil {
+				nxt.Free()
+			}
+			head.Free()
 		} else {
 			logger.Log("Unable to fetch repo HEAD", global.StatusError)
 			return &model.GitCommitLogResults{
@@ -95,7 +99,6 @@ func (c CommitLogStruct) CommitLogs() *model.GitCommitLogResults {
 				Commits:      nil,
 			}
 		}
-
 	} else {
 		refId, _ := git2go.NewOid(referenceCommit)
 		refCommit, refCommitErr := repo.LookupCommit(refId)
@@ -108,6 +111,10 @@ func (c CommitLogStruct) CommitLogs() *model.GitCommitLogResults {
 				nxt = nxt.Parent(0)
 				counter++
 			}
+			if nxt != nil {
+				nxt.Free()
+			}
+			refCommit.Free()
 		} else {
 			logger.Log(refCommitErr.Error(), global.StatusError)
 			return &model.GitCommitLogResults{

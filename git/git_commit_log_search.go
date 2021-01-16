@@ -61,6 +61,7 @@ func (s SearchCommitStruct) SearchCommitLogs() []*model.GitCommits {
 			}
 			return true
 		})
+		walker.Free()
 	} else {
 		logger.Log(walkerErr.Error(), global.StatusError)
 		return searchResult
