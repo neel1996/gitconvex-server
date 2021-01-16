@@ -38,7 +38,7 @@ jobs:
       - name: Running Test Cases
         run: |
           go get github.com/libgit2/git2go/v31
-          export GOTESTENV=ci && go test -v ./...
+          export GOTESTENV=ci && go test -v -tags static,system_libgit2 ./...
 
       - name: Build
         run: go build -v .
