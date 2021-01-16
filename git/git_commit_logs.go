@@ -35,18 +35,7 @@ func commitOrganizer(repo *git2go.Repository, commits []git2go.Commit) []*model.
 			commitDate := commit.Committer().When.String()
 
 			if parentTree != nil && currentTree != nil {
-				diff, diffErr := repo.DiffTreeToTree(parentTree, currentTree, &git2go.DiffOptions{
-					Flags:            0,
-					IgnoreSubmodules: 0,
-					Pathspec:         nil,
-					NotifyCallback:   nil,
-					ContextLines:     0,
-					InterhunkLines:   0,
-					IdAbbrev:         0,
-					MaxSize:          0,
-					OldPrefix:        "",
-					NewPrefix:        "",
-				})
+				diff, diffErr := repo.DiffTreeToTree(parentTree, currentTree, nil)
 
 				if diffErr == nil {
 					commitFileCount, _ = diff.NumDeltas()
