@@ -30,6 +30,7 @@ jobs:
           cmake ..
           cmake --build .
           sudo make install
+          sudo /sbin/ldconfig -v
 
       - name: Get dependencies
         run: |

@@ -27,6 +27,7 @@ jobs:
           cmake ..
           cmake --build .
           sudo make install
+          sudo /sbin/ldconfig -v
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
