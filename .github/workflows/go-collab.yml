@@ -21,8 +21,8 @@ jobs:
           tar -xzf libgit2-1.1.0.tar.gz
           cd libgit2-1.1.0
           mkdir build && cd ./build
-          apt  install cmake -y
-          apt-get install libssl-dev
+          sudo apt  install cmake -y
+          sudo apt-get install libssl-dev
           cmake ..
           cmake --build .
 
