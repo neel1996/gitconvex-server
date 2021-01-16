@@ -36,7 +36,9 @@ jobs:
           go get -v -t -d ./...
 
       - name: Running Test Cases
-        run: export GOTESTENV=ci && go test -v ./...
+        run: |
+          go get github.com/libgit2/git2go/v31
+          export GOTESTENV=ci && go test -v ./...
 
       - name: Build
         run: go build -v .
