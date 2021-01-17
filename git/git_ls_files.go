@@ -3,11 +3,9 @@ package git
 import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
+	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
-	"github.com/neel1996/gitconvex-server/utils"
-	"go/types"
 	"io/ioutil"
 	"strings"
 	"sync"
@@ -23,14 +21,25 @@ type ListFilesInterface interface {
 	ListFiles() *model.GitFolderContentResults
 }
 
+type fileDiffStruct struct {
+	diffPath string
+}
+
+type commitEntry struct {
+	fileEntries   []fileDiffStruct
+	commitMessage string
+}
+
 type ListFilesStruct struct {
-	Repo          *git.Repository
-	RepoPath      string
-	DirectoryName string
-	FileName      *string
-	fileChan      chan string
-	commitChan    chan string
-	waitGroup     *sync.WaitGroup
+	Repo                 *git.Repository
+	RepoPath             string
+	DirectoryName        string
+	Commits              []git2go.Commit
+	AllCommitTreeEntries []commitEntry
+	FileName             *string
+	fileChan             chan string
+	commitChan           chan string
+	waitGroup            *sync.WaitGroup
 }
 
 type LsFileInfo struct {
@@ -44,46 +53,65 @@ var waitGroup sync.WaitGroup
 
 // DirCommitHandler collects the commit messages for the directories present in the target repo
 func (l ListFilesStruct) DirCommitHandler(dirName *string) {
-	repoPath := l.RepoPath
 	fileChan := l.fileChan
 	commitChan := l.commitChan
 	waitGroup := l.waitGroup
+	allCommitEntries := l.AllCommitTreeEntries
 
-	args := []string{"log", "--oneline", "-1", "--pretty=format:%s", *dirName + "/"}
-	cmd := utils.GetGitClient(repoPath, args)
+	var dirEntry = ""
+	var commitMsg = ""
 
-	if cmd.String() != "" {
-		dirStr := *dirName + ":directory"
+	for _, entry := range allCommitEntries {
+		fileEntries := entry.fileEntries
+		if dirEntry != "" {
+			break
+		}
 
-		commitLog, err := cmd.Output()
-		if err != nil {
-			logger.Log(fmt.Sprintf("Command execution for -> {{%s}} failed with error %v", cmd.String(), err.Error()), global.StatusError)
-			fmt.Println(commitLog)
-			fileChan <- ""
-			commitChan <- ""
-			waitGroup.Done()
-		} else {
-			commitMsg := string(commitLog)
-			logger.Log(fmt.Sprintf("Fetching commits for file -> %s --> %s", *dirName, commitLog), global.StatusInfo)
-			fileChan <- dirStr
-			commitChan <- commitMsg
-			waitGroup.Done()
+		for _, diffEntry := range fileEntries {
+			if strings.Contains(diffEntry.diffPath, *dirName) {
+				dirEntry = *dirName
+				commitMsg = entry.commitMessage
+				break
+			}
 		}
 	}
+	if dirEntry != "" {
+		logger.Log(fmt.Sprintf("Fetching commits for directory -> %s --> %s", dirEntry, commitMsg), global.StatusInfo)
+	}
+	dirStr := dirEntry + ":directory"
+	fileChan <- dirStr
+	commitChan <- commitMsg
+	waitGroup.Done()
 }
 
 // FileCommitHandler collects the commit messages for the files present in the target repo
 func (l ListFilesStruct) FileCommitHandler(file *string) {
-	repoPath := l.RepoPath
 	fileChan := l.fileChan
 	commitChan := l.commitChan
 	waitGroup := l.waitGroup
+	allCommitEntries := l.AllCommitTreeEntries
 
-	args := []string{"log", "--oneline", "-1", "--pretty=format:%s", *file}
-	cmd := utils.GetGitClient(repoPath, args)
+	var fileStr string
+	var commitMsg string
+	var fileEntry = ""
 
-	if cmd.String() != "" {
-		var fileStr string
+	for _, entry := range allCommitEntries {
+		fileEntries := entry.fileEntries
+		if fileEntry != "" {
+			break
+		}
+
+		for _, diffEntry := range fileEntries {
+			if diffEntry.diffPath == *file {
+				fileEntry = diffEntry.diffPath
+				commitMsg = entry.commitMessage
+				break
+			}
+		}
+	}
+
+	if fileEntry != "" {
+		logger.Log(fmt.Sprintf("Fetching commits for file -> %v --> %s", *file, commitMsg), global.StatusInfo)
 
 		if strings.Contains(*file, "/") {
 			splitEntry := strings.Split(*file, "/")
@@ -91,53 +119,53 @@ func (l ListFilesStruct) FileCommitHandler(file *string) {
 		} else {
 			fileStr = *file + ":File"
 		}
-
-		commitLog, err := cmd.Output()
-		if err != nil {
-			logger.Log(err.Error(), global.StatusError)
-			waitGroup.Done()
-		} else {
-			commitMsg := string(commitLog)
-			logger.Log(fmt.Sprintf("Fetching commits for file -> %v --> %s", *file, commitLog), global.StatusInfo)
-
-			fileChan <- fileStr
-			commitChan <- commitMsg
-			waitGroup.Done()
-		}
 	}
+
+	fileChan <- fileStr
+	commitChan <- commitMsg
+	waitGroup.Done()
 }
 
 // TrackedFileCount returns the total number of files tracked by the target git repo
 func (l ListFilesStruct) TrackedFileCount(trackedFileCountChan chan int) {
 	var totalFileCount int
 	logger := global.Logger{}
-	repo := l.Repo
 
+	r := l.Repo
+	w, _ := r.Worktree()
+
+	repo, _ := git2go.OpenRepository(w.Filesystem.Root())
 	head, headErr := repo.Head()
+
 	if headErr != nil {
 		logger.Log(fmt.Sprintf("Repo head is invalid -> %s", headErr.Error()), global.StatusError)
 		trackedFileCountChan <- 0
 	} else {
-		hash := head.Hash()
-		allCommits, _ := repo.CommitObject(hash)
-		tObj, _ := allCommits.Tree()
+		hash := head.Branch().Target()
+		headCommit, _ := repo.LookupCommit(hash)
 
-		err := tObj.Files().ForEach(func(file *object.File) error {
-			if file != nil {
-				totalFileCount++
-				return nil
+		if headCommit != nil {
+			tree, treeErr := headCommit.Tree()
+			if treeErr != nil {
+				logger.Log(treeErr.Error(), global.StatusError)
+				trackedFileCountChan <- totalFileCount
 			} else {
-				return types.Error{Msg: "File from the tree is empty"}
-			}
-		})
-		tObj.Files().Close()
+				err := tree.Walk(func(s string, entry *git2go.TreeEntry) int {
+					if entry.Id != nil && entry.Type.String() == "Blob" {
+						totalFileCount++
+						return 1
+					}
+					return 0
+				})
 
-		if err != nil {
-			logger.Log(err.Error(), global.StatusError)
-			trackedFileCountChan <- 0
-		} else {
-			logger.Log(fmt.Sprintf("Total Tracked Files : %v", totalFileCount), global.StatusInfo)
-			trackedFileCountChan <- totalFileCount
+				if err != nil {
+					logger.Log(err.Error(), global.StatusError)
+					trackedFileCountChan <- 0
+				} else {
+					logger.Log(fmt.Sprintf("Total Tracked Files : %v", totalFileCount), global.StatusInfo)
+					trackedFileCountChan <- totalFileCount
+				}
+			}
 		}
 	}
 	close(trackedFileCountChan)
@@ -152,6 +180,7 @@ func (l ListFilesStruct) ListFiles() *model.GitFolderContentResults {
 
 	directoryName := l.DirectoryName
 	repoPath := l.RepoPath
+	r, _ := git2go.OpenRepository(l.RepoPath)
 
 	var targetPath string
 	var fileList []*string
@@ -183,6 +212,12 @@ func (l ListFilesStruct) ListFiles() *model.GitFolderContentResults {
 		} else {
 			if fileName != ".git" {
 				fileList = append(fileList, &fileName)
+				fid, fidErr := git2go.NewOid(fileName)
+				if fidErr != nil {
+					fmt.Println(fidErr.Error())
+				} else {
+					fmt.Println(fid.String())
+				}
 			}
 		}
 	}
@@ -194,6 +229,50 @@ func (l ListFilesStruct) ListFiles() *model.GitFolderContentResults {
 	l.waitGroup = &waitGroup
 	l.fileChan = fileListChan
 	l.commitChan = commitListChan
+
+	var allCommits []git2go.Commit
+	var commitEntries []commitEntry
+
+	head, headErr := r.Head()
+
+	if headErr == nil {
+		commit, _ := r.LookupCommit(head.Target())
+		for commit != nil {
+			numParents := commit.ParentCount()
+			if numParents > 0 {
+				parentCommit := commit.Parent(0)
+				parentTree, _ := parentCommit.Tree()
+				commitTree, _ := commit.Tree()
+				if parentTree != nil && commitTree != nil {
+					diff, _ := r.DiffTreeToTree(parentTree, commitTree, nil)
+					if diff != nil {
+						numDeltas, _ := diff.NumDeltas()
+						if numDeltas > 0 {
+							entry := commitEntry{
+								commitMessage: commit.Message(),
+							}
+							for d := 0; d < numDeltas; d++ {
+								delta, _ := diff.Delta(d)
+								fileEntry := fileDiffStruct{diffPath: delta.NewFile.Path}
+								entry.fileEntries = append(entry.fileEntries, fileEntry)
+							}
+							commitEntries = append(commitEntries, entry)
+						}
+					}
+				}
+			}
+			commit = commit.Parent(0)
+		}
+	} else {
+		logger.Log(headErr.Error(), global.StatusError)
+		return &model.GitFolderContentResults{
+			TrackedFiles:     fileFilterList,
+			FileBasedCommits: commitList,
+		}
+	}
+
+	l.Commits = allCommits
+	l.AllCommitTreeEntries = commitEntries
 
 	for _, file := range fileList {
 		waitGroup.Add(1)
