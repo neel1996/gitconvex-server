@@ -10,9 +10,6 @@ import (
 	"sync"
 )
 
-// This go file relies on git installed on the host or the git client packed with the build application -> ./gitclient{.exe}
-// Git client dependency was induced as the go-git based log traversal was highly time consuming
-
 type ListFilesInterface interface {
 	DirCommitHandler(dir *string)
 	FileCommitHandler(file *string)
@@ -33,7 +30,7 @@ type ListFilesStruct struct {
 	Repo                 *git2go.Repository
 	RepoPath             string
 	DirectoryName        string
-	Commits              []git2go.Commit
+	Commits              []*git2go.Commit
 	AllCommitTreeEntries []commitEntry
 	FileName             *string
 	fileChan             chan string
@@ -55,27 +52,37 @@ func (l ListFilesStruct) DirCommitHandler(dirName *string) {
 	fileChan := l.fileChan
 	commitChan := l.commitChan
 	waitGroup := l.waitGroup
-	allCommitEntries := l.AllCommitTreeEntries
+	allCommits := l.Commits
 
 	var dirEntry = ""
 	var commitMsg = ""
 
-	for _, entry := range allCommitEntries {
-		fileEntries := entry.fileEntries
-		if dirEntry != "" {
-			break
-		}
+	for _, commit := range allCommits {
+		if commit != nil {
+			numParents := commit.ParentCount()
+			if numParents > 0 {
+				parent := commit.Parent(0)
+				commitTree, _ := commit.Tree()
+				parentTree, _ := parent.Tree()
 
-		for _, diffEntry := range fileEntries {
-			if strings.Contains(diffEntry.diffPath, *dirName) {
-				dirEntry = *dirName
-				commitMsg = entry.commitMessage
-				break
+				if commitTree != nil && parentTree != nil {
+					cId, _ := commitTree.EntryByPath(*dirName)
+					pId, _ := parentTree.EntryByPath(*dirName)
+
+					if cId != nil && pId != nil {
+						if cId.Id.String() != pId.Id.String() {
+							dirEntry = *dirName
+							commitMsg = commit.Message()
+							break
+						}
+					}
+				}
 			}
 		}
 	}
+
 	if dirEntry != "" {
-		logger.Log(fmt.Sprintf("Fetching commits for directory -> %s --> %s", dirEntry, commitMsg), global.StatusInfo)
+		logger.Log(fmt.Sprintf("Fetching commits for directory -> %s --> %s", dirEntry, strings.Split(commitMsg, "\n")[0]), global.StatusInfo)
 	}
 	dirStr := dirEntry + ":directory"
 	fileChan <- dirStr
@@ -88,29 +95,38 @@ func (l ListFilesStruct) FileCommitHandler(file *string) {
 	fileChan := l.fileChan
 	commitChan := l.commitChan
 	waitGroup := l.waitGroup
-	allCommitEntries := l.AllCommitTreeEntries
+	allCommits := l.Commits
 
 	var fileStr string
 	var commitMsg string
 	var fileEntry = ""
 
-	for _, entry := range allCommitEntries {
-		fileEntries := entry.fileEntries
-		if fileEntry != "" {
-			break
-		}
+	for _, commit := range allCommits {
+		if commit != nil {
+			numParents := commit.ParentCount()
+			if numParents > 0 {
+				parent := commit.Parent(0)
+				commitTree, _ := commit.Tree()
+				parentTree, _ := parent.Tree()
 
-		for _, diffEntry := range fileEntries {
-			if diffEntry.diffPath == *file {
-				fileEntry = diffEntry.diffPath
-				commitMsg = entry.commitMessage
-				break
+				if commitTree != nil && parentTree != nil {
+					cId, _ := commitTree.EntryByPath(*file)
+					pId, _ := parentTree.EntryByPath(*file)
+
+					if cId != nil && pId != nil {
+						if cId.Id.String() != pId.Id.String() {
+							fileEntry = *file
+							commitMsg = commit.Message()
+							break
+						}
+					}
+				}
 			}
 		}
 	}
 
 	if fileEntry != "" {
-		logger.Log(fmt.Sprintf("Fetching commits for file -> %v --> %s", *file, commitMsg), global.StatusInfo)
+		logger.Log(fmt.Sprintf("Fetching commits for file -> %v --> %s", *file, strings.Split(commitMsg, "\n")[0]), global.StatusInfo)
 
 		if strings.Contains(*file, "/") {
 			splitEntry := strings.Split(*file, "/")
@@ -220,7 +236,7 @@ func (l ListFilesStruct) ListFiles() *model.GitFolderContentResults {
 	l.fileChan = fileListChan
 	l.commitChan = commitListChan
 
-	var allCommits []git2go.Commit
+	var allCommits []*git2go.Commit
 	var commitEntries []commitEntry
 
 	head, headErr := r.Head()
@@ -228,29 +244,7 @@ func (l ListFilesStruct) ListFiles() *model.GitFolderContentResults {
 	if headErr == nil {
 		commit, _ := r.LookupCommit(head.Target())
 		for commit != nil {
-			numParents := commit.ParentCount()
-			if numParents > 0 {
-				parentCommit := commit.Parent(0)
-				parentTree, _ := parentCommit.Tree()
-				commitTree, _ := commit.Tree()
-				if parentTree != nil && commitTree != nil {
-					diff, _ := r.DiffTreeToTree(parentTree, commitTree, nil)
-					if diff != nil {
-						numDeltas, _ := diff.NumDeltas()
-						if numDeltas > 0 {
-							entry := commitEntry{
-								commitMessage: commit.Message(),
-							}
-							for d := 0; d < numDeltas; d++ {
-								delta, _ := diff.Delta(d)
-								fileEntry := fileDiffStruct{diffPath: delta.NewFile.Path}
-								entry.fileEntries = append(entry.fileEntries, fileEntry)
-							}
-							commitEntries = append(commitEntries, entry)
-						}
-					}
-				}
-			}
+			allCommits = append(allCommits, commit)
 			commit = commit.Parent(0)
 		}
 	} else {
