@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
@@ -43,7 +42,7 @@ func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchN
 
 	var addBranchObj git.AddBranchInterface
 	addBranchObj = git.AddBranchInput{
-		Repo:       repo.GitRepo,
+		Repo:       repo.Git2goRepo,
 		BranchName: branchName,
 	}
 	return addBranchObj.AddBranch(), nil
@@ -66,7 +65,7 @@ func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, br
 
 	var checkoutObject git.BranchCheckoutInterface
 	checkoutObject = git.BranchCheckoutInputs{
-		Repo:       repo.GitRepo,
+		Repo:       repo.Git2goRepo,
 		BranchName: branchName,
 	}
 	return checkoutObject.CheckoutBranch(), nil
@@ -373,11 +372,9 @@ func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string, dir
 	tmp.FileBasedCommits = nil
 	tmp.TrackedFiles = nil
 
-	git2goRepo, _ := git2go.OpenRepository(repo.RepoPath)
-
 	var listFileObject git.ListFilesInterface
 	listFileObject = git.ListFilesStruct{
-		Repo:          git2goRepo,
+		Repo:          repo.Git2goRepo,
 		RepoPath:      repo.RepoPath,
 		DirectoryName: *directoryName,
 		FileName:      nil,
@@ -395,11 +392,8 @@ func (r *queryResolver) GitCommitLogs(ctx context.Context, repoID string, refere
 	repo := <-repoChan
 
 	var commitLogObject git.CommitLogInterface
-	w, _ := repo.GitRepo.Worktree()
-	git2goRepo, _ := git2go.OpenRepository(w.Filesystem.Root())
-
 	commitLogObject = git.CommitLogStruct{
-		Repo:            git2goRepo,
+		Repo:            repo.Git2goRepo,
 		ReferenceCommit: referenceCommit,
 	}
 
@@ -422,11 +416,9 @@ func (r *queryResolver) GitCommitFiles(ctx context.Context, repoID string, commi
 	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 
-	git2goRepo, _ := git2go.OpenRepository(repo.RepoPath)
-
 	var commitFileListObject git.CommitFileListInterface
 	commitFileListObject = git.CommitFileListStruct{
-		Repo:       git2goRepo,
+		Repo:       repo.Git2goRepo,
 		CommitHash: commitHash,
 	}
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
@@ -452,11 +444,8 @@ func (r *queryResolver) SearchCommitLogs(ctx context.Context, repoID string, sea
 
 	var searchCommitObject git.SearchCommitInterface
 
-	w, _ := repo.GitRepo.Worktree()
-	git2goRepo, _ := git2go.OpenRepository(w.Filesystem.Root())
-
 	searchCommitObject = git.SearchCommitStruct{
-		Repo:       git2goRepo,
+		Repo:       repo.Git2goRepo,
 		SearchType: searchType,
 		SearchKey:  searchKey,
 	}

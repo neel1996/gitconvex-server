@@ -2,8 +2,7 @@ package git
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
+	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"strings"
 )
@@ -14,42 +13,17 @@ type BranchCheckoutInterface interface {
 }
 
 type BranchCheckoutInputs struct {
-	Repo       *git.Repository
+	Repo       *git2go.Repository
 	BranchName string
+}
+
+func returnCheckoutError(err error) string {
+	logger.Log(err.Error(), global.StatusError)
+	return global.BranchCheckoutError
 }
 
 // intermediateFetch performs a remote fetch if the selected checkout branch is a remote branch
 func (inputs BranchCheckoutInputs) intermediateFetch() {
-	repo := inputs.Repo
-	branchName := inputs.BranchName
-
-	logger.Log("Fetching from remote for remote branch -> "+branchName, global.StatusInfo)
-	remoteChan := make(chan RemoteDataModel)
-
-	var remoteDataObject RemoteDataInterface
-	remoteDataObject = RemoteDataStruct{
-		Repo: repo,
-	}
-	go remoteDataObject.RemoteData(remoteChan)
-
-	remoteData := <-remoteChan
-	remoteURL := remoteData.RemoteURL
-
-	remoteDataObject = RemoteDataStruct{
-		Repo:      repo,
-		RemoteURL: *remoteURL[0],
-	}
-
-	var fetchObject FetchInterface
-	fetchObject = FetchStruct{
-		Repo:         repo,
-		RemoteName:   remoteDataObject.GetRemoteName(),
-		RepoPath:     "",
-		RemoteURL:    *remoteURL[0],
-		RemoteBranch: branchName,
-	}
-
-	fetchObject.FetchFromRemote()
 }
 
 // CheckoutBranch checks out the branchName received as argument
@@ -59,9 +33,6 @@ func (inputs BranchCheckoutInputs) CheckoutBranch() string {
 
 	repo := inputs.Repo
 	branchName := inputs.BranchName
-
-	logger := global.Logger{}
-	w, _ := repo.Worktree()
 
 	if strings.Contains(branchName, "remotes/") {
 		splitRef := strings.Split(branchName, "/")
@@ -76,24 +47,42 @@ func (inputs BranchCheckoutInputs) CheckoutBranch() string {
 	if isRemoteBranch {
 		logger.Log(fmt.Sprintf("Branch - %s is a remote branch\nTrying with intermediate remote fetch!", branchName), global.StatusWarning)
 		inputs.intermediateFetch()
+		_, remoteBranchErr := repo.LookupBranch(branchName, git2go.BranchRemote)
 
-		checkoutErr := w.Checkout(&git.CheckoutOptions{
-			Branch: plumbing.ReferenceName(referenceBranchName),
-			Force:  true,
-		})
-		if checkoutErr != nil {
-			logger.Log("Checkout failed - "+checkoutErr.Error(), global.StatusError)
+		if remoteBranchErr != nil {
+			logger.Log(remoteBranchErr.Error(), global.StatusError)
 			return global.BranchCheckoutError
 		}
+
+		//TODO: Add logic to checkout remote branches
 	}
 
-	checkoutErr := w.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.ReferenceName(referenceBranchName),
-		Keep:   true,
-	})
-	if checkoutErr != nil {
-		logger.Log(checkoutErr.Error(), global.StatusError)
-		return global.BranchCheckoutError
+	branch, branchErr := repo.LookupBranch(branchName, git2go.BranchLocal)
+
+	if branchErr != nil {
+		return returnCheckoutError(branchErr)
+	}
+
+	topCommit, _ := repo.LookupCommit(branch.Target())
+	if topCommit != nil {
+		tree, treeErr := topCommit.Tree()
+		if treeErr != nil {
+			return returnCheckoutError(treeErr)
+		}
+
+		checkoutErr := repo.CheckoutTree(tree, &git2go.CheckoutOptions{
+			Strategy:       git2go.CheckoutSafe,
+			DisableFilters: false,
+		})
+
+		if checkoutErr != nil {
+			return returnCheckoutError(checkoutErr)
+		}
+
+		err := repo.SetHead(referenceBranchName)
+		if err != nil {
+			return returnCheckoutError(err)
+		}
 	}
 
 	logger.Log(fmt.Sprintf("Current branch checked out to -> %s", branchName), global.StatusInfo)
