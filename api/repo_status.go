@@ -81,8 +81,13 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		*remoteURL = *remotes[0]
 	}
 
+	//Temporary Statement
+	w, _ := repo.Worktree()
+	git2goRepo, _ := git2go.OpenRepository(w.Filesystem.Root())
+	// Block end
+
 	var branchListObject git.BranchListInterface
-	branchListObject = git.BranchListInputs{Repo: repo}
+	branchListObject = git.BranchListInputs{Repo: git2goRepo}
 	go branchListObject.GetBranchList(branchChan)
 
 	branchList := <-branchChan
@@ -94,11 +99,6 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 
 	var allCommitObject git.AllCommitInterface
 
-	//Temporary Statement
-	w, _ := repo.Worktree()
-	git2goRepo, _ := git2go.OpenRepository(w.Filesystem.Root())
-	// Block end
-
 	allCommitObject = git.AllCommitStruct{Repo: git2goRepo}
 	go allCommitObject.AllCommits(commitChan)
 	commitData := <-commitChan
@@ -108,7 +108,7 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 
 	var listFilesObject git.ListFilesInterface
 	listFilesObject = git.ListFilesStruct{
-		Repo: repo,
+		Repo: git2goRepo,
 	}
 
 	go listFilesObject.TrackedFileCount(trackedFileCountChan)

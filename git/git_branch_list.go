@@ -104,6 +104,5 @@ func (inputs BranchListInputs) GetBranchList(branchChan chan Branch) {
 			}
 		}
 	}
-
 	close(branchChan)
 }

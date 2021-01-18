@@ -373,14 +373,15 @@ func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string, dir
 	tmp.FileBasedCommits = nil
 	tmp.TrackedFiles = nil
 
+	git2goRepo, _ := git2go.OpenRepository(repo.RepoPath)
+
 	var listFileObject git.ListFilesInterface
 	listFileObject = git.ListFilesStruct{
-		Repo:          repo.GitRepo,
+		Repo:          git2goRepo,
 		RepoPath:      repo.RepoPath,
 		DirectoryName: *directoryName,
 		FileName:      nil,
 	}
-
 	return listFileObject.ListFiles(), nil
 }
 
@@ -421,9 +422,11 @@ func (r *queryResolver) GitCommitFiles(ctx context.Context, repoID string, commi
 	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 
+	git2goRepo, _ := git2go.OpenRepository(repo.RepoPath)
+
 	var commitFileListObject git.CommitFileListInterface
 	commitFileListObject = git.CommitFileListStruct{
-		Repo:       repo.GitRepo,
+		Repo:       git2goRepo,
 		CommitHash: commitHash,
 	}
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {

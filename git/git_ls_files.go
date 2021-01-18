@@ -2,7 +2,6 @@ package git
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
@@ -31,7 +30,7 @@ type commitEntry struct {
 }
 
 type ListFilesStruct struct {
-	Repo                 *git.Repository
+	Repo                 *git2go.Repository
 	RepoPath             string
 	DirectoryName        string
 	Commits              []git2go.Commit
@@ -131,12 +130,9 @@ func (l ListFilesStruct) TrackedFileCount(trackedFileCountChan chan int) {
 	var totalFileCount int
 	logger := global.Logger{}
 
-	r := l.Repo
-	w, _ := r.Worktree()
+	repo := l.Repo
 
-	repo, _ := git2go.OpenRepository(w.Filesystem.Root())
 	head, headErr := repo.Head()
-
 	if headErr != nil {
 		logger.Log(fmt.Sprintf("Repo head is invalid -> %s", headErr.Error()), global.StatusError)
 		trackedFileCountChan <- 0
@@ -212,12 +208,6 @@ func (l ListFilesStruct) ListFiles() *model.GitFolderContentResults {
 		} else {
 			if fileName != ".git" {
 				fileList = append(fileList, &fileName)
-				fid, fidErr := git2go.NewOid(fileName)
-				if fidErr != nil {
-					fmt.Println(fidErr.Error())
-				} else {
-					fmt.Println(fid.String())
-				}
 			}
 		}
 	}
