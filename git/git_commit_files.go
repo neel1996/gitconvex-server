@@ -17,7 +17,7 @@ type CommitFileListStruct struct {
 }
 
 // Common function for returning empty response in case of errors
-func returnError(err error) []*model.GitCommitFileResult {
+func returnCommitFileError(err error) []*model.GitCommitFileResult {
 	logger.Log(err.Error(), global.StatusError)
 	return []*model.GitCommitFileResult{{
 		Type:     "",
@@ -38,12 +38,12 @@ func (c CommitFileListStruct) CommitFileList() []*model.GitCommitFileResult {
 
 	oid, oidErr := git2go.NewOid(commitHash)
 	if oidErr != nil {
-		return returnError(oidErr)
+		return returnCommitFileError(oidErr)
 	}
 
 	commit, err := repo.LookupCommit(oid)
 	if err != nil {
-		return returnError(err)
+		return returnCommitFileError(err)
 	}
 
 	numParents := commit.ParentCount()
@@ -55,12 +55,12 @@ func (c CommitFileListStruct) CommitFileList() []*model.GitCommitFileResult {
 		if commitTree != nil && prevTree != nil {
 			diff, diffErr := repo.DiffTreeToTree(prevTree, commitTree, nil)
 			if diffErr != nil {
-				return returnError(diffErr)
+				return returnCommitFileError(diffErr)
 			}
 
 			numDelta, numDeltaErr := diff.NumDeltas()
 			if numDeltaErr != nil {
-				return returnError(numDeltaErr)
+				return returnCommitFileError(numDeltaErr)
 			}
 			for d := 0; d < numDelta; d++ {
 				delta, _ := diff.Delta(d)
