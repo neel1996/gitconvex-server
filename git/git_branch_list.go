@@ -92,6 +92,7 @@ func (inputs BranchListInputs) GetBranchList(branchChan chan Branch) {
 							}
 						} else {
 							allBranchList = append(allBranchList, &branchName)
+							branches = append(branches, &branchName)
 						}
 					}
 					return nil
