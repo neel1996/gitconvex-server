@@ -76,6 +76,26 @@ func (l ListFilesStruct) DirCommitHandler(dirName *string) {
 							break
 						}
 					}
+
+					// This condition is for files that are newly added as part of a commit
+					// but not changed in any other commits i.e. Objects with no changes
+					if pId == nil && cId != nil {
+						dirEntry = *dirName
+						commitMsg = commit.Message()
+						break
+					}
+				}
+			} else {
+				commitTree, _ := commit.Tree()
+				if commitTree != nil {
+					_, cIdErr := commitTree.EntryByPath(*dirName)
+					if cIdErr == nil {
+						dirEntry = *dirName
+						commitMsg = commit.Message()
+						break
+					} else {
+						logger.Log(cIdErr.Error(), global.StatusError)
+					}
 				}
 			}
 		}
@@ -120,6 +140,28 @@ func (l ListFilesStruct) FileCommitHandler(file *string) {
 							break
 						}
 					}
+
+					// This condition is for files that are newly added as part of a commit
+					// but not changed in any other commits i.e. Objects with no changes
+					if pId == nil && cId != nil {
+						fileEntry = *file
+						commitMsg = commit.Message()
+						break
+					}
+				}
+			} else {
+				commitTree, _ := commit.Tree()
+				if commitTree != nil {
+					_, cIdErr := commitTree.EntryByPath(*file)
+					if cIdErr == nil {
+						fileEntry = *file
+						commitMsg = commit.Message()
+						break
+					} else {
+						logger.Log(cIdErr.Error(), global.StatusError)
+					}
+				} else {
+					continue
 				}
 			}
 		}
