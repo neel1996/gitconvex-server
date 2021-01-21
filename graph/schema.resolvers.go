@@ -88,9 +88,8 @@ func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, bran
 
 	var deleteBranchObject git.DeleteBranchInterface
 	deleteBranchObject = git.DeleteBranchInputs{
-		Repo:       repo.GitRepo,
+		Repo:       repo.Git2goRepo,
 		BranchName: branchName,
-		ForceFlag:  forceFlag,
 	}
 	return deleteBranchObject.DeleteBranch(), nil
 }
@@ -628,7 +627,7 @@ func (r *queryResolver) BranchCompare(ctx context.Context, repoID string, baseBr
 
 	var branchCompareObject git.BranchCompareInterface
 	branchCompareObject = git.BranchCompareInputs{
-		Repo:       repo.GitRepo,
+		Repo:       repo.Git2goRepo,
 		BaseBranch: baseBranch,
 		DiffBranch: compareBranch,
 	}
