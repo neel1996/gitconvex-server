@@ -4,6 +4,7 @@ import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
+	"go/types"
 	"strings"
 )
 
@@ -30,35 +31,80 @@ func (inputs BranchCheckoutInputs) intermediateFetch() {
 func (inputs BranchCheckoutInputs) CheckoutBranch() string {
 	var isRemoteBranch bool
 	var referenceBranchName string
+	var remoteBranchName string
 
 	repo := inputs.Repo
 	branchName := inputs.BranchName
 
 	if strings.Contains(branchName, "remotes/") {
-		splitRef := strings.Split(branchName, "/")
-		branchName = splitRef[len(splitRef)-1]
-		referenceBranchName = "refs/heads/" + branchName
+		singleBranchName := strings.Split(branchName, "/")
+		referenceBranchName = "refs/heads/" + singleBranchName[len(singleBranchName)-1]
+		remoteBranchSplit := strings.Split(branchName, "remotes/")
+		remoteBranchName = remoteBranchSplit[len(remoteBranchSplit)-1]
+		branchName = singleBranchName[len(singleBranchName)-1]
 		isRemoteBranch = true
 	} else {
 		referenceBranchName = "refs/heads/" + branchName
 	}
 
-	// If the branch is a remote branch then a remote fetch will be performed and then the branch checkout will be initiated
 	if isRemoteBranch {
-		logger.Log(fmt.Sprintf("Branch - %s is a remote branch\nTrying with intermediate remote fetch!", branchName), global.StatusWarning)
-		inputs.intermediateFetch()
-		_, remoteBranchErr := repo.LookupBranch(branchName, git2go.BranchRemote)
+		logger.Log(fmt.Sprintf("Branch - %s is a remote branch. Trying with intermediate remote fetch!", branchName), global.StatusWarning)
 
+		remoteBranch, remoteBranchErr := repo.LookupBranch(remoteBranchName, git2go.BranchRemote)
 		if remoteBranchErr != nil {
-			logger.Log(remoteBranchErr.Error(), global.StatusError)
-			return global.BranchCheckoutError
-		}
+			return returnCheckoutError(remoteBranchErr)
+		} else {
+			remoteHead := remoteBranch.Target()
+			remoteCommit, remoteCommitErr := repo.LookupCommit(remoteHead)
+			if remoteCommitErr != nil {
+				return returnCheckoutError(remoteCommitErr)
+			} else {
+				remoteTree, remoteTreeErr := remoteCommit.Tree()
+				if remoteTree != nil {
+					checkoutErr := repo.CheckoutTree(remoteTree, &git2go.CheckoutOptions{Strategy: git2go.CheckoutSafe})
+					if checkoutErr != nil {
+						return returnCheckoutError(checkoutErr)
+					} else {
+						_, localLookupErr := repo.LookupBranch(branchName, git2go.BranchLocal)
+						if localLookupErr != nil {
+							logger.Log(localLookupErr.Error(), global.StatusError)
 
-		//TODO: Add logic to checkout remote branches
+							var addBranchObject AddBranchInterface
+							addBranchObject = AddBranchInput{
+								Repo:         repo,
+								BranchName:   branchName,
+								RemoteSwitch: false,
+								TargetCommit: remoteCommit,
+							}
+
+							branchCreateStatus := addBranchObject.AddBranch()
+							if branchCreateStatus != "BRANCH_ADD_FAILED" {
+								err := repo.SetHead(referenceBranchName)
+								if err != nil {
+									return returnCheckoutError(err)
+								} else {
+									return fmt.Sprintf("Head checked out to branch - %v", branchName)
+								}
+							}else{
+								return returnCheckoutError(types.Error{Msg: "Branch creation failed"})
+							}
+						} else {
+							err := repo.SetHead(referenceBranchName)
+							if err != nil {
+								return returnCheckoutError(err)
+							} else {
+								return fmt.Sprintf("Head checked out to branch - %v", branchName)
+							}
+						}
+					}
+				} else {
+					return returnCheckoutError(remoteTreeErr)
+				}
+			}
+		}
 	}
 
 	branch, branchErr := repo.LookupBranch(branchName, git2go.BranchLocal)
-
 	if branchErr != nil {
 		return returnCheckoutError(branchErr)
 	}

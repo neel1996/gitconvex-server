@@ -11,14 +11,17 @@ type AddBranchInterface interface {
 }
 
 type AddBranchInput struct {
-	Repo       *git2go.Repository
-	BranchName string
+	Repo         *git2go.Repository
+	BranchName   string
+	RemoteSwitch bool
+	TargetCommit *git2go.Commit
 }
 
 // AddBranch adds a new branch to the target repo
 func (input AddBranchInput) AddBranch() string {
 	logger := global.Logger{}
 
+	targetCommit := input.TargetCommit
 	repo := input.Repo
 	branchName := input.BranchName
 	head, headErr := repo.Head()
@@ -28,7 +31,13 @@ func (input AddBranchInput) AddBranch() string {
 		logger.Log(fmt.Sprintf("Unable to fetch HEAD -> %s", headErr.Error()), global.StatusError)
 		return global.BranchAddError
 	} else {
-		targetCommit, _ := repo.LookupCommit(head.Target())
+		if targetCommit == nil {
+			targetCommit, _ = repo.LookupCommit(head.Target())
+			if targetCommit == nil {
+				logger.Log("Target commit is nil", global.StatusError)
+				return global.BranchAddError
+			}
+		}
 		_, branchErr := repo.CreateBranch(branchName, targetCommit, false)
 
 		if branchErr != nil {

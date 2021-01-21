@@ -54,9 +54,11 @@ func (t AllCommitStruct) AllCommits(commitChan chan AllCommitData) {
 		} else {
 			logger.Log(fmt.Sprintf("Total commits in the repo -> %v", len(commits)), global.StatusInfo)
 
-			commitChan <- AllCommitData{
-				TotalCommits: float64(len(commits)),
-				LatestCommit: commits[0].Message(),
+			if len(commits) > 0 {
+				commitChan <- AllCommitData{
+					TotalCommits: float64(len(commits)),
+					LatestCommit: commits[0].Message(),
+				}
 			}
 		}
 	}
