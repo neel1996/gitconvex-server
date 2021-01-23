@@ -507,7 +507,7 @@ func (r *queryResolver) GitChanges(ctx context.Context, repoID string) (*model.G
 	}
 
 	gitChangeObject = git.ChangedStruct{
-		Repo:     repo.GitRepo,
+		Repo:     repo.Git2goRepo,
 		RepoPath: repo.RepoPath,
 	}
 	return gitChangeObject.ChangedFiles(), nil
