@@ -234,7 +234,7 @@ func (r *mutationResolver) RemoveAllStagedItem(ctx context.Context, repoID strin
 	}
 
 	var resetAllObject git.ResetAllInterface
-	resetAllObject = git.ResetAllStruct{Repo: repo.GitRepo}
+	resetAllObject = git.ResetAllStruct{Repo: repo.Git2goRepo}
 	return resetAllObject.ResetAllItems(), nil
 }
 
