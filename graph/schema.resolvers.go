@@ -192,7 +192,7 @@ func (r *mutationResolver) StageItem(ctx context.Context, repoID string, item st
 
 	var stageItemObject git.StageItemInterface
 	stageItemObject = git.StageItemStruct{
-		Repo:     repo.GitRepo,
+		Repo:     repo.Git2goRepo,
 		FileItem: item,
 	}
 	return stageItemObject.StageItem(), nil
@@ -213,6 +213,7 @@ func (r *mutationResolver) RemoveStagedItem(ctx context.Context, repoID string, 
 
 	var resetObject git.ResetInterface
 	resetObject = git.ResetStruct{
+		Repo:     repo.Git2goRepo,
 		RepoPath: repo.RepoPath,
 		FileItem: item,
 	}
@@ -251,7 +252,7 @@ func (r *mutationResolver) StageAllItems(ctx context.Context, repoID string) (st
 	}
 
 	var stageAllObject git.StageAllInterface
-	stageAllObject = git.StageAllStruct{Repo: repo.GitRepo}
+	stageAllObject = git.StageAllStruct{Repo: repo.Git2goRepo}
 	return stageAllObject.StageAllItems(), nil
 }
 
