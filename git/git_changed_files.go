@@ -54,7 +54,7 @@ func (c ChangedStruct) ChangedFiles() *model.GitChangeResults {
 	tree, treeErr := commit.Tree()
 	errStatus = checkError(treeErr)
 
-	diff, diffErr := repo.DiffTreeToWorkdir(tree, nil)
+	diff, diffErr := repo.DiffTreeToWorkdirWithIndex(tree, nil)
 	errStatus = checkError(diffErr)
 
 	repoIndex, indexErr := repo.Index()
@@ -100,9 +100,15 @@ func (c ChangedStruct) ChangedFiles() *model.GitChangeResults {
 		fileEntry := delta.NewFile.Path
 		if !stagedMap[fileEntry] {
 			changeStatus := delta.Status
-
 			if changeStatus != git2go.DeltaUntracked {
 				logger.Log(fmt.Sprintf("Changed file --> %v", delta.NewFile.Path), global.StatusInfo)
+				entry := delta.Status.String()[0:1] + "," + delta.NewFile.Path
+				changedFileList = append(changedFileList, &entry)
+			}
+		} else {
+			changeFlag := delta.NewFile.Flags
+			if changeFlag == 8 {
+				logger.Log(fmt.Sprintf("Staged and Changed file --> %v", delta.NewFile.Path), global.StatusInfo)
 				entry := delta.Status.String()[0:1] + "," + delta.NewFile.Path
 				changedFileList = append(changedFileList, &entry)
 			}
