@@ -8,11 +8,11 @@ import (
 	"runtime/debug"
 )
 
-type ChangeInterface interface {
+type ChangedItemsInterface interface {
 	ChangedFiles() *model.GitChangeResults
 }
 
-type ChangedStruct struct {
+type ChangedItemStruct struct {
 	Repo     *git2go.Repository
 	RepoPath string
 }
@@ -27,7 +27,7 @@ func checkError(err error) error {
 
 // ChangedFiles returns the list of changes from the target
 // The function organizes the tracked, untracked and staged files in separate slices and returns the struct *model.GitChangeResults
-func (c ChangedStruct) ChangedFiles() *model.GitChangeResults {
+func (c ChangedItemStruct) ChangedFiles() *model.GitChangeResults {
 	logger.Log("Fetching the current status of the repo", global.StatusInfo)
 	var changedFileList []*string
 	var stagedFileList []*string
@@ -45,8 +45,29 @@ func (c ChangedStruct) ChangedFiles() *model.GitChangeResults {
 		}
 	}()
 
-	head, headErr := repo.Head()
-	errStatus = checkError(headErr)
+	head, _ := repo.Head()
+	if head == nil {
+		logger.Log("Repo has no HEAD. Treating it as a newly initialized repo", global.StatusWarning)
+		statusList, _ := repo.StatusList(&git2go.StatusOptions{
+			Show:  git2go.StatusShowIndexAndWorkdir,
+			Flags: git2go.StatusOptIncludeUntracked,
+		})
+
+		n, _ := statusList.EntryCount()
+		for i := 0; i < n; i++ {
+			entry, entryErr := statusList.ByIndex(i)
+
+			if entryErr == nil {
+				diff := entry.HeadToIndex
+				unTrackedList = append(unTrackedList, &diff.NewFile.Path)
+			}
+		}
+		return &model.GitChangeResults{
+			GitUntrackedFiles: unTrackedList,
+			GitChangedFiles:   nil,
+			GitStagedFiles:    nil,
+		}
+	}
 
 	commit, commitErr := repo.LookupCommit(head.Target())
 	errStatus = checkError(commitErr)
