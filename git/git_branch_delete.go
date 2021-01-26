@@ -20,7 +20,6 @@ type DeleteBranchInputs struct {
 func (inputs DeleteBranchInputs) DeleteBranch() *model.BranchDeleteStatus {
 	repo := inputs.Repo
 	branchName := inputs.BranchName
-
 	deleteBranch, deleteBranchErr := repo.LookupBranch(branchName, git2go.BranchLocal)
 
 	if deleteBranchErr != nil {
@@ -28,7 +27,6 @@ func (inputs DeleteBranchInputs) DeleteBranch() *model.BranchDeleteStatus {
 		return &model.BranchDeleteStatus{Status: global.BranchDeleteError}
 	} else {
 		deleteErr := deleteBranch.Delete()
-
 		if deleteErr == nil {
 			logger.Log(fmt.Sprintf("Branch - %s has been removed from the repo", branchName), global.StatusInfo)
 			return &model.BranchDeleteStatus{

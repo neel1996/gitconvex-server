@@ -63,10 +63,13 @@ func (c CommitStruct) CommitChanges() string {
 	errStatus = checkCommitError(headCommitErr)
 
 	repoIndex, indexErr := repo.Index()
-	checkCommitError(indexErr)
+	errStatus = checkCommitError(indexErr)
 
-	newTreeId, _ := repoIndex.WriteTree()
-	newTree, _ := repo.LookupTree(newTreeId)
+	newTreeId, writeTreeErr := repoIndex.WriteTree()
+	errStatus = checkCommitError(writeTreeErr)
+
+	newTree, newTreeErr := repo.LookupTree(newTreeId)
+	errStatus = checkCommitError(newTreeErr)
 
 	newCommitId, err := repo.CreateCommit("HEAD", signature, signature, formattedMessage, newTree, headCommit)
 	errStatus = checkCommitError(err)
@@ -78,7 +81,7 @@ func (c CommitStruct) CommitChanges() string {
 	errStatus = checkCommitError(headErr)
 
 	newRef, newRefErr := head.SetTarget(newCommitId, formattedMessage)
-	checkCommitError(newRefErr)
+	errStatus = checkCommitError(newRefErr)
 
 	if errStatus {
 		return global.CommitChangeError

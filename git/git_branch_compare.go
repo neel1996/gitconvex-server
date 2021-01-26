@@ -18,6 +18,14 @@ type BranchCompareInputs struct {
 	DiffBranch string
 }
 
+func returnBranchCompareError(errString string) []*model.BranchCompareResults {
+	if errString != "" {
+		logger.Log(errString, global.StatusWarning)
+		return []*model.BranchCompareResults{}
+	}
+	return nil
+}
+
 // CompareBranch compares two branches and returns the commits which are different from each other
 // The function uses the git client to fetch the results as go-git lacks this feature
 func (inputs BranchCompareInputs) CompareBranch() []*model.BranchCompareResults {
@@ -29,21 +37,23 @@ func (inputs BranchCompareInputs) CompareBranch() []*model.BranchCompareResults 
 	compareBranch, compareBranchErr := repo.LookupBranch(inputs.DiffBranch, git2go.BranchLocal)
 
 	if baseBranchErr != nil || compareBranchErr != nil {
-		logger.Log("Unable to lookup target branches from the repo", global.StatusError)
-		return []*model.BranchCompareResults{}
+		return returnBranchCompareError("Unable to lookup target branches from the repo")
 	}
-
 	compareResult := baseBranch.Cmp(compareBranch.Reference)
 
 	if compareResult == 0 {
-		logger.Log("There are no difference between both the branches", global.StatusWarning)
-		return []*model.BranchCompareResults{}
+		return returnBranchCompareError("There are no difference between both the branches")
 	}
+
 	baseTarget := baseBranch.Target()
 	compareTarget := compareBranch.Target()
 
 	baseHead, _ := repo.LookupCommit(baseTarget)
 	compareHead, _ := repo.LookupCommit(compareTarget)
+
+	if baseHead == nil || compareHead == nil {
+		return returnBranchCompareError("Branch head is NIL")
+	}
 
 	var baseNext *git2go.Commit
 	var compareNext *git2go.Commit

@@ -21,9 +21,8 @@ type AllCommitData struct {
 
 // AllCommits function returns the total number of commits from the repo and commit message of the most recent commit
 func (t AllCommitStruct) AllCommits(commitChan chan AllCommitData) {
-	repo := *t.Repo
+	repo := t.Repo
 	logItr, itrErr := repo.Walk()
-	logger := global.Logger{}
 	var commits []git2go.Commit
 
 	if itrErr != nil {

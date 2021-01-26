@@ -23,9 +23,9 @@ type SearchCommitStruct struct {
 // The UI uses 'message' as the default search type to look up based on commit messages
 func (s SearchCommitStruct) SearchCommitLogs() []*model.GitCommits {
 	var searchResult []*model.GitCommits
-	logger := global.Logger{}
 
 	repo := s.Repo
+
 	searchKey := s.SearchKey
 	searchType := s.SearchType
 
@@ -61,7 +61,6 @@ func (s SearchCommitStruct) SearchCommitLogs() []*model.GitCommits {
 			}
 			return true
 		})
-		walker.Free()
 	} else {
 		logger.Log(walkerErr.Error(), global.StatusError)
 		return searchResult

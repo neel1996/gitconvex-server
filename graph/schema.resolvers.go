@@ -109,7 +109,7 @@ func (r *mutationResolver) AddRemote(ctx context.Context, repoID string, remoteN
 
 	var addRemoteObject git.AddRemoteInterface
 	addRemoteObject = git.AddRemoteStruct{
-		Repo:       repo.GitRepo,
+		Repo:       repo.Git2goRepo,
 		RemoteName: remoteName,
 		RemoteURL:  remoteURL,
 	}

@@ -28,7 +28,6 @@ func returnCommitFileError(err error) []*model.GitCommitFileResult {
 // CommitFileList returns the list of files modified, added or removed as part of a commit
 // compares the previous commit tree with the current commit tree and, returns the change type (M|D|A) and file name
 func (c CommitFileListStruct) CommitFileList() []*model.GitCommitFileResult {
-	logger := global.Logger{}
 	var res []*model.GitCommitFileResult
 
 	repo := c.Repo
