@@ -267,7 +267,7 @@ func (r *mutationResolver) CommitChanges(ctx context.Context, repoID string, com
 
 	var commitObject git.CommitInterface
 	commitObject = git.CommitStruct{
-		Repo:          repo.GitRepo,
+		Repo:          repo.Git2goRepo,
 		CommitMessage: commitMessage,
 		RepoPath:      repo.RepoPath,
 	}
@@ -495,7 +495,7 @@ func (r *queryResolver) GitChanges(ctx context.Context, repoID string) (*model.G
 	repoObject = git.RepoStruct{RepoId: repoID}
 	go repoObject.Repo(repoChan)
 	repo := <-repoChan
-	var gitChangeObject git.ChangeInterface
+	var gitChangeObject git.ChangedItemsInterface
 
 	if repo.GitRepo == nil {
 		logger.Log("Repo is invalid", global.StatusError)
@@ -507,7 +507,7 @@ func (r *queryResolver) GitChanges(ctx context.Context, repoID string) (*model.G
 		}, nil
 	}
 
-	gitChangeObject = git.ChangedStruct{
+	gitChangeObject = git.ChangedItemStruct{
 		Repo:     repo.Git2goRepo,
 		RepoPath: repo.RepoPath,
 	}

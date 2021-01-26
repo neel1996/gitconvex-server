@@ -26,8 +26,8 @@ func (s StageAllStruct) StageAllItems() string {
 
 	var stageItemObject StageItemInterface
 
-	var changedFiesObject ChangeInterface
-	changedFiesObject = ChangedStruct{
+	var changedFiesObject ChangedItemsInterface
+	changedFiesObject = ChangedItemStruct{
 		Repo: repo,
 	}
 
