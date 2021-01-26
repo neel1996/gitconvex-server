@@ -22,28 +22,6 @@ type Branch struct {
 	AllBranchList []*string
 }
 
-// isBranchNameValid function checks if the branch name is valid to be return as an eligible branch
-//
-// The function filters out Tags and stashes returned as references
-func isBranchNameValid(branchName string) bool {
-	var branchNameValid bool
-	branchNameValid = true
-
-	if branchName == "HEAD" {
-		branchNameValid = false
-	}
-
-	if !strings.Contains(branchName, "refs/") {
-		branchNameValid = false
-	}
-
-	if strings.Contains(branchName, "tags/") {
-		branchNameValid = false
-	}
-
-	return branchNameValid
-}
-
 // GetBranchList fetches all the branches from the target repository
 // The result will be returned as a struct with the current branch and all the available branches
 func (inputs BranchListInputs) GetBranchList(branchChan chan Branch) {
@@ -53,7 +31,6 @@ func (inputs BranchListInputs) GetBranchList(branchChan chan Branch) {
 	)
 	var currentBranch string
 	repo := inputs.Repo
-	logger := global.Logger{}
 
 	if repo != nil {
 		head, headErr := repo.Head()
