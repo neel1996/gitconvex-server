@@ -309,7 +309,7 @@ func (r *mutationResolver) PushToRemote(ctx context.Context, repoID string, remo
 
 	var pushObject git.PushInterface
 	pushObject = git.PushStruct{
-		Repo:         repo.GitRepo,
+		Repo:         repo.Git2goRepo,
 		RemoteName:   remoteName,
 		RemoteBranch: branch,
 		RepoPath:     repo.RepoPath,
