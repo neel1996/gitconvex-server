@@ -1,16 +1,10 @@
 package git
 
 import (
-	"bytes"
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/config"
-	"github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband"
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/utils"
-	"io"
-	"strings"
 )
 
 type PushInterface interface {
@@ -19,7 +13,7 @@ type PushInterface interface {
 }
 
 type PushStruct struct {
-	Repo         *git.Repository
+	Repo         *git2go.Repository
 	RemoteName   string
 	RemoteBranch string
 	RepoPath     string
@@ -52,47 +46,94 @@ func (p PushStruct) PushToRemote() string {
 	remoteBranch := p.RemoteBranch
 	remoteName := p.RemoteName
 
-	targetRefPsec := "refs/heads/" + remoteBranch + ":refs/heads/" + remoteBranch
-	w, _ := repo.Worktree()
+	//targetRefPsec := "refs/heads/" + remoteBranch + ":refs/heads/" + remoteBranch
+	//w, _ := repo.Worktree()
+	targetRefPsec := "refs/heads/" + remoteBranch
 
-	b := new(bytes.Buffer)
-	sshAuth, sshErr := ssh.NewSSHAgentAuth("git")
-	logger.Log(fmt.Sprintf("Pushing changes to remote -> %s : %s", remoteName, targetRefPsec), global.StatusInfo)
-
-	if sshErr != nil {
-		logger.Log(fmt.Sprintf("Authentication failed -> %s", sshErr.Error()), global.StatusError)
-
-		if w == nil {
-			return global.PushToRemoteError
-		}
-		logger.Log("Falling back to native git client for pushing changes", global.StatusWarning)
-		return p.windowsPush()
-	}
-
-	remote, remoteErr := repo.Remote(remoteName)
+	remote, remoteErr := repo.Remotes.Lookup(remoteName)
 	if remoteErr != nil {
 		logger.Log(remoteErr.Error(), global.StatusError)
 		return global.PushToRemoteError
 	}
 
-	err := remote.Push(&git.PushOptions{
-		RemoteName: remoteName,
-		RefSpecs:   []config.RefSpec{config.RefSpec(targetRefPsec)},
-		Auth:       sshAuth,
-		Progress: sideband.Progress(func(f io.Writer) io.Writer {
-			return f
-		}(b)),
-	})
+	remoteCallbacks := git2go.RemoteCallbacks{
+		SidebandProgressCallback: func(str string) git2go.ErrorCode {
+			if str != "" {
+				fmt.Println(str)
+				return 0
+			} else {
+				return git2go.ErrorCodeInvalid
+			}
+		},
+		CompletionCallback: func(completion git2go.RemoteCompletion) git2go.ErrorCode {
+			fmt.Println(completion)
+			return 0
+		},
+		CertificateCheckCallback: git2go.CertificateCheckCallback(func(cert *git2go.Certificate, valid bool, hostname string) git2go.ErrorCode {
+			return 0
+		}),
+		CredentialsCallback: git2go.CredentialsCallback(func(url string, username_from_url string, allowed_types git2go.CredentialType) (*git2go.Credential, error) {
+			fmt.Println(url)
+			fmt.Println(username_from_url)
+			fmt.Println(allowed_types.String())
+
+			return git2go.NewCredentialSSHKey(username_from_url, "C:\\Users\\SVNPC\\.ssh\\id_rsa.pub", "C:\\Users\\SVNPC\\.ssh\\id_rsa", "")
+			//return git2go.NewCredentialSSHKeyFromAgent(username_from_url)
+		}),
+	}
+
+	pushOption := &git2go.PushOptions{
+		RemoteCallbacks: remoteCallbacks,
+	}
+
+	err := remote.Push([]string{targetRefPsec}, pushOption)
 
 	if err != nil {
-		if strings.Contains(err.Error(), "ssh: handshake failed: ssh:") {
-			logger.Log("push failed. Retrying push with git client", global.StatusWarning)
-			return p.windowsPush()
-		}
 		logger.Log(fmt.Sprintf("Error occurred while pushing changes to -> %s : %s\n%s", remoteName, targetRefPsec, err.Error()), global.StatusError)
 		return global.PushToRemoteError
 	} else {
-		logger.Log(fmt.Sprintf("commits pushed to remote -> %s : %s\n%v", remoteName, targetRefPsec, b.String()), global.StatusInfo)
+		logger.Log(fmt.Sprintf("commits pushed to remote -> %s : %s", remoteName, targetRefPsec), global.StatusInfo)
 		return global.PushToRemoteSuccess
 	}
+
+	//b := new(bytes.Buffer)
+	//sshAuth, sshErr := ssh.NewSSHAgentAuth("git")
+	//logger.Log(fmt.Sprintf("Pushing changes to remote -> %s : %s", remoteName, targetRefPsec), global.StatusInfo)
+	//
+	//if sshErr != nil {
+	//	logger.Log(fmt.Sprintf("Authentication failed -> %s", sshErr.Error()), global.StatusError)
+	//
+	//	if w == nil {
+	//		return global.PushToRemoteError
+	//	}
+	//	logger.Log("Falling back to native git client for pushing changes", global.StatusWarning)
+	//	return p.windowsPush()
+	//}
+	//
+	//remote, remoteErr := repo.Remote(remoteName)
+	//if remoteErr != nil {
+	//	logger.Log(remoteErr.Error(), global.StatusError)
+	//	return global.PushToRemoteError
+	//}
+	//
+	//err := remote.Push(&git.PushOptions{
+	//	RemoteName: remoteName,
+	//	RefSpecs:   []config.RefSpec{config.RefSpec(targetRefPsec)},
+	//	Auth:       sshAuth,
+	//	Progress: sideband.Progress(func(f io.Writer) io.Writer {
+	//		return f
+	//	}(b)),
+	//})
+	//
+	//if err != nil {
+	//	if strings.Contains(err.Error(), "ssh: handshake failed: ssh:") {
+	//		logger.Log("push failed. Retrying push with git client", global.StatusWarning)
+	//		return p.windowsPush()
+	//	}
+	//	logger.Log(fmt.Sprintf("Error occurred while pushing changes to -> %s : %s\n%s", remoteName, targetRefPsec, err.Error()), global.StatusError)
+	//	return global.PushToRemoteError
+	//} else {
+	//	logger.Log(fmt.Sprintf("commits pushed to remote -> %s : %s\n%v", remoteName, targetRefPsec, b.String()), global.StatusInfo)
+	//	return global.PushToRemoteSuccess
+	//}
 }
