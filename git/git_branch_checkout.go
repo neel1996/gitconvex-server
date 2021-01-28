@@ -5,7 +5,6 @@ import (
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"go/types"
-	"runtime/debug"
 	"strings"
 )
 
@@ -39,11 +38,12 @@ func (inputs BranchCheckoutInputs) CheckoutBranch() string {
 	var remoteBranchName string
 	var errStatus bool
 
-	defer func() {
+	defer func() string {
 		if r := recover(); r != nil {
 			logger.Log(fmt.Sprintf("%v", r), global.StatusError)
-			fmt.Println(debug.Stack())
+			return global.BranchCheckoutError
 		}
+		return global.BranchCheckoutError
 	}()
 
 	repo := inputs.Repo
@@ -122,7 +122,10 @@ func (inputs BranchCheckoutInputs) CheckoutBranch() string {
 			Strategy:       git2go.CheckoutSafe,
 			DisableFilters: false,
 		})
-		errStatus = checkCheckoutError(checkoutErr)
+
+		if checkoutErr != nil {
+			return returnCheckoutError(checkoutErr)
+		}
 
 		err := repo.SetHead(referenceBranchName)
 		if err != nil {
