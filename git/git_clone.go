@@ -1,17 +1,12 @@
 package git
 
 import (
-	"bytes"
 	"fmt"
-	git "github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"github.com/neel1996/gitconvex-server/utils"
 	"go/types"
-	"io"
 )
 
 type CloneInterface interface {
@@ -20,11 +15,13 @@ type CloneInterface interface {
 }
 
 type CloneStruct struct {
+	RepoName   string
 	RepoPath   string
 	RepoURL    string
 	AuthOption string
-	UserName   *string
-	Password   *string
+	UserName   string
+	Password   string
+	SSHKeyPath string
 }
 
 // fallbackClone performs a git clone using the native git client
@@ -60,66 +57,54 @@ func (c CloneStruct) CloneHandler() (*model.ResponseModel, error) {
 	repoURL := c.RepoURL
 	userName := c.UserName
 	password := c.Password
+	sshKeyPath := c.SSHKeyPath
 
-	gitSSHAuth, authErr := ssh.NewSSHAgentAuth("git")
+	logger.Log(fmt.Sprintf("Initiating repo clone with - %v auth option", authOption), global.StatusInfo)
+	var err error
+	var r *git2go.Repository
 
-	if authOption == "ssh" && authErr != nil {
-		logger.Log(authErr.Error(), global.StatusError)
-		logger.Log("Auth failed. Retrying with native git client based clone", global.StatusWarning)
-		return c.fallbackClone()
-	} else {
-		logger.Log(fmt.Sprintf("Initiating repo clone with - %v auth option", authOption), global.StatusInfo)
-		var err error
-		var r *git.Repository
-		b := new(bytes.Buffer)
-
-		if authOption == "ssh" {
-			r, err = git.PlainClone(repoPath, false, &git.CloneOptions{
-				URL:  repoURL,
-				Auth: gitSSHAuth,
-				Progress: sideband.Progress(func(f io.Writer) io.Writer {
-					return f
-				}(b)),
-			})
-		} else if authOption == "https" {
-			r, err = git.PlainClone(repoPath, false, &git.CloneOptions{
-				URL: repoURL,
-				Auth: &http.BasicAuth{
-					Username: *userName,
-					Password: *password,
-				},
-				Progress: sideband.Progress(func(f io.Writer) io.Writer {
-					return f
-				}(b)),
-			})
-		} else {
-			r, err = git.PlainClone(repoPath, false, &git.CloneOptions{
-				URL: repoURL,
-				Progress: sideband.Progress(func(f io.Writer) io.Writer {
-					return f
-				}(b)),
-			})
-		}
-
-		if err != nil {
-			logger.Log(fmt.Sprintf("Error occurred while cloning repo \n%v", err), global.StatusError)
-			return nil, types.Error{Msg: "Git repo clone failed"}
-		}
-
-		fmt.Println(b.String())
-
-		var repoRoot string
-		w, _ := r.Worktree()
-		if w != nil {
-			repoRoot = w.Filesystem.Root()
-		}
-
-		logger.Log(fmt.Sprintf("Repo %v - Cloned to target directory - %s", r, repoRoot), global.StatusInfo)
-
-		return &model.ResponseModel{
-			Status:    "success",
-			Message:   "Git clone completed",
-			HasFailed: false,
-		}, nil
+	var remoteCBObject RemoteCallbackInterface
+	remoteCBObject = &RemoteCallbackStruct{
+		RepoName:   c.RepoName,
+		UserName:   userName,
+		Password:   password,
+		SSHKeyPath: sshKeyPath,
 	}
+	var remoteCallbacks git2go.RemoteCallbacks
+
+	if authOption == "ssh" {
+		remoteCallbacks = git2go.RemoteCallbacks{
+			CertificateCheckCallback: remoteCBObject.CertCallback(),
+			CredentialsCallback:      remoteCBObject.SSHAUthCallBack(),
+		}
+	} else if authOption == "https" {
+		remoteCallbacks = git2go.RemoteCallbacks{
+			CertificateCheckCallback: remoteCBObject.CertCallback(),
+			CredentialsCallback:      remoteCBObject.HTTPSAuthCallBack(),
+		}
+	} else {
+		remoteCallbacks = git2go.RemoteCallbacks{
+			CertificateCheckCallback: remoteCBObject.CertCallback(),
+			CredentialsCallback:      remoteCBObject.NoAuthCallBack(),
+		}
+	}
+
+	r, err = git2go.Clone(repoURL, repoPath, &git2go.CloneOptions{
+		FetchOptions: &git2go.FetchOptions{
+			RemoteCallbacks: remoteCallbacks,
+		},
+	})
+
+	if err != nil {
+		logger.Log(fmt.Sprintf("Error occurred while cloning repo \n%v", err), global.StatusError)
+		return nil, types.Error{Msg: "Git repo clone failed"}
+	}
+
+	logger.Log(fmt.Sprintf("Repo %v - Cloned to target directory - %s", c.RepoName, r.Path()), global.StatusInfo)
+
+	return &model.ResponseModel{
+		Status:    "success",
+		Message:   "Git clone completed",
+		HasFailed: false,
+	}, nil
 }

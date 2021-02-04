@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
@@ -12,17 +13,18 @@ import (
 	"github.com/neel1996/gitconvex-server/graph/model"
 )
 
-func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool, authOption string, userName *string, password *string) (*model.AddRepoParams, error) {
+func (r *mutationResolver) AddRepo(ctx context.Context, repoName string, repoPath string, cloneSwitch bool, repoURL *string, initSwitch bool, authOption string, sshKeyPath *string, userName *string, password *string) (*model.AddRepoParams, error) {
 	var addRepoObject api.AddRepoInterface
 	addRepoObject = api.AddRepoInputs{
 		RepoName:    repoName,
 		RepoPath:    repoPath,
 		CloneSwitch: cloneSwitch,
-		RepoURL:     repoURL,
+		RepoURL:     *repoURL,
 		InitSwitch:  initSwitch,
 		AuthOption:  authOption,
-		UserName:    userName,
-		Password:    password,
+		UserName:    *userName,
+		Password:    *password,
+		SSHKeyPath:  *sshKeyPath,
 	}
 	return addRepoObject.AddRepo(), nil
 }

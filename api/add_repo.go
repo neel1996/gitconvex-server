@@ -24,11 +24,12 @@ type AddRepoInputs struct {
 	RepoName    string
 	RepoPath    string
 	CloneSwitch bool
-	RepoURL     *string
+	RepoURL     string
 	InitSwitch  bool
 	AuthOption  string
-	UserName    *string
-	Password    *string
+	UserName    string
+	Password    string
+	SSHKeyPath  string
 }
 
 type RepoData struct {
@@ -141,18 +142,27 @@ func (inputs AddRepoInputs) AddRepo() *model.AddRepoParams {
 	authOption := inputs.AuthOption
 	userName := inputs.UserName
 	password := inputs.Password
+	sshKeyPath := inputs.SSHKeyPath
 
-	if cloneSwitch && len(*repoURL) > 0 {
-		repoPath = repoPath + "/" + repoName
+	if cloneSwitch && len(repoURL) > 0 {
+		currentOs := HealthCheckApi().Os
+		if currentOs == "windows" {
+			repoPath = repoPath + "\\" + repoName
+		} else {
+			repoPath = repoPath + "/" + repoName
+		}
+
 		inputs.RepoPath = repoPath
 
 		var cloneObject git.CloneInterface
 		cloneObject = git.CloneStruct{
+			RepoName:   repoName,
 			RepoPath:   repoPath,
-			RepoURL:    *repoURL,
+			RepoURL:    repoURL,
 			AuthOption: authOption,
 			UserName:   userName,
 			Password:   password,
+			SSHKeyPath: sshKeyPath,
 		}
 
 		_, err := cloneObject.CloneHandler()

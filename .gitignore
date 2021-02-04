@@ -6,3 +6,4 @@ database/
 env_config.json
 gitclient
 *.exe
+*.dll
