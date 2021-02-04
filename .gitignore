@@ -5,5 +5,5 @@ build/
 database/
 env_config.json
 gitclient
-*.exe
-*.dll
+/*.exe
+/*.dll
