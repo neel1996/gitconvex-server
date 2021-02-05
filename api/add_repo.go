@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
@@ -9,6 +10,7 @@ import (
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"github.com/neel1996/gitconvex-server/utils"
 	"go/types"
+	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -33,15 +35,17 @@ type AddRepoInputs struct {
 }
 
 type RepoData struct {
-	Id        string `json:"id"`
-	RepoName  string `json:"repoName"`
-	RepoPath  string `json:"repoPath"`
-	TimeStamp string `json:"timestamp"`
+	Id         string `json:"id"`
+	RepoName   string `json:"repoName"`
+	RepoPath   string `json:"repoPath"`
+	TimeStamp  string `json:"timestamp"`
+	SSHKeyPath string `json:"sshKeyPath"`
+	UserName   string `json:"userName"`
+	Password   string `json:"password"`
 }
 
 // localLogger logs messages to the global logger module
 func localLogger(message string, status string) {
-	logger := &global.Logger{Message: message}
 	logger.Log(logger.Message, status)
 }
 
@@ -91,11 +95,31 @@ func dataFileWriteHandler(dbFile string, repoDataArray []RepoData) error {
 func (inputs AddRepoInputs) repoDataFileWriter(repoId string, repoAddStatus chan string) {
 	rArray := make([]RepoData, 1)
 
+	if inputs.Password != "" {
+		utfBytes := bytes.NewBufferString(inputs.Password)
+		hashedBytes, _ := bcrypt.GenerateFromPassword(utfBytes.Bytes(), bcrypt.MinCost)
+		if hashedBytes != nil {
+			inputs.Password = string(hashedBytes)
+		}
+	}
+
+	if inputs.Password != "" && repoId != "" {
+		var encryptObject utils.PasswordCipherInterface
+		encryptObject = utils.PasswordCipherStruct{
+			PlainPassword: inputs.Password,
+			KeyString:     repoId + repoId,
+		}
+		inputs.Password = encryptObject.EncryptPassword()
+	}
+
 	rArray[0] = RepoData{
-		Id:        repoId,
-		RepoName:  inputs.RepoName,
-		RepoPath:  inputs.RepoPath,
-		TimeStamp: time.Now().String(),
+		Id:         repoId,
+		RepoName:   inputs.RepoName,
+		RepoPath:   inputs.RepoPath,
+		TimeStamp:  time.Now().String(),
+		SSHKeyPath: inputs.SSHKeyPath,
+		UserName:   inputs.UserName,
+		Password:   inputs.Password,
 	}
 
 	envConfig := *utils.EnvConfigFileReader()

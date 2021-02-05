@@ -1,7 +1,6 @@
 package git
 
 import (
-	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
@@ -64,7 +63,6 @@ func (u UnPushedCommitStruct) UnPushedCommits() []*model.GitCommits {
 		if commonAncestor != nil {
 			commitArray = append(commitArray, commitModel(localCommit))
 			// Return if there is only one new commit to be pushed
-			fmt.Println(diff)
 			if diff == 1 {
 				return commitArray
 			}
