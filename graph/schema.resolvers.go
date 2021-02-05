@@ -516,7 +516,7 @@ func (r *queryResolver) GitChanges(ctx context.Context, repoID string) (*model.G
 	return gitChangeObject.ChangedFiles(), nil
 }
 
-func (r *queryResolver) GitUnPushedCommits(ctx context.Context, repoID string, remoteURL string, remoteBranch string) ([]*string, error) {
+func (r *queryResolver) GitUnPushedCommits(ctx context.Context, repoID string, remoteURL string, remoteBranch string) ([]*model.GitCommits, error) {
 	logger.Log("Initiating get un-pushed commits request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
@@ -538,7 +538,7 @@ func (r *queryResolver) GitUnPushedCommits(ctx context.Context, repoID string, r
 
 	var unPushedObject git.UnPushedCommitInterface
 	unPushedObject = git.UnPushedCommitStruct{
-		Repo:      repo.GitRepo,
+		Repo:      repo.Git2goRepo,
 		RemoteRef: remoteRef,
 	}
 	return unPushedObject.UnPushedCommits(), nil

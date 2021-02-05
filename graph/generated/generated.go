@@ -207,7 +207,7 @@ type QueryResolver interface {
 	SearchCommitLogs(ctx context.Context, repoID string, searchType string, searchKey string) ([]*model.GitCommits, error)
 	CodeFileDetails(ctx context.Context, repoID string, fileName string) (*model.CodeFileType, error)
 	GitChanges(ctx context.Context, repoID string) (*model.GitChangeResults, error)
-	GitUnPushedCommits(ctx context.Context, repoID string, remoteURL string, remoteBranch string) ([]*string, error)
+	GitUnPushedCommits(ctx context.Context, repoID string, remoteURL string, remoteBranch string) ([]*model.GitCommits, error)
 	GitFileLineChanges(ctx context.Context, repoID string, fileName string) (*model.FileLineChangeResult, error)
 	SettingsData(ctx context.Context) (*model.SettingsDataResults, error)
 	CommitCompare(ctx context.Context, repoID string, baseCommit string, compareCommit string) ([]*model.GitCommitFileResult, error)
@@ -1065,7 +1065,7 @@ type Query {
     searchCommitLogs(repoId: String!, searchType: String!, searchKey: String!): [gitCommits]!
     codeFileDetails(repoId: String!, fileName: String!): codeFileType!
     gitChanges(repoId: String!): gitChangeResults!
-    gitUnPushedCommits(repoId: String!, remoteURL: String!, remoteBranch: String!): [String]!
+    gitUnPushedCommits(repoId: String!, remoteURL: String!, remoteBranch: String!): [gitCommits]!
     gitFileLineChanges(repoId: String!, fileName: String!): fileLineChangeResult!
     settingsData: settingsDataResults!
     commitCompare(repoId: String!,baseCommit: String!, compareCommit: String!): [gitCommitFileResult]!
@@ -3887,9 +3887,9 @@ func (ec *executionContext) _Query_gitUnPushedCommits(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*string)
+	res := resTmp.([]*model.GitCommits)
 	fc.Result = res
-	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
+	return ec.marshalNgitCommits2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐGitCommits(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_gitFileLineChanges(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
