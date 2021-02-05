@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
@@ -50,7 +51,7 @@ func (u UnPushedCommitStruct) UnPushedCommits() []*model.GitCommits {
 	}
 
 	// Checking if both branches have any varying commits
-	diff := remoteBranch.Cmp(head)
+	diff := head.Cmp(remoteBranch.Reference)
 	if diff == 0 {
 		return commitArray
 	}
@@ -62,6 +63,12 @@ func (u UnPushedCommitStruct) UnPushedCommits() []*model.GitCommits {
 		commonAncestor, _ := repo.MergeBase(localCommit.Id(), remoteCommit.Id())
 		if commonAncestor != nil {
 			commitArray = append(commitArray, commitModel(localCommit))
+			// Return if there is only one new commit to be pushed
+			fmt.Println(diff)
+			if diff == 1 {
+				return commitArray
+			}
+
 			n := localCommit.ParentCount()
 			var i uint
 			for i = 0; i < n; i++ {
