@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 type RemoteCallbackInterface interface {
@@ -35,8 +36,30 @@ func (grc *RemoteCallbackStruct) CertCallback() git2go.CertificateCheckCallback 
 func (grc *RemoteCallbackStruct) SSHAUthCallBack() git2go.CredentialsCallback {
 	logger.Log("Initiating SSH credential creation", global.StatusInfo)
 	return func(url string, username_from_url string, allowed_types git2go.CredentialType) (*git2go.Credential, error) {
-		if allowed_types.String() == "SSHKey|SSHCustom" {
+		if strings.Contains(allowed_types.String(), "SSH") {
 			if runtime.GOOS != "windows" {
+				_, agentErr := exec.LookPath("ssh-agent")
+				if agentErr != nil {
+					logger.Log(agentErr.Error(), global.StatusError)
+					return nil, agentErr
+				}
+
+				_, sshAddErr := exec.LookPath("ssh-agent")
+				if sshAddErr != nil {
+					logger.Log(sshAddErr.Error(), global.StatusError)
+					return nil, sshAddErr
+				}
+
+				sshAdd, _ := exec.LookPath("ssh-add")
+				cmd := exec.Cmd{
+					Path: sshAdd,
+					Args: []string{"", grc.SSHKeyPath},
+				}
+				_, err := cmd.Output()
+				if err != nil {
+					logger.Log("Unable to add SSH key : "+err.Error(), global.StatusError)
+					return nil, err
+				}
 				return git2go.NewCredentialSSHKeyFromAgent(username_from_url)
 			}
 
