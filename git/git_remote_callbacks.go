@@ -13,6 +13,7 @@ import (
 )
 
 type RemoteCallbackInterface interface {
+	RemoteCallbackSelector() git2go.RemoteCallbacks
 	HTTPSAuthCallBack() git2go.CredentialsCallback
 	SSHAUthCallBack() git2go.CredentialsCallback
 	NoAuthCallBack() git2go.CredentialsCallback
@@ -24,12 +25,33 @@ type RemoteCallbackStruct struct {
 	UserName   string
 	Password   string
 	SSHKeyPath string
+	AuthOption string
 }
 
 func (grc *RemoteCallbackStruct) CertCallback() git2go.CertificateCheckCallback {
 	logger.Log("Verification to allow remote host certificates", global.StatusInfo)
 	return func(cert *git2go.Certificate, valid bool, hostname string) git2go.ErrorCode {
 		return 0
+	}
+}
+
+func (grc *RemoteCallbackStruct) RemoteCallbackSelector() git2go.RemoteCallbacks {
+	switch grc.AuthOption {
+	case global.SSHAuthOption:
+		return git2go.RemoteCallbacks{
+			CertificateCheckCallback: grc.CertCallback(),
+			CredentialsCallback:      grc.SSHAUthCallBack(),
+		}
+	case global.HTTPSAuthOption:
+		return git2go.RemoteCallbacks{
+			CertificateCheckCallback: grc.CertCallback(),
+			CredentialsCallback:      grc.HTTPSAuthCallBack(),
+		}
+	default:
+		return git2go.RemoteCallbacks{
+			CertificateCheckCallback: grc.CertCallback(),
+			CredentialsCallback:      grc.NoAuthCallBack(),
+		}
 	}
 }
 

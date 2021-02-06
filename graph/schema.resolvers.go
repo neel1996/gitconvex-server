@@ -312,6 +312,11 @@ func (r *mutationResolver) PushToRemote(ctx context.Context, repoID string, remo
 	var pushObject git.PushInterface
 	pushObject = git.PushStruct{
 		Repo:         repo.Git2goRepo,
+		RepoName:     repo.RepoName,
+		AuthOption:   repo.AuthOption,
+		UserName:     repo.UserName,
+		Password:     repo.Password,
+		SSHKeyPath:   repo.SSHKeyPath,
 		RemoteName:   remoteName,
 		RemoteBranch: branch,
 		RepoPath:     repo.RepoPath,

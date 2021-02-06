@@ -6,4 +6,7 @@ const (
 	DefaultPort      = "9001"
 	PuttyGenExeName  = "puttygen.exe"
 	PageantExeName   = "pageant.exe"
+	SSHAuthOption    = "ssh"
+	HTTPSAuthOption  = "http"
+	NoAuthOption     = "noauth"
 )

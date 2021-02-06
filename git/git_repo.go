@@ -18,6 +18,12 @@ type RepoStruct struct {
 type RepoDetails struct {
 	RepoId     string
 	RepoPath   string
+	RepoName   string
+	TimeStamp  string
+	AuthOption string
+	UserName   string
+	Password   string
+	SSHKeyPath string
 	GitRepo    *git.Repository
 	Git2goRepo *git2go.Repository
 }
@@ -34,7 +40,15 @@ func handlePanic() {
 // Repo function gets the repoId and returns the respective git.Repository object along with additional repo metadata
 func (r RepoStruct) Repo(repoChan chan RepoDetails) {
 	var repoData []utils.RepoData
-	var repoPath string
+	var (
+		repoName   string
+		repoPath   string
+		authOption string
+		sshKeyPath string
+		userName   string
+		password   string
+		timeStamp  string
+	)
 	logger := global.Logger{}
 	repoId := r.RepoId
 
@@ -48,7 +62,13 @@ func (r RepoStruct) Repo(repoChan chan RepoDetails) {
 
 	for _, repo := range repoData {
 		if repo.RepoId == repoId {
+			repoName = repo.RepoName
+			authOption = repo.AuthOption
+			sshKeyPath = repo.SSHKeyPath
+			userName = repo.UserName
+			password = repo.Password
 			repoPath = repo.RepoPath
+			timeStamp = repo.TimeStamp
 			break
 		}
 	}
@@ -71,6 +91,12 @@ func (r RepoStruct) Repo(repoChan chan RepoDetails) {
 		repoChan <- RepoDetails{
 			RepoId:     repoId,
 			RepoPath:   repoPath,
+			RepoName:   repoName,
+			TimeStamp:  timeStamp,
+			AuthOption: authOption,
+			UserName:   userName,
+			Password:   password,
+			SSHKeyPath: sshKeyPath,
 			GitRepo:    repository,
 			Git2goRepo: git2goRepo,
 		}
