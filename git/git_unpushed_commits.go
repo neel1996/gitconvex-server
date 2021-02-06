@@ -61,12 +61,6 @@ func (u UnPushedCommitStruct) UnPushedCommits() []*model.GitCommits {
 	if localCommit != nil && remoteCommit != nil {
 		commonAncestor, _ := repo.MergeBase(localCommit.Id(), remoteCommit.Id())
 		if commonAncestor != nil {
-			commitArray = append(commitArray, commitModel(localCommit))
-			// Return if there is only one new commit to be pushed
-			if diff == 1 {
-				return commitArray
-			}
-
 			n := localCommit.ParentCount()
 			var i uint
 			for i = 0; i < n; i++ {
