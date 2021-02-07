@@ -66,7 +66,7 @@ func (u UnPushedCommitStruct) UnPushedCommits() []*model.GitCommits {
 			var i uint
 			for i = 0; i < n; i++ {
 				currentCommit := localCommit.Parent(i)
-				if currentCommit != nil && currentCommit.Id() != commonAncestor {
+				if currentCommit != nil && currentCommit.Id().String() != commonAncestor.String() {
 					commitArray = append(commitArray, commitModel(currentCommit))
 				} else {
 					break
