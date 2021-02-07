@@ -1,7 +1,6 @@
 package api
 
 import (
-	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
@@ -26,7 +25,7 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 
 	var repoName *string
 	r := <-repoChan
-	repo := r.GitRepo
+	repo := r.Git2goRepo
 
 	if repo == nil {
 		return &model.GitRepoStatusResults{
@@ -81,13 +80,8 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		*remoteURL = *remotes[0]
 	}
 
-	//Temporary Statement
-	w, _ := repo.Worktree()
-	git2goRepo, _ := git2go.OpenRepository(w.Filesystem.Root())
-	// Block end
-
 	var branchListObject git.BranchListInterface
-	branchListObject = git.BranchListInputs{Repo: git2goRepo}
+	branchListObject = git.BranchListInputs{Repo: repo}
 	go branchListObject.GetBranchList(branchChan)
 
 	branchList := <-branchChan
@@ -99,7 +93,7 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 
 	var allCommitObject git.AllCommitInterface
 
-	allCommitObject = git.AllCommitStruct{Repo: git2goRepo}
+	allCommitObject = git.AllCommitStruct{Repo: repo}
 	go allCommitObject.AllCommits(commitChan)
 	commitData := <-commitChan
 	latestCommit = &commitData.LatestCommit
@@ -108,7 +102,7 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 
 	var listFilesObject git.ListFilesInterface
 	listFilesObject = git.ListFilesStruct{
-		Repo: git2goRepo,
+		Repo: repo,
 	}
 
 	go listFilesObject.TrackedFileCount(trackedFileCountChan)

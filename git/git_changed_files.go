@@ -17,7 +17,7 @@ type ChangedItemStruct struct {
 	RepoPath string
 }
 
-func checkCHangedFilesError(err error) error {
+func checkChangedFilesError(err error) error {
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
 		return err
@@ -52,7 +52,7 @@ func (c ChangedItemStruct) ChangedFiles() *model.GitChangeResults {
 			Show:  git2go.StatusShowIndexAndWorkdir,
 			Flags: git2go.StatusOptIncludeUntracked,
 		})
-		errStatus = checkCHangedFilesError(statusListErr)
+		errStatus = checkChangedFilesError(statusListErr)
 
 		n, _ := statusList.EntryCount()
 		for i := 0; i < n; i++ {
@@ -71,29 +71,29 @@ func (c ChangedItemStruct) ChangedFiles() *model.GitChangeResults {
 	}
 
 	commit, commitErr := repo.LookupCommit(head.Target())
-	errStatus = checkCHangedFilesError(commitErr)
+	errStatus = checkChangedFilesError(commitErr)
 
 	tree, treeErr := commit.Tree()
-	errStatus = checkCHangedFilesError(treeErr)
+	errStatus = checkChangedFilesError(treeErr)
 
 	diff, diffErr := repo.DiffTreeToWorkdirWithIndex(tree, nil)
-	errStatus = checkCHangedFilesError(diffErr)
+	errStatus = checkChangedFilesError(diffErr)
 
 	repoIndex, indexErr := repo.Index()
-	errStatus = checkCHangedFilesError(indexErr)
+	errStatus = checkChangedFilesError(indexErr)
 
 	stagedDiff, stagedDiffErr := repo.DiffTreeToIndex(tree, repoIndex, nil)
-	errStatus = checkCHangedFilesError(stagedDiffErr)
+	errStatus = checkChangedFilesError(stagedDiffErr)
 
 	statusList, statusListErr := repo.StatusList(&git2go.StatusOptions{
 		Show:     git2go.StatusShowWorkdirOnly,
 		Flags:    git2go.StatusOptIncludeUntracked,
 		Pathspec: nil,
 	})
-	errStatus = checkCHangedFilesError(statusListErr)
+	errStatus = checkChangedFilesError(statusListErr)
 
 	stat, statErr := stagedDiff.Stats()
-	errStatus = checkCHangedFilesError(statErr)
+	errStatus = checkChangedFilesError(statErr)
 
 	stagedFileCount := stat.FilesChanged()
 
@@ -101,7 +101,7 @@ func (c ChangedItemStruct) ChangedFiles() *model.GitChangeResults {
 		n, _ := stagedDiff.NumDeltas()
 		for d := 0; d < n; d++ {
 			delta, deltaErr := stagedDiff.Delta(d)
-			errStatus = checkCHangedFilesError(deltaErr)
+			errStatus = checkChangedFilesError(deltaErr)
 
 			fileEntry := delta.NewFile.Path
 			logger.Log(fmt.Sprintf("Staged file --> %v", fileEntry), global.StatusInfo)
@@ -117,7 +117,7 @@ func (c ChangedItemStruct) ChangedFiles() *model.GitChangeResults {
 	n, _ = diff.NumDeltas()
 	for d := 0; d < n; d++ {
 		delta, deltaErr := diff.Delta(d)
-		errStatus = checkCHangedFilesError(deltaErr)
+		errStatus = checkChangedFilesError(deltaErr)
 
 		fileEntry := delta.NewFile.Path
 		if !stagedMap[fileEntry] {
@@ -138,7 +138,7 @@ func (c ChangedItemStruct) ChangedFiles() *model.GitChangeResults {
 	}
 
 	numStatus, numStatusErr := statusList.EntryCount()
-	errStatus = checkCHangedFilesError(numStatusErr)
+	errStatus = checkChangedFilesError(numStatusErr)
 
 	for i := 0; i < numStatus; i++ {
 		statusEntry, _ := statusList.ByIndex(i)

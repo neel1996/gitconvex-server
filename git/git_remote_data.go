@@ -2,7 +2,7 @@ package git
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5"
+	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"strings"
 )
@@ -14,7 +14,7 @@ type RemoteDataInterface interface {
 }
 
 type RemoteDataStruct struct {
-	Repo      *git.Repository
+	Repo      *git2go.Repository
 	RemoteURL string
 }
 
@@ -40,43 +40,39 @@ func (r RemoteDataStruct) GetRemoteHost() *string {
 
 // GetRemoteName function returns the name of the remote based on the supplied remote URL
 func (r RemoteDataStruct) GetRemoteName() string {
-	var remoteName string
-	logger := global.Logger{}
-
 	repo := r.Repo
 	remoteURL := r.RemoteURL
+	remoteList, _ := repo.Remotes.List()
 
-	remotes, remoteErr := repo.Remotes()
-
-	if remoteErr != nil {
-		logger.Log(remoteErr.Error(), global.StatusError)
-	} else {
-		for _, remote := range remotes {
-			if remote.Config().URLs[0] == remoteURL {
-				remoteName = remote.Config().Name
+	for _, remoteEntry := range remoteList {
+		remoteCollection, _ := repo.Remotes.Lookup(remoteEntry)
+		if remoteCollection != nil {
+			url := remoteCollection.Url()
+			if url == remoteURL {
+				remoteName := remoteCollection.Name()
+				logger.Log(fmt.Sprintf("Remote Name - %s for the url - %s", remoteName, remoteURL), global.StatusInfo)
+				return remoteName
 			}
 		}
 	}
-	return remoteName
+	logger.Log(fmt.Sprintf("Unable to find a suitable remote entry for the url - %s", remoteURL), global.StatusError)
+	return ""
 }
 
 // RemoteData returns the remote host name and the remote URL of the target repo
 func (r RemoteDataStruct) RemoteData(remoteChan chan RemoteDataModel) {
-	logger := global.Logger{}
 	var remoteURL []*string
 	repo := r.Repo
 
-	remote, _ := repo.Remotes()
-	remoteURL = func() []*string {
-		var rUrl []*string
-		for _, i := range remote {
-			for _, tempUrl := range i.Config().URLs {
-				logger.Log(fmt.Sprintf("Available remotes in repo : \n%v", tempUrl), global.StatusInfo)
-				rUrl = append(rUrl, &tempUrl)
-			}
+	remotes, _ := repo.Remotes.List()
+
+	for _, i := range remotes {
+		remote, _ := repo.Remotes.Lookup(i)
+		if remote != nil {
+			url := remote.Url()
+			remoteURL = append(remoteURL, &url)
 		}
-		return rUrl
-	}()
+	}
 
 	if len(remoteURL) == 0 {
 		nilRemote := "No Remote Host Available"
