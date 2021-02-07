@@ -103,7 +103,7 @@ func (inputs AddRepoInputs) repoDataFileWriter(repoId string, repoAddStatus chan
 		var encryptObject utils.PasswordCipherInterface
 		encryptObject = utils.PasswordCipherStruct{
 			PlainPassword: inputs.Password,
-			KeyString:     repoId + repoId,
+			KeyString:     repoId,
 		}
 		inputs.Password = encryptObject.EncryptPassword()
 	}

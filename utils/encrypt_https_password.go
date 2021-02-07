@@ -25,7 +25,7 @@ func (x PasswordCipherStruct) EncryptPassword() string {
 	plainText := x.PlainPassword
 	keyString := x.KeyString
 
-	keyBytes := []byte(keyString)
+	keyBytes := []byte(keyString + keyString)
 	plainBytes := []byte(plainText)
 
 	if keyBytes != nil {
@@ -57,7 +57,7 @@ func (x PasswordCipherStruct) DecryptPassword() string {
 	keyString := x.KeyString
 	password := x.EncryptedPassword
 	encBytes, _ := base64.StdEncoding.DecodeString(password)
-	keyBytes := []byte(keyString)
+	keyBytes := []byte(keyString + keyString)
 
 	if keyBytes == nil && encBytes == nil {
 		return ""

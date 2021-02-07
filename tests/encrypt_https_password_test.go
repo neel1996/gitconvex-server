@@ -20,7 +20,7 @@ func TestPasswordCipherStruct_EncryptPassword(t *testing.T) {
 			PlainPassword     string
 			EncryptedPassword string
 			KeyString         string
-		}{PlainPassword: "password", EncryptedPassword: "", KeyString: "ac2f0ec3ac2f0ec3"}, want: "7XJmCQ/zn+xDqemILMJ1mS1zUqAzivF5PQ6r5YX2cEl7QhM+"},
+		}{PlainPassword: "password", EncryptedPassword: "", KeyString: "ac2f0ec3"}, want: "7XJmCQ/zn+xDqemILMJ1mS1zUqAzivF5PQ6r5YX2cEl7QhM+"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -51,7 +51,7 @@ func TestPasswordCipherStruct_DecryptPassword(t *testing.T) {
 			PlainPassword     string
 			EncryptedPassword string
 			KeyString         string
-		}{PlainPassword: "", EncryptedPassword: "7XJmCQ/zn+xDqemILMJ1mS1zUqAzivF5PQ6r5YX2cEl7QhM+", KeyString: "ac2f0ec3ac2f0ec3"}, want: "password"},
+		}{PlainPassword: "", EncryptedPassword: "7XJmCQ/zn+xDqemILMJ1mS1zUqAzivF5PQ6r5YX2cEl7QhM+", KeyString: "ac2f0ec3"}, want: "password"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

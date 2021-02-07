@@ -4,6 +4,7 @@ import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
+	"github.com/neel1996/gitconvex-server/utils"
 	"go/types"
 	"os"
 	"os/exec"
@@ -21,6 +22,7 @@ type RemoteCallbackInterface interface {
 }
 
 type RemoteCallbackStruct struct {
+	RepoId     string
 	RepoName   string
 	UserName   string
 	Password   string
@@ -133,6 +135,13 @@ func (grc *RemoteCallbackStruct) SSHAUthCallBack() git2go.CredentialsCallback {
 
 func (grc *RemoteCallbackStruct) HTTPSAuthCallBack() git2go.CredentialsCallback {
 	return func(url string, username_from_url string, allowed_types git2go.CredentialType) (*git2go.Credential, error) {
+		var cipherObject utils.PasswordCipherInterface
+		cipherObject = utils.PasswordCipherStruct{
+			EncryptedPassword: grc.Password,
+			KeyString:         grc.RepoId,
+		}
+		grc.Password = cipherObject.DecryptPassword()
+
 		if allowed_types == git2go.CredentialTypeUserpassPlaintext {
 			return git2go.NewCredentialUserpassPlaintext(grc.UserName, grc.Password)
 		} else {
