@@ -61,12 +61,13 @@ func (u UnPushedCommitStruct) UnPushedCommits() []*model.GitCommits {
 	if localCommit != nil && remoteCommit != nil {
 		commonAncestor, _ := repo.MergeBase(localCommit.Id(), remoteCommit.Id())
 		if commonAncestor != nil {
+			commitArray = append(commitArray, commitModel(localCommit))
 			n := localCommit.ParentCount()
 			var i uint
 			for i = 0; i < n; i++ {
 				currentCommit := localCommit.Parent(i)
 				if currentCommit != nil && currentCommit.Id() != commonAncestor {
-					commitArray = append(commitArray, commitModel(localCommit))
+					commitArray = append(commitArray, commitModel(currentCommit))
 				} else {
 					break
 				}
