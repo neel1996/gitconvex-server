@@ -138,17 +138,22 @@ func (r *mutationResolver) FetchFromRemote(ctx context.Context, repoID string, r
 
 	var remoteDataObject git.RemoteDataInterface
 	remoteDataObject = git.RemoteDataStruct{
-		Repo:      repo.GitRepo,
+		Repo:      repo.Git2goRepo,
 		RemoteURL: *remoteURL,
 	}
 
 	var fetchObject git.FetchInterface
 	fetchObject = git.FetchStruct{
-		Repo:         repo.GitRepo,
+		Repo:         repo.Git2goRepo,
 		RemoteName:   remoteDataObject.GetRemoteName(),
 		RepoPath:     repo.RepoPath,
 		RemoteURL:    *remoteURL,
 		RemoteBranch: *remoteBranch,
+		RepoName:     repo.RepoName,
+		AuthOption:   repo.AuthOption,
+		UserName:     repo.UserName,
+		Password:     repo.Password,
+		SSHKeyPath:   repo.SSHKeyPath,
 	}
 	return fetchObject.FetchFromRemote(), nil
 }
@@ -298,7 +303,7 @@ func (r *mutationResolver) PushToRemote(ctx context.Context, repoID string, remo
 
 	var remoteDataObject git.RemoteDataInterface
 	remoteDataObject = git.RemoteDataStruct{
-		Repo:      repo.GitRepo,
+		Repo:      repo.Git2goRepo,
 		RemoteURL: remoteHost,
 	}
 
@@ -535,7 +540,7 @@ func (r *queryResolver) GitUnPushedCommits(ctx context.Context, repoID string, r
 	}
 	var remoteDataObject git.RemoteDataInterface
 	remoteDataObject = git.RemoteDataStruct{
-		Repo:      repo.GitRepo,
+		Repo:      repo.Git2goRepo,
 		RemoteURL: remoteURL,
 	}
 	remoteName := remoteDataObject.GetRemoteName()
