@@ -40,6 +40,12 @@ func (grc *RemoteCallbackStruct) CertCallback() git2go.CertificateCheckCallback 
 func (grc *RemoteCallbackStruct) RemoteCallbackSelector() git2go.RemoteCallbacks {
 	switch grc.AuthOption {
 	case global.SSHAuthOption:
+		if runtime.GOOS == "windows" {
+			err := grc.invokeWindowsPageant()
+			if err != nil {
+				return git2go.RemoteCallbacks{}
+			}
+		}
 		return git2go.RemoteCallbacks{
 			CertificateCheckCallback: grc.CertCallback(),
 			CredentialsCallback:      grc.SSHAUthCallBack(),
@@ -87,49 +93,60 @@ func (grc *RemoteCallbackStruct) SSHAUthCallBack() git2go.CredentialsCallback {
 				return git2go.NewCredentialSSHKeyFromAgent(username_from_url)
 			}
 
-			logger.Log("Starting up pageant agent for windows", global.StatusInfo)
-			execPath, execPathErr := os.Executable()
-
-			if execPathErr != nil {
-				logger.Log(execPathErr.Error(), global.StatusError)
-				return nil, execPathErr
-			}
-
-			execPath = filepath.Dir(execPath)
-			etcPath := execPath + "\\etc\\"
-			keyGenPath := etcPath + "\\" + global.PuttyGenExeName
-			ppkFileName := etcPath + "\\" + grc.RepoName + ".ppk"
-
-			cmdArgs := []string{"", grc.SSHKeyPath, "-o", ppkFileName}
-			cmd := exec.Cmd{
-				Path: keyGenPath,
-				Args: cmdArgs,
-			}
-			_, cmdErr := cmd.Output()
-
-			if cmdErr == nil {
-				pageantPath := etcPath + global.PageantExeName
-				cmdArgs := []string{"", ppkFileName}
-
-				cmd := exec.Cmd{Path: pageantPath, Args: cmdArgs}
-				_, cmdErr := cmd.Output()
-
-				if cmdErr == nil {
-					return git2go.NewCredentialSSHKeyFromAgent(username_from_url)
-				} else {
-					logger.Log(cmdErr.Error(), global.StatusError)
-					return nil, types.Error{Msg: "AUTH Failed on a non-windows platform"}
-				}
-			} else {
-				logger.Log("Unable to convert private key", global.StatusWarning)
-				logger.Log(cmdErr.Error(), global.StatusError)
-			}
+			return git2go.NewCredentialSSHKeyFromAgent(username_from_url)
 		} else {
 			logger.Log("Expected auth type is not received", global.StatusWarning)
 			logger.Log(fmt.Sprintf("Expected : %s || Recived : %s", git2go.CredentialTypeSSHKey.String(), allowed_types.String()), global.StatusWarning)
 			return nil, types.Error{Msg: "AUTH Failed due to incompatible auth mode " + allowed_types.String()}
 		}
-		return nil, types.Error{Msg: "AUTH Failed for SSH auth mode"}
+	}
+}
+
+func (grc *RemoteCallbackStruct) invokeWindowsPageant() error {
+	logger.Log("Starting up pageant agent for windows", global.StatusInfo)
+	execPath, execPathErr := os.Executable()
+
+	if execPathErr != nil {
+		logger.Log(execPathErr.Error(), global.StatusError)
+		return execPathErr
+	}
+
+	execPath = filepath.Dir(execPath)
+	etcPath := execPath + "\\etc\\"
+	keyGenPath := etcPath + "\\" + global.PuttyGenExeName
+	ppkFileName := etcPath + "\\" + grc.RepoName + ".ppk"
+
+	var (
+		cmdArgs []string
+		cmd     exec.Cmd
+		cmdErr  error
+	)
+
+	cmdArgs = []string{"", grc.SSHKeyPath, "-o", ppkFileName}
+	cmd = exec.Cmd{
+		Path: keyGenPath,
+		Args: cmdArgs,
+	}
+	_, cmdErr = cmd.Output()
+
+	if cmdErr == nil {
+		pageantPath := etcPath + global.PageantExeName
+		cmdArgs = []string{"", ppkFileName}
+
+		cmd = exec.Cmd{Path: pageantPath, Args: cmdArgs}
+		cmdErr = cmd.Start()
+		_ = cmd.Process.Release()
+
+		if cmdErr == nil {
+			return cmdErr
+		} else {
+			logger.Log(cmdErr.Error(), global.StatusError)
+			return cmdErr
+		}
+	} else {
+		logger.Log("Unable to convert private key", global.StatusWarning)
+		logger.Log(cmdErr.Error(), global.StatusError)
+		return cmdErr
 	}
 }
 
