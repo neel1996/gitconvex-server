@@ -54,9 +54,10 @@ func (s StageAllStruct) StageAllItems() string {
 				Repo:     repo,
 				FileItem: *stageItem,
 			}
-			logger.Log("Staging items -> "+*stageItem, global.StatusInfo)
+			logger.Log("From stage all : Staging item -> "+*stageItem, global.StatusInfo)
 			stageStatus := stageItemObject.StageItem()
 			if stageStatus != global.StageItemSuccess {
+				logger.Log("Stage individual item failed => "+*stageItem, global.StatusError)
 				stageAllSwitch = false
 			}
 		}
