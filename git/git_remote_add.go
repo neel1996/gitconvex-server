@@ -4,10 +4,11 @@ import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
+	"github.com/neel1996/gitconvex-server/graph/model"
 )
 
 type AddRemoteInterface interface {
-	AddRemote() string
+	AddRemote() *model.RemoteMutationResult
 }
 
 type AddRemoteStruct struct {
@@ -17,7 +18,7 @@ type AddRemoteStruct struct {
 }
 
 // AddRemote adds a new remote to the target git repo
-func (a AddRemoteStruct) AddRemote() string {
+func (a AddRemoteStruct) AddRemote() *model.RemoteMutationResult {
 	repo := a.Repo
 	remoteName := a.RemoteName
 	remoteURL := a.RemoteURL
@@ -26,9 +27,9 @@ func (a AddRemoteStruct) AddRemote() string {
 
 	if err == nil {
 		logger.Log(fmt.Sprintf("New remote %s added to the repo", remote.Name()), global.StatusInfo)
-		return global.RemoteAddSuccess
+		return &model.RemoteMutationResult{Status: global.RemoteAddSuccess}
 	} else {
 		logger.Log("Remote addition Failed -> "+err.Error(), global.StatusError)
-		return global.RemoteAddError
+		return &model.RemoteMutationResult{Status: global.RemoteAddError}
 	}
 }

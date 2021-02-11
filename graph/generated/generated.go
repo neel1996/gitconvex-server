@@ -94,7 +94,9 @@ type ComplexityRoot struct {
 		CheckoutBranch      func(childComplexity int, repoID string, branchName string) int
 		CommitChanges       func(childComplexity int, repoID string, commitMessage string) int
 		DeleteBranch        func(childComplexity int, repoID string, branchName string, forceFlag bool) int
+		DeleteRemote        func(childComplexity int, repoID string, remoteName string) int
 		DeleteRepo          func(childComplexity int, repoID string) int
+		EditRemote          func(childComplexity int, repoID string, remoteName string, newRemoteName string, remoteURL string) int
 		FetchFromRemote     func(childComplexity int, repoID string, remoteURL *string, remoteBranch *string) int
 		PullFromRemote      func(childComplexity int, repoID string, remoteURL *string, remoteBranch *string) int
 		PushToRemote        func(childComplexity int, repoID string, remoteHost string, branch string) int
@@ -117,6 +119,7 @@ type ComplexityRoot struct {
 		CodeFileDetails    func(childComplexity int, repoID string, fileName string) int
 		CommitCompare      func(childComplexity int, repoID string, baseCommit string, compareCommit string) int
 		FetchRepo          func(childComplexity int) int
+		GetRemote          func(childComplexity int, repoID string) int
 		GitChanges         func(childComplexity int, repoID string) int
 		GitCommitFiles     func(childComplexity int, repoID string, commitHash string) int
 		GitCommitLogs      func(childComplexity int, repoID string, referenceCommit string) int
@@ -172,6 +175,15 @@ type ComplexityRoot struct {
 		Hash             func(childComplexity int) int
 	}
 
+	RemoteDetails struct {
+		RemoteName func(childComplexity int) int
+		RemoteURL  func(childComplexity int) int
+	}
+
+	RemoteMutationResult struct {
+		Status func(childComplexity int) int
+	}
+
 	SettingsDataResults struct {
 		SettingsDatabasePath func(childComplexity int) int
 		SettingsPortDetails  func(childComplexity int) int
@@ -183,7 +195,6 @@ type MutationResolver interface {
 	AddBranch(ctx context.Context, repoID string, branchName string) (string, error)
 	CheckoutBranch(ctx context.Context, repoID string, branchName string) (string, error)
 	DeleteBranch(ctx context.Context, repoID string, branchName string, forceFlag bool) (*model.BranchDeleteStatus, error)
-	AddRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (string, error)
 	FetchFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.FetchResult, error)
 	PullFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.PullResult, error)
 	StageItem(ctx context.Context, repoID string, item string) (string, error)
@@ -196,6 +207,9 @@ type MutationResolver interface {
 	UpdateRepoDataFile(ctx context.Context, newDbFile string) (string, error)
 	DeleteRepo(ctx context.Context, repoID string) (*model.DeleteStatus, error)
 	UpdateRepoName(ctx context.Context, repoID string, repoName string) (string, error)
+	AddRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (*model.RemoteMutationResult, error)
+	DeleteRemote(ctx context.Context, repoID string, remoteName string) (*model.RemoteMutationResult, error)
+	EditRemote(ctx context.Context, repoID string, remoteName string, newRemoteName string, remoteURL string) (*model.RemoteMutationResult, error)
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
@@ -212,6 +226,7 @@ type QueryResolver interface {
 	SettingsData(ctx context.Context) (*model.SettingsDataResults, error)
 	CommitCompare(ctx context.Context, repoID string, baseCommit string, compareCommit string) ([]*model.GitCommitFileResult, error)
 	BranchCompare(ctx context.Context, repoID string, baseBranch string, compareBranch string) ([]*model.BranchCompareResults, error)
+	GetRemote(ctx context.Context, repoID string) ([]*model.RemoteDetails, error)
 }
 
 type executableSchema struct {
@@ -462,6 +477,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteBranch(childComplexity, args["repoId"].(string), args["branchName"].(string), args["forceFlag"].(bool)), true
 
+	case "Mutation.deleteRemote":
+		if e.complexity.Mutation.DeleteRemote == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteRemote_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteRemote(childComplexity, args["repoId"].(string), args["remoteName"].(string)), true
+
 	case "Mutation.deleteRepo":
 		if e.complexity.Mutation.DeleteRepo == nil {
 			break
@@ -473,6 +500,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteRepo(childComplexity, args["repoId"].(string)), true
+
+	case "Mutation.editRemote":
+		if e.complexity.Mutation.EditRemote == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editRemote_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditRemote(childComplexity, args["repoId"].(string), args["remoteName"].(string), args["newRemoteName"].(string), args["remoteUrl"].(string)), true
 
 	case "Mutation.fetchFromRemote":
 		if e.complexity.Mutation.FetchFromRemote == nil {
@@ -650,6 +689,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.FetchRepo(childComplexity), true
+
+	case "Query.getRemote":
+		if e.complexity.Query.GetRemote == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getRemote_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetRemote(childComplexity, args["repoId"].(string)), true
 
 	case "Query.gitChanges":
 		if e.complexity.Query.GitChanges == nil {
@@ -894,6 +945,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GitCommits.Hash(childComplexity), true
 
+	case "remoteDetails.remoteName":
+		if e.complexity.RemoteDetails.RemoteName == nil {
+			break
+		}
+
+		return e.complexity.RemoteDetails.RemoteName(childComplexity), true
+
+	case "remoteDetails.remoteUrl":
+		if e.complexity.RemoteDetails.RemoteURL == nil {
+			break
+		}
+
+		return e.complexity.RemoteDetails.RemoteURL(childComplexity), true
+
+	case "remoteMutationResult.status":
+		if e.complexity.RemoteMutationResult.Status == nil {
+			break
+		}
+
+		return e.complexity.RemoteMutationResult.Status(childComplexity), true
+
 	case "settingsDataResults.settingsDatabasePath":
 		if e.complexity.SettingsDataResults.SettingsDatabasePath == nil {
 			break
@@ -1055,6 +1127,11 @@ type branchCompareResults{
     commits: [gitCommits]!
 }
 
+type remoteDetails {
+    remoteName: String!
+    remoteUrl: String!
+}
+
 type Query {
     healthCheck: HealthCheckParams!
     fetchRepo: FetchRepoParams!
@@ -1070,6 +1147,7 @@ type Query {
     settingsData: settingsDataResults!
     commitCompare(repoId: String!,baseCommit: String!, compareCommit: String!): [gitCommitFileResult]!
     branchCompare(repoId: String!, baseBranch: String!, compareBranch: String!): [branchCompareResults]!
+    getRemote(repoId: String!): [remoteDetails]!
 }
 
 type BranchDeleteStatus{
@@ -1091,12 +1169,15 @@ type deleteStatus{
     repoId: String!
 }
 
+type remoteMutationResult{
+    status: String!
+}
+
 type Mutation {
     addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!, authOption: String!, sshKeyPath: String, userName: String, password: String): AddRepoParams!
     addBranch(repoId: String!, branchName: String!): String!
     checkoutBranch(repoId: String!, branchName: String!): String!
     deleteBranch(repoId: String!, branchName: String!, forceFlag: Boolean!): BranchDeleteStatus!
-    addRemote(repoId: String!, remoteName: String!, remoteUrl: String!): String!
     fetchFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): FetchResult!
     pullFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): PullResult!
     stageItem(repoId: String!, item: String!): String!
@@ -1109,6 +1190,9 @@ type Mutation {
     updateRepoDataFile(newDbFile: String!): String!
     deleteRepo(repoId: String!): deleteStatus!
     updateRepoName(repoId: String!, repoName: String!): String!
+    addRemote(repoId: String!, remoteName: String!, remoteUrl: String!): remoteMutationResult!
+    deleteRemote(repoId: String!, remoteName: String!): remoteMutationResult!
+    editRemote(repoId: String!, remoteName: String!, newRemoteName: String!, remoteUrl: String!): remoteMutationResult!
 }
 `, BuiltIn: false},
 }
@@ -1343,6 +1427,30 @@ func (ec *executionContext) field_Mutation_deleteBranch_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteRemote_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["remoteName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["remoteName"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteRepo_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1355,6 +1463,48 @@ func (ec *executionContext) field_Mutation_deleteRepo_args(ctx context.Context, 
 		}
 	}
 	args["repoId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editRemote_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["remoteName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["remoteName"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["newRemoteName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newRemoteName"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newRemoteName"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["remoteUrl"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteUrl"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["remoteUrl"] = arg3
 	return args, nil
 }
 
@@ -1691,6 +1841,21 @@ func (ec *executionContext) field_Query_commitCompare_args(ctx context.Context, 
 		}
 	}
 	args["compareCommit"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getRemote_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["repoId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repoId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["repoId"] = arg0
 	return args, nil
 }
 
@@ -2870,48 +3035,6 @@ func (ec *executionContext) _Mutation_deleteBranch(ctx context.Context, field gr
 	return ec.marshalNBranchDeleteStatus2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐBranchDeleteStatus(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_addRemote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_addRemote_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddRemote(rctx, args["repoId"].(string), args["remoteName"].(string), args["remoteUrl"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Mutation_fetchFromRemote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3414,6 +3537,132 @@ func (ec *executionContext) _Mutation_updateRepoName(ctx context.Context, field 
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_addRemote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addRemote_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddRemote(rctx, args["repoId"].(string), args["remoteName"].(string), args["remoteUrl"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.RemoteMutationResult)
+	fc.Result = res
+	return ec.marshalNremoteMutationResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐRemoteMutationResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteRemote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteRemote_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteRemote(rctx, args["repoId"].(string), args["remoteName"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.RemoteMutationResult)
+	fc.Result = res
+	return ec.marshalNremoteMutationResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐRemoteMutationResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_editRemote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_editRemote_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditRemote(rctx, args["repoId"].(string), args["remoteName"].(string), args["newRemoteName"].(string), args["remoteUrl"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.RemoteMutationResult)
+	fc.Result = res
+	return ec.marshalNremoteMutationResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐRemoteMutationResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PullResult_status(ctx context.Context, field graphql.CollectedField, obj *model.PullResult) (ret graphql.Marshaler) {
@@ -4051,6 +4300,48 @@ func (ec *executionContext) _Query_branchCompare(ctx context.Context, field grap
 	res := resTmp.([]*model.BranchCompareResults)
 	fc.Result = res
 	return ec.marshalNbranchCompareResults2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐBranchCompareResults(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getRemote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getRemote_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetRemote(rctx, args["repoId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.RemoteDetails)
+	fc.Result = res
+	return ec.marshalNremoteDetails2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐRemoteDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5851,6 +6142,111 @@ func (ec *executionContext) _gitCommits_commitFilesCount(ctx context.Context, fi
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _remoteDetails_remoteName(ctx context.Context, field graphql.CollectedField, obj *model.RemoteDetails) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "remoteDetails",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RemoteName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _remoteDetails_remoteUrl(ctx context.Context, field graphql.CollectedField, obj *model.RemoteDetails) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "remoteDetails",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RemoteURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _remoteMutationResult_status(ctx context.Context, field graphql.CollectedField, obj *model.RemoteMutationResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "remoteMutationResult",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _settingsDataResults_settingsDatabasePath(ctx context.Context, field graphql.CollectedField, obj *model.SettingsDataResults) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6210,11 +6606,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "addRemote":
-			out.Values[i] = ec._Mutation_addRemote(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "fetchFromRemote":
 			out.Values[i] = ec._Mutation_fetchFromRemote(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -6272,6 +6663,21 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "updateRepoName":
 			out.Values[i] = ec._Mutation_updateRepoName(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "addRemote":
+			out.Values[i] = ec._Mutation_addRemote(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteRemote":
+			out.Values[i] = ec._Mutation_deleteRemote(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "editRemote":
+			out.Values[i] = ec._Mutation_editRemote(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -6524,6 +6930,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_branchCompare(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "getRemote":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getRemote(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -7024,6 +7444,65 @@ func (ec *executionContext) _gitCommits(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._gitCommits_commitMessage(ctx, field, obj)
 		case "commitFilesCount":
 			out.Values[i] = ec._gitCommits_commitFilesCount(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var remoteDetailsImplementors = []string{"remoteDetails"}
+
+func (ec *executionContext) _remoteDetails(ctx context.Context, sel ast.SelectionSet, obj *model.RemoteDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, remoteDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("remoteDetails")
+		case "remoteName":
+			out.Values[i] = ec._remoteDetails_remoteName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "remoteUrl":
+			out.Values[i] = ec._remoteDetails_remoteUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var remoteMutationResultImplementors = []string{"remoteMutationResult"}
+
+func (ec *executionContext) _remoteMutationResult(ctx context.Context, sel ast.SelectionSet, obj *model.RemoteMutationResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, remoteMutationResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("remoteMutationResult")
+		case "status":
+			out.Values[i] = ec._remoteMutationResult_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7653,6 +8132,57 @@ func (ec *executionContext) marshalNgitCommits2ᚕᚖgithubᚗcomᚋneel1996ᚋg
 	return ret
 }
 
+func (ec *executionContext) marshalNremoteDetails2ᚕᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐRemoteDetails(ctx context.Context, sel ast.SelectionSet, v []*model.RemoteDetails) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOremoteDetails2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐRemoteDetails(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNremoteMutationResult2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐRemoteMutationResult(ctx context.Context, sel ast.SelectionSet, v model.RemoteMutationResult) graphql.Marshaler {
+	return ec._remoteMutationResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNremoteMutationResult2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐRemoteMutationResult(ctx context.Context, sel ast.SelectionSet, v *model.RemoteMutationResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._remoteMutationResult(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNsettingsDataResults2githubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐSettingsDataResults(ctx context.Context, sel ast.SelectionSet, v model.SettingsDataResults) graphql.Marshaler {
 	return ec._settingsDataResults(ctx, sel, &v)
 }
@@ -8014,6 +8544,13 @@ func (ec *executionContext) marshalOgitCommits2ᚖgithubᚗcomᚋneel1996ᚋgitc
 		return graphql.Null
 	}
 	return ec._gitCommits(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOremoteDetails2ᚖgithubᚗcomᚋneel1996ᚋgitconvexᚑserverᚋgraphᚋmodelᚐRemoteDetails(ctx context.Context, sel ast.SelectionSet, v *model.RemoteDetails) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._remoteDetails(ctx, sel, v)
 }
 
 // endregion ***************************** type.gotpl *****************************

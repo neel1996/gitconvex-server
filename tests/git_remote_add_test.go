@@ -47,7 +47,7 @@ func TestAddRemote(t *testing.T) {
 				RemoteName: tt.args.remoteName,
 				RemoteURL:  tt.args.remoteURL,
 			}
-			if got := testObj.AddRemote(); got != tt.want {
+			if got := testObj.AddRemote(); got.Status != tt.want {
 				t.Errorf("AddRemote() = %v, want %v", got, tt.want)
 			}
 		})

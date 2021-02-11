@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
@@ -96,28 +95,6 @@ func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, bran
 	return deleteBranchObject.DeleteBranch(), nil
 }
 
-func (r *mutationResolver) AddRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (string, error) {
-	logger.Log("Initiating remote addition request", global.StatusInfo)
-
-	repoChan := make(chan git.RepoDetails)
-	var repoObject git.RepoInterface
-	repoObject = git.RepoStruct{RepoId: repoID}
-	go repoObject.Repo(repoChan)
-	repo := <-repoChan
-	if repo.GitRepo == nil {
-		logger.Log("Repo is invalid", global.StatusError)
-		return global.RemoteAddError, nil
-	}
-
-	var addRemoteObject git.AddRemoteInterface
-	addRemoteObject = git.AddRemoteStruct{
-		Repo:       repo.Git2goRepo,
-		RemoteName: remoteName,
-		RemoteURL:  remoteURL,
-	}
-	return addRemoteObject.AddRemote(), nil
-}
-
 func (r *mutationResolver) FetchFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.FetchResult, error) {
 	logger.Log("Initiating fetch from remote request", global.StatusInfo)
 
@@ -176,7 +153,7 @@ func (r *mutationResolver) PullFromRemote(ctx context.Context, repoID string, re
 
 	var pullObject git.PullInterface
 	pullObject = git.PullStruct{
-		Repo:         repo.GitRepo,
+		Repo:         repo.Git2goRepo,
 		RemoteURL:    *remoteURL,
 		RemoteBranch: *remoteBranch,
 		RepoPath:     repo.RepoPath,
@@ -347,6 +324,73 @@ func (r *mutationResolver) DeleteRepo(ctx context.Context, repoID string) (*mode
 func (r *mutationResolver) UpdateRepoName(ctx context.Context, repoID string, repoName string) (string, error) {
 	logger.Log("Initiating repo name update request", global.StatusInfo)
 	return api.UpdateRepoName(repoID, repoName)
+}
+
+func (r *mutationResolver) AddRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (*model.RemoteMutationResult, error) {
+	logger.Log("Initiating remote addition request", global.StatusInfo)
+
+	repoChan := make(chan git.RepoDetails)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
+	repo := <-repoChan
+	if repo.GitRepo == nil {
+		logger.Log("Repo is invalid", global.StatusError)
+		return &model.RemoteMutationResult{Status: global.RemoteAddError}, nil
+	}
+
+	var addRemoteObject git.AddRemoteInterface
+	addRemoteObject = git.AddRemoteStruct{
+		Repo:       repo.Git2goRepo,
+		RemoteName: remoteName,
+		RemoteURL:  remoteURL,
+	}
+	return addRemoteObject.AddRemote(), nil
+}
+
+func (r *mutationResolver) DeleteRemote(ctx context.Context, repoID string, remoteName string) (*model.RemoteMutationResult, error) {
+	logger.Log("Initiating remote deletion request", global.StatusInfo)
+
+	repoChan := make(chan git.RepoDetails)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
+	repo := <-repoChan
+	if repo.GitRepo == nil {
+		logger.Log("Repo is invalid", global.StatusError)
+		return &model.RemoteMutationResult{Status: global.RemoteAddError}, nil
+	}
+
+	var addRemoteObject git.DeleteRemoteInterface
+	addRemoteObject = &git.DeleteRemoteStruct{
+		Repo:       repo.Git2goRepo,
+		RemoteName: remoteName,
+	}
+	return addRemoteObject.DeleteRemote(), nil
+}
+
+func (r *mutationResolver) EditRemote(ctx context.Context, repoID string, remoteName string, newRemoteName string, remoteURL string) (*model.RemoteMutationResult, error) {
+	logger.Log("Initiating remote edit request", global.StatusInfo)
+
+	repoChan := make(chan git.RepoDetails)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
+	repo := <-repoChan
+
+	if repo.Git2goRepo == nil {
+		logger.Log("Repo is invalid", global.StatusError)
+		return &model.RemoteMutationResult{Status: global.RemoteEditError}, nil
+	}
+
+	var editRemoteObject git.RemoteEditInterface
+	editRemoteObject = git.RemoteEditStruct{
+		Repo:          repo.Git2goRepo,
+		RemoteName:    remoteName,
+		NewRemoteName: newRemoteName,
+		RemoteUrl:     remoteURL,
+	}
+	return editRemoteObject.EditRemoteUrl(), nil
 }
 
 func (r *queryResolver) HealthCheck(ctx context.Context) (*model.HealthCheckParams, error) {
@@ -645,6 +689,23 @@ func (r *queryResolver) BranchCompare(ctx context.Context, repoID string, baseBr
 		DiffBranch: compareBranch,
 	}
 	return branchCompareObject.CompareBranch(), nil
+}
+
+func (r *queryResolver) GetRemote(ctx context.Context, repoID string) ([]*model.RemoteDetails, error) {
+	logger.Log("Initating remote data fetching", global.StatusInfo)
+
+	repoChan := make(chan git.RepoDetails)
+	var repoObject git.RepoInterface
+	repoObject = git.RepoStruct{RepoId: repoID}
+	go repoObject.Repo(repoChan)
+	repo := <-repoChan
+
+	var remoteObject git.RemoteDataInterface
+	remoteObject = git.RemoteDataStruct{
+		Repo: repo.Git2goRepo,
+	}
+	allRemoteData := remoteObject.GetAllRemotes()
+	return allRemoteData, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

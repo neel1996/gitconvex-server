@@ -4,12 +4,14 @@ import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
+	"github.com/neel1996/gitconvex-server/graph/model"
 	"strings"
 )
 
 type RemoteDataInterface interface {
 	GetRemoteHost() *string
 	GetRemoteName() string
+	GetAllRemotes() []*model.RemoteDetails
 	RemoteData(remoteChan chan RemoteDataModel)
 }
 
@@ -89,4 +91,33 @@ func (r RemoteDataStruct) RemoteData(remoteChan chan RemoteDataModel) {
 		}
 	}
 	close(remoteChan)
+}
+
+// GetAllRemotes returns all the remotes and their corresponding URLs from the target repo
+func (r RemoteDataStruct) GetAllRemotes() []*model.RemoteDetails {
+	var allRemoteData []*model.RemoteDetails
+
+	repo := r.Repo
+	remoteList, remoteListErr := repo.Remotes.List()
+	if remoteListErr != nil {
+		logger.Log(remoteListErr.Error(), global.StatusError)
+		return nil
+	}
+
+	for _, remoteEntry := range remoteList {
+		if remoteEntry != "" {
+			remote, remoteErr := repo.Remotes.Lookup(remoteEntry)
+			if remoteErr != nil {
+				logger.Log(remoteErr.Error(), global.StatusError)
+				continue
+			}
+			data := model.RemoteDetails{
+				RemoteName: remote.Name(),
+				RemoteURL:  remote.Url(),
+			}
+			logger.Log(fmt.Sprintf("Remote data fetched => %+v", data), global.StatusInfo)
+			allRemoteData = append(allRemoteData, &data)
+		}
+	}
+	return allRemoteData
 }
