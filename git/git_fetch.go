@@ -31,15 +31,6 @@ func (f FetchStruct) FetchFromRemote() *model.FetchResult {
 	remoteURL := f.RemoteURL
 	remoteBranch := f.RemoteBranch
 
-	// Pick the first available remote if no remote is selected
-	if remoteURL == "" {
-		remotes, _ := repo.Remotes.List()
-		if len(remotes) > 0 {
-			firstRemote, _ := repo.Remotes.Lookup(remotes[0])
-			remoteURL = firstRemote.Url()
-		}
-	}
-
 	var remoteDataObject RemoteDataInterface
 	remoteDataObject = RemoteDataStruct{
 		Repo:      repo,
@@ -47,11 +38,7 @@ func (f FetchStruct) FetchFromRemote() *model.FetchResult {
 	}
 
 	remoteName := remoteDataObject.GetRemoteName()
-	if remoteBranch == "" {
-		targetRefPsec = ""
-	} else {
-		targetRefPsec = "refs/heads/" + remoteBranch
-	}
+	targetRefPsec = "refs/remotes/" + remoteName + "/" + remoteBranch
 	targetRemote, _ := repo.Remotes.Lookup(remoteName)
 
 	if targetRemote == nil {
@@ -75,20 +62,50 @@ func (f FetchStruct) FetchFromRemote() *model.FetchResult {
 		RemoteCallbacks: remoteCallbackObject.RemoteCallbackSelector(),
 	}
 
-	err := targetRemote.Fetch([]string{targetRefPsec}, fetchOption, "")
+	remoteRef, remoteRefErr := repo.References.Lookup(targetRefPsec)
+	if remoteRefErr == nil {
+		remoteCommit, _ := repo.AnnotatedCommitFromRef(remoteRef)
+		if remoteCommit != nil {
+			mergeAnalysis, _, mergeErr := repo.MergeAnalysis([]*git2go.AnnotatedCommit{remoteCommit})
+			if mergeErr != nil {
+				logger.Log("Fetch failed - "+mergeErr.Error(), global.StatusError)
+				return &model.FetchResult{
+					Status:       global.FetchFromRemoteError,
+					FetchedItems: nil,
+				}
+			} else {
+				if mergeAnalysis == git2go.MergeAnalysisUpToDate {
+					logger.Log("No new changes to fetch from remote", global.StatusWarning)
+					msg := "No new changes to fetch from remote"
+					return &model.FetchResult{
+						Status:       global.FetchNoNewChanges,
+						FetchedItems: []*string{&msg},
+					}
+				}
+			}
+		}
 
-	if err != nil {
-		logger.Log("Fetch failed - "+err.Error(), global.StatusError)
+		err := targetRemote.Fetch([]string{targetRefPsec}, fetchOption, "")
+
+		if err != nil {
+			logger.Log("Fetch failed - "+err.Error(), global.StatusError)
+			return &model.FetchResult{
+				Status:       global.FetchFromRemoteError,
+				FetchedItems: nil,
+			}
+		} else {
+			msg := "Changes fetched from remote " + remoteName
+			logger.Log(msg, global.StatusInfo)
+			return &model.FetchResult{
+				Status:       global.FetchFromRemoteSuccess,
+				FetchedItems: []*string{&msg},
+			}
+		}
+	} else {
+		logger.Log("Fetch failed - "+remoteRefErr.Error(), global.StatusError)
 		return &model.FetchResult{
 			Status:       global.FetchFromRemoteError,
 			FetchedItems: nil,
-		}
-	} else {
-		msg := "Changes fetched from remote " + remoteName
-		logger.Log(msg, global.StatusInfo)
-		return &model.FetchResult{
-			Status:       global.FetchFromRemoteSuccess,
-			FetchedItems: []*string{&msg},
 		}
 	}
 }
