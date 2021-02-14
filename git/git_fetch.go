@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
@@ -74,7 +75,7 @@ func (f FetchStruct) FetchFromRemote() *model.FetchResult {
 					FetchedItems: nil,
 				}
 			} else {
-				if mergeAnalysis == git2go.MergeAnalysisUpToDate {
+				if mergeAnalysis&git2go.MergeAnalysisUpToDate == 0 {
 					logger.Log("No new changes to fetch from remote", global.StatusWarning)
 					msg := "No new changes to fetch from remote"
 					return &model.FetchResult{
@@ -85,8 +86,8 @@ func (f FetchStruct) FetchFromRemote() *model.FetchResult {
 			}
 		}
 
+		logger.Log(fmt.Sprintf("Fetching changes from -> %s - %s", remoteName, targetRefPsec), global.StatusInfo)
 		err := targetRemote.Fetch([]string{targetRefPsec}, fetchOption, "")
-
 		if err != nil {
 			logger.Log("Fetch failed - "+err.Error(), global.StatusError)
 			return &model.FetchResult{
