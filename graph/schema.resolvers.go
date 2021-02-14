@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/git"
 	"github.com/neel1996/gitconvex-server/global"
@@ -157,6 +158,11 @@ func (r *mutationResolver) PullFromRemote(ctx context.Context, repoID string, re
 		RemoteURL:    *remoteURL,
 		RemoteBranch: *remoteBranch,
 		RepoPath:     repo.RepoPath,
+		RepoName:     repo.RepoName,
+		AuthOption:   repo.AuthOption,
+		UserName:     repo.UserName,
+		Password:     repo.Password,
+		SSHKeyPath:   repo.SSHKeyPath,
 	}
 	return pullObject.PullFromRemote(), nil
 }
@@ -369,7 +375,7 @@ func (r *mutationResolver) DeleteRemote(ctx context.Context, repoID string, remo
 	return addRemoteObject.DeleteRemote(), nil
 }
 
-func (r *mutationResolver) EditRemote(ctx context.Context, repoID string, remoteName string, newRemoteName string, remoteURL string) (*model.RemoteMutationResult, error) {
+func (r *mutationResolver) EditRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (*model.RemoteMutationResult, error) {
 	logger.Log("Initiating remote edit request", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
@@ -385,10 +391,9 @@ func (r *mutationResolver) EditRemote(ctx context.Context, repoID string, remote
 
 	var editRemoteObject git.RemoteEditInterface
 	editRemoteObject = git.RemoteEditStruct{
-		Repo:          repo.Git2goRepo,
-		RemoteName:    remoteName,
-		NewRemoteName: newRemoteName,
-		RemoteUrl:     remoteURL,
+		Repo:       repo.Git2goRepo,
+		RemoteName: remoteName,
+		RemoteUrl:  remoteURL,
 	}
 	return editRemoteObject.EditRemoteUrl(), nil
 }

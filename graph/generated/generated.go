@@ -96,7 +96,7 @@ type ComplexityRoot struct {
 		DeleteBranch        func(childComplexity int, repoID string, branchName string, forceFlag bool) int
 		DeleteRemote        func(childComplexity int, repoID string, remoteName string) int
 		DeleteRepo          func(childComplexity int, repoID string) int
-		EditRemote          func(childComplexity int, repoID string, remoteName string, newRemoteName string, remoteURL string) int
+		EditRemote          func(childComplexity int, repoID string, remoteName string, remoteURL string) int
 		FetchFromRemote     func(childComplexity int, repoID string, remoteURL *string, remoteBranch *string) int
 		PullFromRemote      func(childComplexity int, repoID string, remoteURL *string, remoteBranch *string) int
 		PushToRemote        func(childComplexity int, repoID string, remoteHost string, branch string) int
@@ -209,7 +209,7 @@ type MutationResolver interface {
 	UpdateRepoName(ctx context.Context, repoID string, repoName string) (string, error)
 	AddRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (*model.RemoteMutationResult, error)
 	DeleteRemote(ctx context.Context, repoID string, remoteName string) (*model.RemoteMutationResult, error)
-	EditRemote(ctx context.Context, repoID string, remoteName string, newRemoteName string, remoteURL string) (*model.RemoteMutationResult, error)
+	EditRemote(ctx context.Context, repoID string, remoteName string, remoteURL string) (*model.RemoteMutationResult, error)
 }
 type QueryResolver interface {
 	HealthCheck(ctx context.Context) (*model.HealthCheckParams, error)
@@ -511,7 +511,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.EditRemote(childComplexity, args["repoId"].(string), args["remoteName"].(string), args["newRemoteName"].(string), args["remoteUrl"].(string)), true
+		return e.complexity.Mutation.EditRemote(childComplexity, args["repoId"].(string), args["remoteName"].(string), args["remoteUrl"].(string)), true
 
 	case "Mutation.fetchFromRemote":
 		if e.complexity.Mutation.FetchFromRemote == nil {
@@ -1192,7 +1192,7 @@ type Mutation {
     updateRepoName(repoId: String!, repoName: String!): String!
     addRemote(repoId: String!, remoteName: String!, remoteUrl: String!): remoteMutationResult!
     deleteRemote(repoId: String!, remoteName: String!): remoteMutationResult!
-    editRemote(repoId: String!, remoteName: String!, newRemoteName: String!, remoteUrl: String!): remoteMutationResult!
+    editRemote(repoId: String!, remoteName: String!, remoteUrl: String!): remoteMutationResult!
 }
 `, BuiltIn: false},
 }
@@ -1488,23 +1488,14 @@ func (ec *executionContext) field_Mutation_editRemote_args(ctx context.Context, 
 	}
 	args["remoteName"] = arg1
 	var arg2 string
-	if tmp, ok := rawArgs["newRemoteName"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newRemoteName"))
+	if tmp, ok := rawArgs["remoteUrl"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteUrl"))
 		arg2, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["newRemoteName"] = arg2
-	var arg3 string
-	if tmp, ok := rawArgs["remoteUrl"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remoteUrl"))
-		arg3, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["remoteUrl"] = arg3
+	args["remoteUrl"] = arg2
 	return args, nil
 }
 
@@ -3648,7 +3639,7 @@ func (ec *executionContext) _Mutation_editRemote(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().EditRemote(rctx, args["repoId"].(string), args["remoteName"].(string), args["newRemoteName"].(string), args["remoteUrl"].(string))
+		return ec.resolvers.Mutation().EditRemote(rctx, args["repoId"].(string), args["remoteName"].(string), args["remoteUrl"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
