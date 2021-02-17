@@ -73,8 +73,6 @@ func (p PullStruct) PullFromRemote() *model.PullResult {
 	remoteRef, remoteRefErr := repo.References.Lookup(targetRefPsec)
 
 	if remoteRefErr == nil {
-		remote, _ := repo.Remotes.Lookup(remoteName)
-		_ = remote.Fetch([]string{}, nil, "")
 		remoteCommit, _ := repo.LookupCommit(remoteRef.Target())
 		fmt.Println(remoteRef.Name())
 		fmt.Println(remoteCommit.Message())
@@ -85,7 +83,7 @@ func (p PullStruct) PullFromRemote() *model.PullResult {
 			if mergeErr != nil {
 				return returnPullErr("Pull failed - " + mergeErr.Error())
 			} else {
-				if mergeAnalysis&git2go.MergeAnalysisUpToDate == 0 {
+				if mergeAnalysis&git2go.MergeAnalysisUpToDate != 0 {
 					logger.Log("No new changes to pull from remote", global.StatusWarning)
 					msg := "No new changes to pull from remote"
 					return &model.PullResult{

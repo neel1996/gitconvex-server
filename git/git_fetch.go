@@ -75,7 +75,7 @@ func (f FetchStruct) FetchFromRemote() *model.FetchResult {
 					FetchedItems: nil,
 				}
 			} else {
-				if mergeAnalysis&git2go.MergeAnalysisUpToDate == 0 {
+				if mergeAnalysis&git2go.MergeAnalysisUpToDate != 0 {
 					logger.Log("No new changes to fetch from remote", global.StatusWarning)
 					msg := "No new changes to fetch from remote"
 					return &model.FetchResult{
