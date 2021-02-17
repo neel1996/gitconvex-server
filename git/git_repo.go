@@ -29,8 +29,6 @@ type RepoDetails struct {
 }
 
 func handlePanic() {
-	logger := global.Logger{}
-
 	panicMsg := recover()
 	if panicMsg != nil {
 		logger.Log("Required fields not received", global.StatusWarning)
@@ -49,7 +47,6 @@ func (r RepoStruct) Repo(repoChan chan RepoDetails) {
 		password   string
 		timeStamp  string
 	)
-	logger := global.Logger{}
 	repoId := r.RepoId
 
 	defer handlePanic()
