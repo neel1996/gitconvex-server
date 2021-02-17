@@ -661,7 +661,7 @@ func (r *queryResolver) CommitCompare(ctx context.Context, repoID string, baseCo
 
 	var compareCommitObject git.CompareCommitInterface
 	compareCommitObject = git.CompareCommitStruct{
-		Repo:                repo.GitRepo,
+		Repo:                repo.Git2goRepo,
 		BaseCommitString:    baseCommit,
 		CompareCommitString: compareCommit,
 	}
