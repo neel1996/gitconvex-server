@@ -629,7 +629,7 @@ func (r *queryResolver) GitFileLineChanges(ctx context.Context, repoID string, f
 
 	var fileLineDiffObject git.FileLineDiffInterface
 	fileLineDiffObject = git.FileLineDiffStruct{
-		Repo:     repo.GitRepo,
+		Repo:     repo.Git2goRepo,
 		FileName: fileName,
 		Data:     fileContent.FileData,
 	}
