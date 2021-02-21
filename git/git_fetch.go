@@ -27,7 +27,6 @@ type FetchStruct struct {
 // FetchFromRemote performs a git fetch for the supplied remote and branch (e.g. `git fetch origin main`)
 // If the remoteBranch is empty, then a fetch is performed with no branch name (similar to `git fetch`)
 func (f FetchStruct) FetchFromRemote() *model.FetchResult {
-	var targetRefPsec string
 	repo := f.Repo
 	remoteURL := f.RemoteURL
 	remoteBranch := f.RemoteBranch
@@ -39,7 +38,8 @@ func (f FetchStruct) FetchFromRemote() *model.FetchResult {
 	}
 
 	remoteName := remoteDataObject.GetRemoteName()
-	targetRefPsec = "refs/remotes/" + remoteName + "/" + remoteBranch
+	localRefSpec := "+refs/heads/" + remoteBranch
+	targetRefPsec := "refs/remotes/" + remoteName + "/" + remoteBranch
 	targetRemote, _ := repo.Remotes.Lookup(remoteName)
 
 	if targetRemote == nil {
@@ -62,6 +62,8 @@ func (f FetchStruct) FetchFromRemote() *model.FetchResult {
 	fetchOption := &git2go.FetchOptions{
 		RemoteCallbacks: remoteCallbackObject.RemoteCallbackSelector(),
 	}
+	logger.Log(fmt.Sprintf("Fetching changes from -> %s - %s", remoteName, localRefSpec+":"+targetRefPsec), global.StatusInfo)
+	err := targetRemote.Fetch([]string{localRefSpec + ":" + targetRefPsec}, fetchOption, "")
 
 	remoteRef, remoteRefErr := repo.References.Lookup(targetRefPsec)
 	if remoteRefErr == nil {
@@ -86,8 +88,6 @@ func (f FetchStruct) FetchFromRemote() *model.FetchResult {
 			}
 		}
 
-		logger.Log(fmt.Sprintf("Fetching changes from -> %s - %s", remoteName, targetRefPsec), global.StatusInfo)
-		err := targetRemote.Fetch([]string{targetRefPsec}, fetchOption, "")
 		if err != nil {
 			logger.Log("Fetch failed - "+err.Error(), global.StatusError)
 			return &model.FetchResult{
