@@ -50,8 +50,6 @@ func (c CloneStruct) fallbackClone() (*model.ResponseModel, error) {
 // CloneHandler clones the remote repo to the target directory
 // It supports options for SSH and HTTPS authentications
 func (c CloneStruct) CloneHandler() (*model.ResponseModel, error) {
-	logger := global.Logger{}
-
 	authOption := c.AuthOption
 	repoPath := c.RepoPath
 	repoURL := c.RepoURL
@@ -68,26 +66,11 @@ func (c CloneStruct) CloneHandler() (*model.ResponseModel, error) {
 		RepoName:   c.RepoName,
 		UserName:   userName,
 		Password:   password,
+		AuthOption: authOption,
 		SSHKeyPath: sshKeyPath,
 	}
 	var remoteCallbacks git2go.RemoteCallbacks
-
-	if authOption == "ssh" {
-		remoteCallbacks = git2go.RemoteCallbacks{
-			CertificateCheckCallback: remoteCBObject.CertCallback(),
-			CredentialsCallback:      remoteCBObject.SSHAUthCallBack(),
-		}
-	} else if authOption == "https" {
-		remoteCallbacks = git2go.RemoteCallbacks{
-			CertificateCheckCallback: remoteCBObject.CertCallback(),
-			CredentialsCallback:      remoteCBObject.HTTPSAuthCallBack(),
-		}
-	} else {
-		remoteCallbacks = git2go.RemoteCallbacks{
-			CertificateCheckCallback: remoteCBObject.CertCallback(),
-			CredentialsCallback:      remoteCBObject.NoAuthCallBack(),
-		}
-	}
+	remoteCallbacks = remoteCBObject.RemoteCallbackSelector()
 
 	r, err = git2go.Clone(repoURL, repoPath, &git2go.CloneOptions{
 		FetchOptions: &git2go.FetchOptions{
