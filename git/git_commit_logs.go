@@ -26,6 +26,10 @@ func commitOrganizer(repo *git2go.Repository, commits []git2go.Commit) []*model.
 			commitMessage := strings.Split(commit.Message(), "\n")[0]
 
 			parentCommit := commit.Parent(0)
+			if parentCommit == nil {
+				logger.Log("NIL Commit encountered", global.StatusWarning)
+				continue
+			}
 			parentTree, _ := parentCommit.Tree()
 			currentTree, _ := commit.Tree()
 
