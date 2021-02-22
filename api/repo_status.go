@@ -25,7 +25,7 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 
 	var repoName *string
 	r := <-repoChan
-	repo := r.Git2goRepo
+	repo := r.GitRepo
 
 	if repo == nil {
 		return &model.GitRepoStatusResults{

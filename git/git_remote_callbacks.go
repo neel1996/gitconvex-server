@@ -41,6 +41,7 @@ func (grc *RemoteCallbackStruct) RemoteCallbackSelector() git2go.RemoteCallbacks
 	switch grc.AuthOption {
 	case global.SSHAuthOption:
 		if runtime.GOOS == "windows" {
+			logger.Log("Platform detected is windows. Initiating SSH agent startup", global.StatusInfo)
 			err := grc.invokeWindowsPageant()
 			if err != nil {
 				return git2go.RemoteCallbacks{}

@@ -44,7 +44,7 @@ func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchN
 
 	var addBranchObj git.AddBranchInterface
 	addBranchObj = git.AddBranchInput{
-		Repo:       repo.Git2goRepo,
+		Repo:       repo.GitRepo,
 		BranchName: branchName,
 	}
 	return addBranchObj.AddBranch(), nil
@@ -67,7 +67,7 @@ func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, br
 
 	var checkoutObject git.BranchCheckoutInterface
 	checkoutObject = git.BranchCheckoutInputs{
-		Repo:       repo.Git2goRepo,
+		Repo:       repo.GitRepo,
 		BranchName: branchName,
 	}
 	return checkoutObject.CheckoutBranch(), nil
@@ -90,7 +90,7 @@ func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, bran
 
 	var deleteBranchObject git.DeleteBranchInterface
 	deleteBranchObject = git.DeleteBranchInputs{
-		Repo:       repo.Git2goRepo,
+		Repo:       repo.GitRepo,
 		BranchName: branchName,
 	}
 	return deleteBranchObject.DeleteBranch(), nil
@@ -116,13 +116,13 @@ func (r *mutationResolver) FetchFromRemote(ctx context.Context, repoID string, r
 
 	var remoteDataObject git.RemoteDataInterface
 	remoteDataObject = git.RemoteDataStruct{
-		Repo:      repo.Git2goRepo,
+		Repo:      repo.GitRepo,
 		RemoteURL: *remoteURL,
 	}
 
 	var fetchObject git.FetchInterface
 	fetchObject = git.FetchStruct{
-		Repo:         repo.Git2goRepo,
+		Repo:         repo.GitRepo,
 		RemoteName:   remoteDataObject.GetRemoteName(),
 		RepoPath:     repo.RepoPath,
 		RemoteURL:    *remoteURL,
@@ -154,7 +154,7 @@ func (r *mutationResolver) PullFromRemote(ctx context.Context, repoID string, re
 
 	var pullObject git.PullInterface
 	pullObject = git.PullStruct{
-		Repo:         repo.Git2goRepo,
+		Repo:         repo.GitRepo,
 		RemoteURL:    *remoteURL,
 		RemoteBranch: *remoteBranch,
 		RepoPath:     repo.RepoPath,
@@ -182,7 +182,7 @@ func (r *mutationResolver) StageItem(ctx context.Context, repoID string, item st
 
 	var stageItemObject git.StageItemInterface
 	stageItemObject = git.StageItemStruct{
-		Repo:     repo.Git2goRepo,
+		Repo:     repo.GitRepo,
 		FileItem: item,
 	}
 	return stageItemObject.StageItem(), nil
@@ -203,7 +203,7 @@ func (r *mutationResolver) RemoveStagedItem(ctx context.Context, repoID string, 
 
 	var resetObject git.ResetInterface
 	resetObject = git.ResetStruct{
-		Repo:     repo.Git2goRepo,
+		Repo:     repo.GitRepo,
 		RepoPath: repo.RepoPath,
 		FileItem: item,
 	}
@@ -224,7 +224,7 @@ func (r *mutationResolver) RemoveAllStagedItem(ctx context.Context, repoID strin
 	}
 
 	var resetAllObject git.ResetAllInterface
-	resetAllObject = git.ResetAllStruct{Repo: repo.Git2goRepo}
+	resetAllObject = git.ResetAllStruct{Repo: repo.GitRepo}
 	return resetAllObject.ResetAllItems(), nil
 }
 
@@ -242,7 +242,7 @@ func (r *mutationResolver) StageAllItems(ctx context.Context, repoID string) (st
 	}
 
 	var stageAllObject git.StageAllInterface
-	stageAllObject = git.StageAllStruct{Repo: repo.Git2goRepo}
+	stageAllObject = git.StageAllStruct{Repo: repo.GitRepo}
 	return stageAllObject.StageAllItems(), nil
 }
 
@@ -257,20 +257,14 @@ func (r *mutationResolver) CommitChanges(ctx context.Context, repoID string, com
 
 	var commitObject git.CommitInterface
 	commitObject = git.CommitStruct{
-		Repo:          repo.Git2goRepo,
+		Repo:          repo.GitRepo,
 		CommitMessage: commitMessage,
 		RepoPath:      repo.RepoPath,
 	}
 
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
-		w, _ := repo.GitRepo.Worktree()
-		if w != nil {
-
-			return commitObject.CommitChanges(), nil
-		} else {
-			logger.Log("Repo is invalid or worktree is null", global.StatusError)
-			return global.CommitChangeError, nil
-		}
+		logger.Log("Repo is invalid or worktree is null", global.StatusError)
+		return global.CommitChangeError, nil
 	}
 	return commitObject.CommitChanges(), nil
 }
@@ -286,7 +280,7 @@ func (r *mutationResolver) PushToRemote(ctx context.Context, repoID string, remo
 
 	var remoteDataObject git.RemoteDataInterface
 	remoteDataObject = git.RemoteDataStruct{
-		Repo:      repo.Git2goRepo,
+		Repo:      repo.GitRepo,
 		RemoteURL: remoteHost,
 	}
 
@@ -299,7 +293,7 @@ func (r *mutationResolver) PushToRemote(ctx context.Context, repoID string, remo
 
 	var pushObject git.PushInterface
 	pushObject = git.PushStruct{
-		Repo:         repo.Git2goRepo,
+		Repo:         repo.GitRepo,
 		RepoName:     repo.RepoName,
 		AuthOption:   repo.AuthOption,
 		UserName:     repo.UserName,
@@ -347,7 +341,7 @@ func (r *mutationResolver) AddRemote(ctx context.Context, repoID string, remoteN
 
 	var addRemoteObject git.AddRemoteInterface
 	addRemoteObject = git.AddRemoteStruct{
-		Repo:       repo.Git2goRepo,
+		Repo:       repo.GitRepo,
 		RemoteName: remoteName,
 		RemoteURL:  remoteURL,
 	}
@@ -369,7 +363,7 @@ func (r *mutationResolver) DeleteRemote(ctx context.Context, repoID string, remo
 
 	var addRemoteObject git.DeleteRemoteInterface
 	addRemoteObject = &git.DeleteRemoteStruct{
-		Repo:       repo.Git2goRepo,
+		Repo:       repo.GitRepo,
 		RemoteName: remoteName,
 	}
 	return addRemoteObject.DeleteRemote(), nil
@@ -384,14 +378,14 @@ func (r *mutationResolver) EditRemote(ctx context.Context, repoID string, remote
 	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 
-	if repo.Git2goRepo == nil {
+	if repo.GitRepo == nil {
 		logger.Log("Repo is invalid", global.StatusError)
 		return &model.RemoteMutationResult{Status: global.RemoteEditError}, nil
 	}
 
 	var editRemoteObject git.RemoteEditInterface
 	editRemoteObject = git.RemoteEditStruct{
-		Repo:       repo.Git2goRepo,
+		Repo:       repo.GitRepo,
 		RemoteName: remoteName,
 		RemoteUrl:  remoteURL,
 	}
@@ -435,7 +429,7 @@ func (r *queryResolver) GitFolderContent(ctx context.Context, repoID string, dir
 
 	var listFileObject git.ListFilesInterface
 	listFileObject = git.ListFilesStruct{
-		Repo:          repo.Git2goRepo,
+		Repo:          repo.GitRepo,
 		RepoPath:      repo.RepoPath,
 		DirectoryName: *directoryName,
 		FileName:      nil,
@@ -454,7 +448,7 @@ func (r *queryResolver) GitCommitLogs(ctx context.Context, repoID string, refere
 
 	var commitLogObject git.CommitLogInterface
 	commitLogObject = git.CommitLogStruct{
-		Repo:            repo.Git2goRepo,
+		Repo:            repo.GitRepo,
 		ReferenceCommit: referenceCommit,
 	}
 
@@ -479,7 +473,7 @@ func (r *queryResolver) GitCommitFiles(ctx context.Context, repoID string, commi
 
 	var commitFileListObject git.CommitFileListInterface
 	commitFileListObject = git.CommitFileListStruct{
-		Repo:       repo.Git2goRepo,
+		Repo:       repo.GitRepo,
 		CommitHash: commitHash,
 	}
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
@@ -506,7 +500,7 @@ func (r *queryResolver) SearchCommitLogs(ctx context.Context, repoID string, sea
 	var searchCommitObject git.SearchCommitInterface
 
 	searchCommitObject = git.SearchCommitStruct{
-		Repo:       repo.Git2goRepo,
+		Repo:       repo.GitRepo,
 		SearchType: searchType,
 		SearchKey:  searchKey,
 	}
@@ -569,7 +563,7 @@ func (r *queryResolver) GitChanges(ctx context.Context, repoID string) (*model.G
 	}
 
 	gitChangeObject = git.ChangedItemStruct{
-		Repo:     repo.Git2goRepo,
+		Repo:     repo.GitRepo,
 		RepoPath: repo.RepoPath,
 	}
 	return gitChangeObject.ChangedFiles(), nil
@@ -589,7 +583,7 @@ func (r *queryResolver) GitUnPushedCommits(ctx context.Context, repoID string, r
 	}
 	var remoteDataObject git.RemoteDataInterface
 	remoteDataObject = git.RemoteDataStruct{
-		Repo:      repo.Git2goRepo,
+		Repo:      repo.GitRepo,
 		RemoteURL: remoteURL,
 	}
 	remoteName := remoteDataObject.GetRemoteName()
@@ -597,7 +591,7 @@ func (r *queryResolver) GitUnPushedCommits(ctx context.Context, repoID string, r
 
 	var unPushedObject git.UnPushedCommitInterface
 	unPushedObject = git.UnPushedCommitStruct{
-		Repo:      repo.Git2goRepo,
+		Repo:      repo.GitRepo,
 		RemoteRef: remoteRef,
 	}
 	return unPushedObject.UnPushedCommits(), nil
@@ -629,7 +623,7 @@ func (r *queryResolver) GitFileLineChanges(ctx context.Context, repoID string, f
 
 	var fileLineDiffObject git.FileLineDiffInterface
 	fileLineDiffObject = git.FileLineDiffStruct{
-		Repo:     repo.Git2goRepo,
+		Repo:     repo.GitRepo,
 		FileName: fileName,
 		Data:     fileContent.FileData,
 	}
@@ -661,7 +655,7 @@ func (r *queryResolver) CommitCompare(ctx context.Context, repoID string, baseCo
 
 	var compareCommitObject git.CompareCommitInterface
 	compareCommitObject = git.CompareCommitStruct{
-		Repo:                repo.Git2goRepo,
+		Repo:                repo.GitRepo,
 		BaseCommitString:    baseCommit,
 		CompareCommitString: compareCommit,
 	}
@@ -689,7 +683,7 @@ func (r *queryResolver) BranchCompare(ctx context.Context, repoID string, baseBr
 
 	var branchCompareObject git.BranchCompareInterface
 	branchCompareObject = git.BranchCompareInputs{
-		Repo:       repo.Git2goRepo,
+		Repo:       repo.GitRepo,
 		BaseBranch: baseBranch,
 		DiffBranch: compareBranch,
 	}
@@ -707,7 +701,7 @@ func (r *queryResolver) GetRemote(ctx context.Context, repoID string) ([]*model.
 
 	var remoteObject git.RemoteDataInterface
 	remoteObject = git.RemoteDataStruct{
-		Repo: repo.Git2goRepo,
+		Repo: repo.GitRepo,
 	}
 	allRemoteData := remoteObject.GetAllRemotes()
 	return allRemoteData, nil

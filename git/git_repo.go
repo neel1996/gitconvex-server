@@ -1,7 +1,6 @@
 package git
 
 import (
-	git "github.com/go-git/go-git/v5"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/utils"
@@ -24,8 +23,7 @@ type RepoDetails struct {
 	UserName   string
 	Password   string
 	SSHKeyPath string
-	GitRepo    *git.Repository
-	Git2goRepo *git2go.Repository
+	GitRepo    *git2go.Repository
 }
 
 func handlePanic() {
@@ -70,19 +68,14 @@ func (r RepoStruct) Repo(repoChan chan RepoDetails) {
 		}
 	}
 
-	repository, err := git.PlainOpenWithOptions(repoPath, &git.PlainOpenOptions{
-		DetectDotGit: true,
-	})
-
-	git2goRepo, _ := git2go.OpenRepository(repoPath)
+	git2goRepo, err := git2go.OpenRepository(repoPath)
 
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
 		repoChan <- RepoDetails{
-			RepoId:     repoId,
-			RepoPath:   repoPath,
-			GitRepo:    nil,
-			Git2goRepo: nil,
+			RepoId:   repoId,
+			RepoPath: repoPath,
+			GitRepo:  nil,
 		}
 	} else {
 		repoChan <- RepoDetails{
@@ -94,8 +87,7 @@ func (r RepoStruct) Repo(repoChan chan RepoDetails) {
 			UserName:   userName,
 			Password:   password,
 			SSHKeyPath: sshKeyPath,
-			GitRepo:    repository,
-			Git2goRepo: git2goRepo,
+			GitRepo:    git2goRepo,
 		}
 	}
 	close(repoChan)
