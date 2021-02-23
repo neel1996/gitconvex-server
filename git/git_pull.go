@@ -45,6 +45,7 @@ func (p PullStruct) PullFromRemote() *model.PullResult {
 	}
 
 	remoteName := remoteDataObject.GetRemoteName()
+	localRefSpec := "+refs/heads/" + remoteBranch
 	targetRefPsec := "refs/remotes/" + remoteName + "/" + remoteBranch
 	targetRemote, _ := repo.Remotes.Lookup(remoteName)
 
@@ -52,30 +53,30 @@ func (p PullStruct) PullFromRemote() *model.PullResult {
 		return returnPullErr("Target remote is unavailable")
 	}
 
-	var fetchObject FetchInterface
-	fetchObject = FetchStruct{
-		Repo:         repo,
-		RemoteName:   remoteName,
-		RepoPath:     p.RepoPath,
-		RemoteURL:    p.RemoteURL,
-		RemoteBranch: p.RemoteBranch,
-		RepoName:     p.RepoName,
-		AuthOption:   p.AuthOption,
-		UserName:     p.UserName,
-		Password:     p.Password,
-		SSHKeyPath:   p.SSHKeyPath,
+	var remoteCallbackObject RemoteCallbackInterface
+	remoteCallbackObject = &RemoteCallbackStruct{
+		RepoName:   p.RepoName,
+		UserName:   p.UserName,
+		Password:   p.Password,
+		SSHKeyPath: p.SSHKeyPath,
+		AuthOption: p.AuthOption,
 	}
-	fetchResult := fetchObject.FetchFromRemote()
-	if fetchResult.Status == global.FetchFromRemoteError {
-		return returnPullErr("Remote fetch failed!")
+	fetchOption := &git2go.FetchOptions{
+		RemoteCallbacks: remoteCallbackObject.RemoteCallbackSelector(),
+		UpdateFetchhead: true,
+	}
+
+	logger.Log(fmt.Sprintf("Fetching changes from -> %s - %s", remoteName, targetRefPsec), global.StatusInfo)
+	fetchErr := targetRemote.Fetch([]string{localRefSpec + ":" + targetRefPsec}, fetchOption, "")
+	if fetchErr != nil {
+		return returnPullErr("Fetch Failed : " + fetchErr.Error())
 	}
 
 	remoteRef, remoteRefErr := repo.References.Lookup(targetRefPsec)
-
 	if remoteRefErr == nil {
 		remoteCommit, _ := repo.LookupCommit(remoteRef.Target())
 		fmt.Println(remoteRef.Name())
-		fmt.Println(remoteCommit.Message())
+		fmt.Println(remoteCommit.Id(), remoteCommit.Message())
 
 		annotatedCommit, _ := repo.AnnotatedCommitFromRef(remoteRef)
 		if annotatedCommit != nil {
@@ -92,7 +93,7 @@ func (p PullStruct) PullFromRemote() *model.PullResult {
 					}
 				} else {
 					err := repo.Merge([]*git2go.AnnotatedCommit{annotatedCommit}, nil, &git2go.CheckoutOptions{
-						Strategy: git2go.CheckoutAllowConflicts,
+						Strategy: git2go.CheckoutSafe,
 					})
 					if err != nil {
 						return returnPullErr("Annotated merge failed : " + err.Error())
@@ -110,7 +111,9 @@ func (p PullStruct) PullFromRemote() *model.PullResult {
 						if treeErr != nil {
 							return returnPullErr("Tree Error : " + treeErr.Error())
 						}
-						checkoutErr := repo.CheckoutTree(remoteTree, nil)
+						checkoutErr := repo.CheckoutTree(remoteTree, &git2go.CheckoutOptions{
+							Strategy: git2go.CheckoutForce,
+						})
 						if checkoutErr != nil {
 							return returnPullErr("Tree checkout error : " + checkoutErr.Error())
 						}
@@ -127,13 +130,14 @@ func (p PullStruct) PullFromRemote() *model.PullResult {
 						if head == nil {
 							return returnPullErr("HEAD is nil")
 						}
-						headTarget, _ := head.SetTarget(remoteRef.Target(), "")
+
+						headTarget, _ := head.SetTarget(remoteCommit.Id(), "")
 						if headTarget == nil {
 							return returnPullErr("Unable to set target to HEAD")
 						}
 
 						logger.Log("New changes pulled from remote -> "+targetRemote.Name(), global.StatusInfo)
-						msg := "New changed pulled from remote"
+						msg := "New changes pulled from remote"
 						return &model.PullResult{
 							Status:      global.PullFromRemoteSuccess,
 							PulledItems: []*string{&msg},
