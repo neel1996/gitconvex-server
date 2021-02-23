@@ -32,7 +32,7 @@ func TestChangedFiles(t *testing.T) {
 	var stageObject git2.StageItemInterface
 	stageObject = git2.StageItemStruct{
 		Repo:     r,
-		FileItem: repoPath + "/" + changedResult,
+		FileItem: changedResult,
 	}
 	stageObject.StageItem()
 
