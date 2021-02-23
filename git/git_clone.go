@@ -5,13 +5,11 @@ import (
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/global"
 	"github.com/neel1996/gitconvex-server/graph/model"
-	"github.com/neel1996/gitconvex-server/utils"
 	"go/types"
 )
 
 type CloneInterface interface {
 	CloneHandler() (*model.ResponseModel, error)
-	fallbackClone() (*model.ResponseModel, error)
 }
 
 type CloneStruct struct {
@@ -22,29 +20,6 @@ type CloneStruct struct {
 	UserName   string
 	Password   string
 	SSHKeyPath string
-}
-
-// fallbackClone performs a git clone using the native git client
-// If the go-git based clone fails due to an authentication issue, then this function will be invoked to perform a clone
-func (c CloneStruct) fallbackClone() (*model.ResponseModel, error) {
-	repoPath := c.RepoPath
-	repoURL := c.RepoURL
-
-	args := []string{"clone", repoURL, repoPath}
-	cmd := utils.GetGitClient(".", args)
-	cmdStr, cmdErr := cmd.Output()
-
-	if cmdErr != nil {
-		logger.Log(fmt.Sprintf("Fallback clone failed -> %s", cmdErr.Error()), global.StatusError)
-		return nil, cmdErr
-	} else {
-		logger.Log(fmt.Sprintf("New repo has been cloned to -> %s -> %s", repoPath, cmdStr), global.StatusInfo)
-		return &model.ResponseModel{
-			Status:    "success",
-			Message:   "Git clone completed",
-			HasFailed: false,
-		}, nil
-	}
 }
 
 // CloneHandler clones the remote repo to the target directory
@@ -83,7 +58,7 @@ func (c CloneStruct) CloneHandler() (*model.ResponseModel, error) {
 		return nil, types.Error{Msg: "Git repo clone failed"}
 	}
 
-	logger.Log(fmt.Sprintf("Repo %v - Cloned to target directory - %s", c.RepoName, r.Path()), global.StatusInfo)
+	logger.Log(fmt.Sprintf("Repo %v - Cloned to target directory - %s", c.RepoName, r.Workdir()), global.StatusInfo)
 
 	return &model.ResponseModel{
 		Status:    "success",
