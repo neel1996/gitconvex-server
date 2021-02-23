@@ -47,7 +47,12 @@ func TestCommitFileList(t *testing.T) {
 			}
 
 			if got := testObject.CommitFileList(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CommitFileList() = %v, want %v", got, tt.want)
+				for _, fileItem := range got {
+					fmt.Println(fileItem.FileName)
+					if fileItem.FileName != tt.want[0].FileName {
+						t.Errorf("CommitFileList() = %v, want %v", got, tt.want)
+					}
+				}
 			}
 		})
 	}
