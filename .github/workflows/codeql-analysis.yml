@@ -51,8 +51,23 @@ jobs:
           # Prefix the list here with "+" to use these queries and those in the config file.
           # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
-      # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
-      # If this step fails, then you should remove it and run the build manually (see below)
+
+        # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
+        # If this step fails, then you should remove it and run the build manually (see below)
+
+      - name: Setup libgit2
+        run: |
+          wget https://github.com/libgit2/libgit2/releases/download/v1.1.0/libgit2-1.1.0.tar.gz
+          tar -xzf libgit2-1.1.0.tar.gz
+          cd libgit2-1.1.0
+          mkdir build && cd ./build
+          sudo apt  install cmake -y
+          sudo apt install pkg-config -y
+          sudo apt-get install libssl-dev
+          cmake ..
+          cmake --build .
+          sudo make install
+
       - name: Autobuild
         uses: github/codeql-action/autobuild@v1
 
