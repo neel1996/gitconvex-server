@@ -39,6 +39,7 @@ jobs:
       - name: Running Test Cases
         run: |
           go get github.com/libgit2/git2go/v31
+          git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
           export GOTESTENV=ci && go test -v -tags static,system_libgit2 ./...
 
       - name: Build
