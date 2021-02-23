@@ -14,11 +14,14 @@ import (
 func TestDeleteRemoteStruct_DeleteRemote(t *testing.T) {
 	var r *git.Repository
 	cwd, _ := os.Getwd()
+	var testRemoteName string
 
 	if os.Getenv("GOTESTENV") == "ci" {
 		r, _ = git.OpenRepository(path.Join(cwd, ".."))
+		testRemoteName = "origin"
 	} else {
 		r, _ = git.OpenRepository(os.Getenv("REPODIR"))
+		testRemoteName = "github"
 	}
 
 	type fields struct {
@@ -33,7 +36,7 @@ func TestDeleteRemoteStruct_DeleteRemote(t *testing.T) {
 		{name: "Test for remote deletion", fields: struct {
 			Repo       git.Repository
 			RemoteName string
-		}{Repo: *r, RemoteName: "github"}, want: &model.RemoteMutationResult{Status: global.RemoteDeleteSuccess}},
+		}{Repo: *r, RemoteName: testRemoteName}, want: &model.RemoteMutationResult{Status: global.RemoteDeleteSuccess}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
