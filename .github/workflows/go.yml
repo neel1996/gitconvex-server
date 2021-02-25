@@ -63,6 +63,7 @@ jobs:
           rm -rf .git/ .github/ .gitignore gitconvex-server
           cp -rp * $HOME/gitconvex/
           cd $HOME/gitconvex/
+          rm -rf libgit2-1.1.0*
           echo "Commit Message --> $LATEST_COMMIT"
           git status
           git add --all
