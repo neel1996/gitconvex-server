@@ -43,7 +43,7 @@ jobs:
           export GOTESTENV=ci && go test -v -tags static,system_libgit2 ./...
 
       - name: Build
-        run: go build -v .
+        run: go build -tags static -v .
 
       - name: Integration and Deployment
         run: |
