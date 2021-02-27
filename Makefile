@@ -36,7 +36,7 @@ build:
 	mv build/ ./dist/ && \
 	mv ./dist/build ./dist/gitconvex-ui
 	echo "Building final go source with UI bundle" && \
-	go build -v -tags static -o ./dist && \
+	go build -v -a -o ./dist && \
 	echo "Gitconvex build completed!" && \
 	mv ./dist/gitconvex-server ./dist/gitconvex
 	echo "Copying etc files to dist"

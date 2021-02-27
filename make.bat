@@ -41,7 +41,7 @@ if "%ip%"==%BUILD% (
 	echo "Removing intermediary folder ui/"
 	rd /s /q ui
     echo "Building gitconvex bundle"
-    go build -tags static -o ./dist
+    go build -a -o ./dist
 	cd .\dist
     rename gitconvex-server.exe gitconvex.exe
 	echo "Run ./dist/gitconvex.exe to start gitconvex on port 9001"
