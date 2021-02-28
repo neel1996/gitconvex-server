@@ -1,0 +1,3 @@
+[submodule "gitconvex-ui"]
+	path = gitconvex-ui
+	url = https://github.com/neel1996/gitconvex-ui.git
