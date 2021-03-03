@@ -53,7 +53,14 @@ this directory
 │   ├── fetch_repo.go
 │   ├── health_check.go
 │   ├── repo_status.go
-│   └── settings_api.go
+│   ├── settings_api.go
+│   └── update_repo_name.go
+├── etc
+│   ├── cygwin1.dll
+│   ├── git2.dll
+│   ├── pageant.exe
+│   ├── putty.exe
+│   └── puttygen.exe
 ├── git
 │   ├── git_branch_add.go
 │   ├── git_branch_checkout.go
@@ -74,19 +81,26 @@ this directory
 │   ├── git_pull.go
 │   ├── git_push.go
 │   ├── git_remote_add.go
-│   ├── git_remote_data.go
-│   ├── git_remote_name.go
+│   ├── git_remote_allremotedata.go
+│   ├── git_remote_callbacks.go
+│   ├── git_remote_delete.go
+│   ├── git_remote_edit.go
 │   ├── git_repo.go
 │   ├── git_repo_validate.go
-│   ├── git_resetall_items.go
 │   ├── git_reset_item.go
-│   ├── git_stageall_items.go
+│   ├── git_resetall_items.go
 │   ├── git_stage_item.go
+│   ├── git_stageall_items.go
 │   ├── git_total_commits.go
 │   └── git_unpushed_commits.go
-├── gitclient
+├── gitconvex-k8s.yml
+├── gitconvex-ui
 ├── global
-│   └── GlobalLogger.go
+│   ├── GlobalLogger.go
+│   ├── common_strings.go
+│   ├── current_version.go
+│   ├── errors.go
+│   └── status_strings.go
 ├── go.mod
 ├── go.sum
 ├── gqlgen.yml
@@ -100,28 +114,38 @@ this directory
 │   ├── schema.graphqls
 │   └── schema.resolvers.go
 ├── make.bat
-├── Makefile
-├── README.md
 ├── server.go
 ├── tests
+│   ├── beforeAll_git_clone_test.go
+│   ├── code_file_view_test.go
+│   ├── encrypt_https_password_test.go
 │   ├── git_branch_add_test.go
 │   ├── git_branch_delete_test.go
 │   ├── git_branch_test.go
 │   ├── git_changed_files_test.go
-│   ├── git_clone_test.go
+│   ├── git_commit_changes_test.go
+│   ├── git_commit_compare_test.go
 │   ├── git_commit_files_test.go
+│   ├── git_commit_log_search_test.go
 │   ├── git_commit_logs_test.go
 │   ├── git_ls_files_test.go
 │   ├── git_remote_add_test.go
+│   ├── git_remote_allremotedata_test.go
 │   ├── git_remote_data_test.go
+│   ├── git_remote_delete_test.go
+│   ├── git_remote_edit_test.go
+│   ├── git_resetall_items_test.go
 │   ├── git_total_commits_test.go
-│   └── health_check_test.go
+│   ├── git_unpushed_commits_test.go
+│   ├── health_check_test.go
+│   └── update_repo_name_test.go
 └── utils
     ├── db_file_reader.go
+    ├── db_file_writer.go
+    ├── encrypt_https_password.go
     ├── env_file_handler.go
     └── git_standalone_client.go
 
-8 directories, 65 files
-    
+10 directories, 88 files
 ```
 
