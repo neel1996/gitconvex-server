@@ -39,6 +39,7 @@ RUN cd ~ && wget https://github.com/libgit2/libgit2/releases/download/v1.1.0/lib
     mkdir build && cd build && \
     cmake -DCMAKE_PREFIX_PATH=../../libssh2-1.9.0/install/ -DCMAKE_INSTALL_PREFIX=../install -DBUILD_CLAR=OFF .. && \
     cmake --build . --target install && \
+    make install && \
     mv ~/libgit2-1.1.0/install/include/* /usr/local/include/ && \
     mv ~/libgit2-1.1.0/install/lib64/pkgconfig/* /usr/local/lib/
 

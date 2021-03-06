@@ -8,23 +8,28 @@ This is the back-end go source repo for the [gitconvex](https://github.com/neel1
 
 ## Dependencies
 
-The depedency packages used by this project can be
+The dependency packages used by this project can be
 found [here](https://github.com/neel1996/gitconvex-server/network/dependencies)
 
-- **📜 Git Library** - The project uses [git2go](https://github.com/libgit2/git2go) library for performing majority of
-  the git operations without relying on the native git client
+- **📜 Git Library** - The project uses [git2go](https://github.com/libgit2/git2go) library for all the git operations
+  without relying on the native git client
 - **📈 GraphQL** - [gqlgen](https://github.com/99designs/gqlgen) is used for generating boiler plate GraphQL code which
   is the backbone of the whole project
 - **📡 HTTP Router** - [mux](https://github.com/gorilla/mux) is used as the HTTP router for graphql playground and sets
-  a handler for the API enttry point
-- **⌚ Go time Library** - [goment](https://github.com/nleeper/goment) is used for formatting commit times and also for
-  calculating the difference between the commit time and the current clock time
+  a handler for the API entry point
 
 ### Libgit2 usage
 
-As the project used git2go - A libgit2 based binding for go, libgit2 must be setup properly to run the project. Follow [these](https://libgit2.org/docs/guides/build-and-link/) instructions to build libgit2 from [soruce](https://github.com/libgit2/libgit2)
+The project uses **git2go** - A libgit2 based binding for go to handle all the git operations. So libgit2 must be setup
+properly to run the project.
 
-If you stumble upon any challenger, then use [this](https://github.com/neel1996/gitconvex-server/discussions/7) discussion forum for assistance
+Follow [these](https://libgit2.org/docs/guides/build-and-link/) instructions to build libgit2
+from [soruce](https://github.com/libgit2/libgit2). Follow this only if you have openssl and libssh setup in your
+machine. If this is not the case then follow the detailed instructions mentioned in [LIBGIT_NOTES](LIBGIT_NOTES) for a
+step-by-step guide
+
+If you stumble upon any challenges, then use [this](https://github.com/neel1996/gitconvex-server/discussions/7)
+discussion forum for assistance
 
 ### Guidelines
 
