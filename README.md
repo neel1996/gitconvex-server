@@ -25,7 +25,7 @@ properly to run the project.
 
 Follow [these](https://libgit2.org/docs/guides/build-and-link/) instructions to build libgit2
 from [soruce](https://github.com/libgit2/libgit2). Follow this only if you have openssl and libssh setup in your
-machine. If this is not the case then follow the detailed instructions mentioned in [LIBGIT_NOTES](LIBGIT_NOTES) for a
+machine. If this is not the case then follow the detailed instructions mentioned in [LIBGIT_NOTES](LIBGIT_NOTES.md) for a
 step-by-step guide
 
 If you stumble upon any challenges, then use [this](https://github.com/neel1996/gitconvex-server/discussions/7)
