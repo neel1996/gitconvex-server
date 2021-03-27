@@ -40,6 +40,9 @@ jobs:
         run: |
           go get github.com/libgit2/git2go/v31
           git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
+          go get
+          go get gotest.tools/gotestsum
+          gotestsum --format=testname ./...
           export GOTESTENV=ci && go test -v ./...
 
       - name: Build
