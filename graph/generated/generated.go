@@ -1067,15 +1067,27 @@ var sources = []*ast.Source{
 #
 # https://gqlgen.com/getting-started/
 
+"""
+Returns the host OS and the current version of gitconvex
+"""
 type HealthCheckParams{
+    "OS on which gitconvex is running"
     os: String!
+    "Current version of gitconvex"
     gitconvex: String!
 }
 
+"""
+Details about the repo data stored in gitconvex JSON data file
+"""
 type FetchRepoParams{
+    "UUID based ID generated for the repo"
     repoId: [String]!
+    "Name of the repo given while adding the repo"
     repoName: [String]!
+    "Path of the git repository"
     repoPath: [String]!
+    "Timestamp at which the repo was added to gitconvex"
     timeStamp: [String]!
 }
 
@@ -1085,15 +1097,27 @@ type AddRepoParams{
     message: String!
 }
 
+"""
+Basic information about the target repository
+"""
 type GitRepoStatusResults {
+    "The remote repos available in the target repository"
     gitRemoteData: String
+    "Name of the repo"
     gitRepoName: String
+    "List of all the local branches available in the repo"
     gitBranchList: [String]
+    "List of all the local branches + remote branches available in the repo"
     gitAllBranchList: [String]
+    "The current branch"
     gitCurrentBranch: String
+    "Remote host name based on the remote URL (E.g: https://github.com/github/repo.git -> Github)"
     gitRemoteHost: String
+    "Total number of commits tracked by the current branch"
     gitTotalCommits: Float
+    "The latest commit (HEAD commit)"
     gitLatestCommit: String
+    "Total number of files tracked by git repo"
     gitTotalTrackedFiles: Int
 }
 
@@ -1152,8 +1176,11 @@ type remoteDetails {
 }
 
 type Query {
+    "To check if gitconvex API is reachable"
     healthCheck: HealthCheckParams!
+    "Fetches the details of the repo stored in the JSON repo data file"
     fetchRepo: FetchRepoParams!
+    "Returns the current status of the target repo"
     gitRepoStatus(repoId: String!): GitRepoStatusResults!
     gitFolderContent(repoId: String!, directoryName: String): GitFolderContentResults!
     gitCommitLogs(repoId: String!, referenceCommit: String!): gitCommitLogResults!
