@@ -174,15 +174,15 @@ type Query {
     fetchRepo: FetchRepoParams!
     "Returns the current status of the target repo"
     gitRepoStatus(repoId: String!): GitRepoStatusResults!
-    "Dislays the content of a directory from the git workstree along with its respective commit message"
+    "Displays the content of a directory from the git worktree along with its respective commit message"
     gitFolderContent(repoId: String!, directoryName: String): GitFolderContentResults!
-    "Lists upto 10 commit logs"
+    "Lists up to 10 commit logs"
     gitCommitLogs(repoId: String!, referenceCommit: String!): GitCommitLogResults!
     "Returns the files that are changed as part of a commit based on the `commitHash`"
     gitCommitFiles(repoId: String!, commitHash: String!): [gitCommitFileResult]!
     "Returns the commit logs based on the search query"
     searchCommitLogs(repoId: String!, searchType: String!, searchKey: String!): [gitCommits]!
-    "Dsiplays the content of a selected file from the repository work tree"
+    "Displays the content of a selected file from the repository work tree"
     codeFileDetails(repoId: String!, fileName: String!): codeFileType!
     "Returns the items that are modified (similar to `git status`)"
     gitChanges(repoId: String!): gitChangeResults!
@@ -194,60 +194,107 @@ type Query {
     settingsData: settingsDataResults!
     "Compares two commits and returns the results"
     commitCompare(repoId: String!,baseCommit: String!, compareCommit: String!): [gitCommitFileResult]!
-    "Compared two branches and returns the list of differing commits"
+    "Compares two branches and returns the list of differing commits"
     branchCompare(repoId: String!, baseBranch: String!, compareBranch: String!): [branchCompareResults]!
-    "Returns the details about a repositorie's remote repos"
+    "Returns the details about a repository's remote repos"
     getRemote(repoId: String!): [remoteDetails]!
 }
 
+"""
+The response holding the data of the newly added repo
+"""
 type AddRepoParams{
+    "The UUID generated for the new repo"
     repoId: String!
+    "Status denoting if the repo has been added successfully or not"
     status: String!
+    "A message stating if the repo is added to the data file or not"
     message: String!
 }
 
+"""
+Result returned after attempting to delete a repo entry from the gitconvex data file
+"""
 type deleteStatus{
+    "String based status denoting the outcome of the delete"
     status: String!
+    "UUID of the repo deleted from the data file"
     repoId: String!
 }
 
-type remoteMutationResult{
-    status: String!
-}
-
-
+"""
+Shows the status if the branch has been deleted or not
+"""
 type BranchDeleteStatus{
+    "Branch delete status"
     status: String!
 }
 
+"""
+Result of the remote fetch operation
+"""
 type FetchResult{
+    "Status string denoting the fetch operation"
     status: String!
+    "Message denoting the outcome of the fetch"
     fetchedItems: [String]!
 }
 
+"""
+Result of the remote pull operation
+"""
 type PullResult{
+    "Status string denoting the pull operation"
     status: String!
+    "Message denoting the outcome of the pull"
     pulledItems: [String]!
 }
 
+"""
+Returns the status after attempting remote data manipulation operations such as adding / deleting or editing a remote
+"""
+type remoteMutationResult{
+    "Status denoting the outcome of the remote operation"
+    status: String!
+}
+
 type Mutation {
+    "Adds a new repo to the gitconvex repo datastore"
     addRepo(repoName: String!, repoPath: String!, cloneSwitch: Boolean!, repoURL: String, initSwitch: Boolean!, authOption: String!, sshKeyPath: String, userName: String, password: String): AddRepoParams!
+    "Adds a new branch to the repo"
     addBranch(repoId: String!, branchName: String!): String!
+    "Checks out to the target branch"
     checkoutBranch(repoId: String!, branchName: String!): String!
+    "Deletes the selected local branch from the repo"
     deleteBranch(repoId: String!, branchName: String!, forceFlag: Boolean!): BranchDeleteStatus!
+    "Fetches the changes from the target remote"
     fetchFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): FetchResult!
+    "Pulls the changes from the remote repo"
     pullFromRemote(repoId: String!, remoteUrl: String, remoteBranch: String): PullResult!
+    "Stages a single item. Similar to `git add <item>`"
     stageItem(repoId: String!, item: String!): String!
+    "Removes a staged item from the index. Similar to `git reset <item>`"
     removeStagedItem(repoId: String!, item: String!): String!
+    "Removes all the staged items from the index. Similar to `git reset`"
     removeAllStagedItem(repoId: String!): String!
+    "Stages all the changes. Similar to `git add --all`"
     stageAllItems(repoId: String!): String!
+    "Commits the staged changes with a commit message"
     commitChanges(repoId: String!, commitMessage: String!): String!
+    "Pushes the commits to the remote"
     pushToRemote(repoId: String!, remoteHost: String!, branch: String!): String!
+    "To change the port to which gitconvex server listens"
     settingsEditPort(newPort: String!): String!
+    "To update the path of the JSON data file which holds the data of all the repositories tracked by gitconvex"
     updateRepoDataFile(newDbFile: String!): String!
+    "To delete a repo from the JSON data file. The actual repo will not be affected in anyway."
     deleteRepo(repoId: String!): deleteStatus!
+    "To update the name of the repo in the JSON data file"
     updateRepoName(repoId: String!, repoName: String!): String!
+    "To add a new remote to the repository"
     addRemote(repoId: String!, remoteName: String!, remoteUrl: String!): remoteMutationResult!
+    "To remove an existing remote from the repo"
     deleteRemote(repoId: String!, remoteName: String!): remoteMutationResult!
+    "To edit the name of the existing remote"
     editRemote(repoId: String!, remoteName: String!, remoteUrl: String!): remoteMutationResult!
 }
