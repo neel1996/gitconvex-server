@@ -31,10 +31,16 @@ step-by-step guide
 If you stumble upon any challenges, then use [this](https://github.com/neel1996/gitconvex-server/discussions/7)
 discussion forum for assistance
 
-### Guidelines
+### Contribution Guidelines
 
 Fork the repo and raise a new Pull Request to merge your branch with the `development` branch of this repo. Once the
 review is complete, the PR will be approved and merged with `main`
+
+## Gitconvex as a Git API
+
+Gitconvex can function as a service without the UI. The whole API is built with graphql and the underlying queries & mutations can be accessed by invoking `http://localhost:9001/gitconvexapi`. GraphQL playground is also enabled to experiment with the GQL queries and mutations and it can be accessed from `http://localhost:9001/gitconvexapi/graph`
+
+![gql-playground](https://user-images.githubusercontent.com/47709856/113421107-248f5100-93e8-11eb-8c22-9f6337f7c25f.png)
 
 ## Project directory tree
 
