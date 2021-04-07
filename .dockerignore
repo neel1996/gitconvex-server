@@ -1,0 +1,14 @@
+.git/
+etc/
+lib/
+.github/
+tests/
+
+*.md
+gitconvex-k8s.yml
+gqlgen.yml
+make.bat
+LICENSE
+
+.gitmodules
+.gitignore
