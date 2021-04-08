@@ -1,16 +1,15 @@
 package tests
 
 import (
-	"github.com/go-git/go-git/v5"
+	git "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/graph/model"
 	"testing"
 )
 
 func TestCodeFileView(t *testing.T) {
-	r, _ := git.PlainOpen("..")
-	w, _ := r.Worktree()
-	repoPath := w.Filesystem.Root()
+	r, _ := git.OpenRepository("..")
+	repoPath := r.Path()
 	expectedLine := "# gitconvex GoLang project"
 
 	type args struct {
