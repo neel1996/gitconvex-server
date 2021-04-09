@@ -5,29 +5,93 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-    name: Gitconvex Server Collaboration Pipeline
+  libgit2-setup-test:
+    name: Setup Libgit2 with Homebrew
     runs-on: ubuntu-latest
     steps:
+      - name: Install libssh2 and libgit2
+        run: |
+          brew install libssh2
+          brew install libgit2
+
+  gitconvex-test:
+    name: Gitconvex server test
+    runs-on: ubuntu-latest
+    env:
+      PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/pkgconfig/
+
+    steps:
+      - name: Install libgit2 from Homebrew
+        run: |
+          brew install libssh2
+          brew install libgit2
+
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.13
+          go-version: ^1.16
         id: go
 
-      - name: Setup libgit2
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Run Go Test
         run: |
-          wget https://github.com/libgit2/libgit2/releases/download/v1.1.0/libgit2-1.1.0.tar.gz
-          tar -xzf libgit2-1.1.0.tar.gz
-          cd libgit2-1.1.0
-          mkdir build && cd ./build
-          sudo apt  install cmake -y
-          sudo apt install pkg-config -y
-          sudo apt-get install libssl-dev
-          cmake ..
-          cmake --build .
-          sudo make install
-          sudo /sbin/ldconfig -v
+          sudo cp /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/lib* /usr/lib
+          export PATH="/home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/:$PATH"
+          git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
+          export GOTESTENV=ci && go test -v ./...
+
+  gitconvex-build:
+    needs:
+      - gitconvex-test
+      - libgit2-setup-test
+
+    name: Gitconvex Go Bundle Build
+    runs-on: ubuntu-latest
+    env:
+      PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/pkgconfig/
+
+    steps:
+      - name: Install libgit2 from Homebrew
+        run: |
+          brew install libssh2
+          brew install libgit2
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Build Go bundle
+        run: go build -v .
+
+  gitconvex-mock-integration:
+    needs:
+      - libgit2-setup-test
+      - gitconvex-test
+      - gitconvex-build
+
+    name: Mocking Gitconvex Unified Repo Integration
+    runs-on: ubuntu-latest
+    env:
+      PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/pkgconfig/
+
+    steps:
+      - name: Install libgit2 from Homebrew
+        run: |
+          brew install libssh2
+          brew install libgit2
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+        id: go
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
@@ -35,17 +99,6 @@ jobs:
       - name: Get dependencies
         run: |
           go get -v -t -d ./...
-
-      - name: Running Test Cases
-        run: |
-          go get github.com/libgit2/git2go/v31
-          git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
-          go get
-          go get gotest.tools/gotestsum
-          export GOTESTENV=ci && gotestsum --format=testname ./...
-
-      - name: Build
-        run: go build -a -v .
 
       - name: Integration checkup
         run: |
