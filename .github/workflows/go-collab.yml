@@ -6,7 +6,7 @@ on:
 
 jobs:
   libgit2-setup-test:
-    name: Setup Libgit2 with Brew
+    name: Setup Libgit2 with Homebrew
     runs-on: ubuntu-latest
     steps:
       - name: Install libssh2 and libgit2
@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/pkgconfig/
-      PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/:$PATH
 
     steps:
       - name: Install libgit2 from Homebrew
@@ -39,6 +38,7 @@ jobs:
 
       - name: Run Go Test
         run: |
+          export PATH="/home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/:$PATH"
           git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
           go get
           go get gotest.tools/gotestsum
@@ -47,7 +47,6 @@ jobs:
   gitconvex-build:
     needs:
       - gitconvex-test
-      - libgit2-setup-test
 
     name: Gitconvex Go Bundle Build
     runs-on: ubuntu-latest
@@ -74,7 +73,6 @@ jobs:
 
   gitconvex-mock-integration:
     needs:
-      - gitconvex-test
       - gitconvex-test
       - gitconvex-build
 
