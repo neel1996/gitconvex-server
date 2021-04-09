@@ -47,7 +47,7 @@ jobs:
       - gitconvex-test
       - libgit2-setup-test
 
-    name: Gitconvex Go Bundle Build
+    name: Gitconvex Build
     runs-on: ubuntu-latest
     env:
       PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/pkgconfig/
@@ -70,13 +70,13 @@ jobs:
       - name: Build Go bundle
         run: go build -v .
 
-  gitconvex-mock-integration:
+  gitconvex-integration:
     needs:
       - libgit2-setup-test
       - gitconvex-test
       - gitconvex-build
 
-    name: Mocking Gitconvex Unified Repo Integration
+    name: Gitconvex Unified Repo Integration
     runs-on: ubuntu-latest
     env:
       PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/pkgconfig/
