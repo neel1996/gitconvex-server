@@ -4,11 +4,15 @@ import (
 	git "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex-server/api"
 	"github.com/neel1996/gitconvex-server/graph/model"
+	"os"
+	"path"
 	"testing"
 )
 
 func TestCodeFileView(t *testing.T) {
-	r, _ := git.OpenRepository("..")
+	cwd, _ := os.Getwd()
+	r, _ := git.OpenRepository(path.Join(cwd, ".."))
+
 	repoPath := r.Path()
 	expectedLine := "# gitconvex GoLang project"
 
