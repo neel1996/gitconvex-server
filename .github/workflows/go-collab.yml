@@ -5,11 +5,22 @@ on:
     branches: [ main ]
 
 jobs:
+  libgit2-setup-test:
+    name: Setup Libgit2 with Brew
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install libssh2 and libgit2
+        run: |
+          brew install libssh2
+          brew install libgit2
+
   gitconvex-test:
+    needs: libgit2-setup-test
     name: Gitconvex server test
     runs-on: ubuntu-latest
     env:
       PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/pkgconfig/
+      PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/:$PATH
 
     steps:
       - name: Install libgit2 from Homebrew
@@ -34,7 +45,10 @@ jobs:
           export GOTESTENV=ci && gotestsum --format=testname ./...
 
   gitconvex-build:
-    needs: gitconvex-test
+    needs:
+      - gitconvex-test
+      - libgit2-setup-test
+
     name: Gitconvex Go Bundle Build
     runs-on: ubuntu-latest
     env:
@@ -61,7 +75,9 @@ jobs:
   gitconvex-mock-integration:
     needs:
       - gitconvex-test
+      - gitconvex-test
       - gitconvex-build
+
     name: Mocking Gitconvex Uni-Repo Integration
     runs-on: ubuntu-latest
     env:
