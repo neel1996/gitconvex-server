@@ -15,7 +15,6 @@ jobs:
           brew install libgit2
 
   gitconvex-test:
-    needs: libgit2-setup-test
     name: Gitconvex server test
     runs-on: ubuntu-latest
     env:
@@ -44,6 +43,10 @@ jobs:
           export GOTESTENV=ci && go test -v ./...
 
   gitconvex-build:
+    needs:
+      - gitconvex-test
+      - libgit2-setup-test
+
     name: Gitconvex Go Bundle Build
     runs-on: ubuntu-latest
     env:
@@ -69,6 +72,7 @@ jobs:
 
   gitconvex-mock-integration:
     needs:
+      - libgit2-setup-test
       - gitconvex-test
       - gitconvex-build
 
