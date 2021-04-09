@@ -34,30 +34,34 @@ jobs:
           export GOTESTENV=ci && gotestsum --format=testname ./...
 
   gitconvex-build:
+    needs: gitconvex-test
     name: Gitconvex Go Bundle Build
     runs-on: ubuntu-latest
     env:
       PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/pkgconfig/
 
     steps:
-        - name: Install libgit2 from Homebrew
-          run: |
-            brew install libssh2
-            brew install libgit2
+      - name: Install libgit2 from Homebrew
+        run: |
+          brew install libssh2
+          brew install libgit2
 
-        - name: Set up Go 1.x
-          uses: actions/setup-go@v2
-          with:
-            go-version: ^1.16
-          id: go
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+        id: go
 
-        - name: Check out code into the Go module directory
-          uses: actions/checkout@v2
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
 
-        - name: Build Go bundle
-          run: go build -v .
+      - name: Build Go bundle
+        run: go build -v .
 
   gitconvex-mock-integration:
+    needs:
+      - gitconvex-test
+      - gitconvex-build
     name: Mocking Gitconvex Uni-Repo Integration
     runs-on: ubuntu-latest
     env:
