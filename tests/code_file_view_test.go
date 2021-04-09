@@ -30,7 +30,7 @@ func TestCodeFileView(t *testing.T) {
 			repo     *git.Repository
 			repoPath string
 			fileName string
-		}{repo: r, repoPath: repoPath, fileName: "README.md"}, want: &model.CodeFileType{FileData: []*string{&expectedLine}}},
+		}{repo: r, repoPath: path.Join(repoPath, ".."), fileName: "README.md"}, want: &model.CodeFileType{FileData: []*string{&expectedLine}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
