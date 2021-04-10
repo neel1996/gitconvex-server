@@ -49,6 +49,11 @@ func TestAddBranch(t *testing.T) {
 			}
 			got := obj.AddBranch()
 			assert.Equal(t, tt.want, got)
+
+			git2.DeleteBranchInputs{
+				Repo:       r,
+				BranchName: "test",
+			}.DeleteBranch()
 		})
 	}
 }
