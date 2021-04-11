@@ -15,12 +15,12 @@ func TestListFiles(t *testing.T) {
 	var repoPath string
 	var r *git.Repository
 	cwd, _ := os.Getwd()
+	mockRepoPath := path.Join(cwd, "../..") + "/starfleet"
 	currentEnv := os.Getenv("GOTESTENV")
 	fmt.Println("Environment : " + currentEnv)
 
 	if currentEnv == "ci" {
-		repoPath = "/home/runner/work/gitconvex-server/starfleet"
-		r, _ = git.OpenRepository(repoPath)
+		r, _ = git.OpenRepository(mockRepoPath)
 	} else {
 		repoPath = path.Join(cwd, "../..")
 		r, _ = git.OpenRepository(repoPath)

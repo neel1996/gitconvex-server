@@ -6,18 +6,20 @@ import (
 	git2 "github.com/neel1996/gitconvex-server/git"
 	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 )
 
 func TestCommitChanges(t *testing.T) {
 	var repoPath string
 	var r *git2go.Repository
+	cwd, _ := os.Getwd()
+	mockRepoPath := path.Join(cwd, "../..") + "/starfleet"
 	currentEnv := os.Getenv("GOTESTENV")
 	fmt.Println("Environment : " + currentEnv)
 
 	if currentEnv == "ci" {
-		repoPath = "/home/runner/work/gitconvex-server/starfleet"
-		r, _ = git2go.OpenRepository(repoPath)
+		r, _ = git2go.OpenRepository(mockRepoPath)
 	}
 
 	sampleFile := "untracked.txt"

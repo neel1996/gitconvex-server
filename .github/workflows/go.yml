@@ -113,7 +113,7 @@ jobs:
           git checkout $TARGET_BRANCH
           cd $GITHUB_WORKSPACE
           rm README.md
-          rm -rf .git/ .github/ .gitignore gitconvex-server tests/
+          rm -rf .git/ .github/ .gitignore gitconvex-server
           cp -rp * $HOME/gitconvex/
           cd $HOME/gitconvex/
           rm -rf libgit2-1.1.0*

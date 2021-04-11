@@ -16,10 +16,10 @@ func TestSearchCommitLogs(t *testing.T) {
 	cwd, _ := os.Getwd()
 	currentEnv := os.Getenv("GOTESTENV")
 	fmt.Println("Environment : " + currentEnv)
+	mockRepoPath := path.Join(cwd, "../..") + "/starfleet"
 
 	if currentEnv == "ci" {
-		repoPath = "/home/runner/work/gitconvex-server/starfleet"
-		r, _ = git.OpenRepository(repoPath)
+		r, _ = git.OpenRepository(mockRepoPath)
 	} else {
 		repoPath = path.Join(cwd, "../..")
 		r, _ = git.OpenRepository(repoPath)
