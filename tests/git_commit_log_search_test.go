@@ -19,7 +19,8 @@ func TestSearchCommitLogs(t *testing.T) {
 	mockRepoPath := path.Join(cwd, "../..") + "/starfleet"
 
 	if currentEnv == "ci" {
-		r, _ = git.OpenRepository(mockRepoPath)
+		repoPath = mockRepoPath
+		r, _ = git.OpenRepository(repoPath)
 	} else {
 		repoPath = path.Join(cwd, "../..")
 		r, _ = git.OpenRepository(repoPath)

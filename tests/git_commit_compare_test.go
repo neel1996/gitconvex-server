@@ -19,7 +19,8 @@ func TestCompareCommit(t *testing.T) {
 	fmt.Println("Environment : " + currentEnv)
 
 	if currentEnv == "ci" {
-		r, _ = git.OpenRepository(mockRepoPath)
+		repoPath = mockRepoPath
+		r, _ = git.OpenRepository(repoPath)
 	} else {
 		repoPath = path.Join(cwd, "../..")
 		r, _ = git.OpenRepository(repoPath)
@@ -43,7 +44,7 @@ func TestCompareCommit(t *testing.T) {
 			repo                *git.Repository
 			baseCommitString    string
 			compareCommitString string
-		}{repo: r, baseCommitString: *sampleCommits.Commits[0].Hash, compareCommitString: *sampleCommits.Commits[1].Hash}},
+		}{repo: r, baseCommitString: *sampleCommits.Commits[1].Hash, compareCommitString: *sampleCommits.Commits[2].Hash}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
