@@ -1,3 +1,7 @@
+![go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![gql](https://img.shields.io/badge/GraphQl-E10098?style=for-the-badge&logo=graphql&logoColor=white)
+![docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
+
 # gitconvex GoLang project
 
 This is the back-end go source repo for the [gitconvex](https://github.com/neel1996/gitconvex) project.
