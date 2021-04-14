@@ -37,8 +37,8 @@ discussion forum for assistance
 
 ### Contribution Guidelines
 
-Fork the repo and raise a new Pull Request to merge your branch with the `development` branch of this repo. Once the
-review is complete, the PR will be approved and merged with `main`
+Fork the repo and raise a new Pull Request to merge your branch with the `main` branch of this repo. Once the
+review is complete, the PR will be approved and merged
 
 ## Gitconvex as a Git API
 
