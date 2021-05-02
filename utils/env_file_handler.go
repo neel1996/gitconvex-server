@@ -23,12 +23,17 @@ func localLogger(message string, status string) {
 
 // getEnvFilePath returns the default filepath for Gitconvex to store the data file
 func getEnvFilePath() (string, error) {
-	baseDirPath := flag.Lookup("basedir").Value.String()
-	flag.Parse()
+	var baseDirPath string
+	baseDirFlag := flag.Lookup("basedir")
 
-	if runtime.GOOS != "windows" {
-		localLogger("Using default path for data file access -> "+baseDirPath, global.StatusInfo)
-		return baseDirPath, nil
+	if baseDirFlag != nil {
+		baseDirPath = flag.Lookup("basedir").Value.String()
+		flag.Parse()
+
+		if runtime.GOOS != "windows" || baseDirPath != "" {
+			localLogger("Using default path for data file access -> "+baseDirPath, global.StatusInfo)
+			return baseDirPath, nil
+		}
 	}
 
 	execName, execErr := os.Executable()
