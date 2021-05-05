@@ -16,10 +16,7 @@ type EnvConfig struct {
 	Port         string `json:"port"`
 }
 
-func localLogger(message string, status string) {
-	logger := &global.Logger{}
-	logger.Log(message, status)
-}
+var logger global.Logger
 
 // getEnvFilePath returns the default filepath for Gitconvex to store the data file
 func getEnvFilePath() (string, error) {
@@ -31,19 +28,19 @@ func getEnvFilePath() (string, error) {
 		flag.Parse()
 
 		if runtime.GOOS != "windows" && baseDirPath != "" {
-			localLogger("Using default path for data file access -> "+baseDirPath, global.StatusInfo)
+			logger.Log("Using default path for data file access -> "+baseDirPath, global.StatusInfo)
 			return baseDirPath, nil
 		}
 	}
 
 	execName, execErr := os.Executable()
 	if execErr != nil {
-		localLogger(execErr.Error(), global.StatusError)
+		logger.Log(execErr.Error(), global.StatusError)
 		return "", execErr
 	}
 
 	execPath := filepath.Dir(execName)
-	localLogger("Using current exe path for data file access -> "+execPath, global.StatusInfo)
+	logger.Log("Using current exe path for data file access -> "+execPath, global.StatusInfo)
 	return execPath, nil
 }
 
@@ -59,11 +56,11 @@ func EnvConfigValidator() error {
 	_, openErr := os.Open(fileString)
 
 	if openErr != nil {
-		localLogger(openErr.Error(), global.StatusError)
+		logger.Log(openErr.Error(), global.StatusError)
 		return openErr
 	} else {
 		if envContent := EnvConfigFileReader(); envContent == nil {
-			localLogger("Unable to read env file", global.StatusError)
+			logger.Log("Unable to read env file", global.StatusError)
 			return types.Error{Msg: "Invalid content in env_config file"}
 		}
 	}
@@ -83,7 +80,7 @@ func EnvConfigFileReader() *EnvConfig {
 	var envConfig *EnvConfig
 
 	if err != nil {
-		localLogger(err.Error(), global.StatusError)
+		logger.Log(err.Error(), global.StatusError)
 		return nil
 	} else {
 		if fileContent, openErr := ioutil.ReadAll(envFile); openErr == nil {
@@ -91,7 +88,7 @@ func EnvConfigFileReader() *EnvConfig {
 			if unMarshallErr == nil {
 				return envConfig
 			} else {
-				localLogger(unMarshallErr.Error(), global.StatusError)
+				logger.Log(unMarshallErr.Error(), global.StatusError)
 				return nil
 			}
 		}
