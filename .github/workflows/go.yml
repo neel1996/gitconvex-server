@@ -40,7 +40,7 @@ jobs:
           sudo cp /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/lib* /usr/lib
           export PATH="/home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/:$PATH"
           git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
-          mkdir -p /usr/local/gitconvex
+          sudo mkdir -p /usr/local/gitconvex
           export GOTESTENV=ci && go test -v ./...
 
   gitconvex-build:
