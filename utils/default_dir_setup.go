@@ -38,10 +38,15 @@ func DefaultDirSetup() (string, error) {
 		return execPath, nil
 	}
 
-	err := os.Mkdir(*baseDirPath, 0755)
-	if err != nil {
-		logger.Log(err.Error(), global.StatusError)
-		return "", err
+	_, statErr := os.Stat(*baseDirPath)
+	if statErr != nil {
+		err := os.Mkdir(*baseDirPath, 0755)
+		if err != nil {
+			logger.Log(err.Error(), global.StatusError)
+			return "", err
+		}
+	} else {
+		return *baseDirPath, nil
 	}
 
 	return "", nil
