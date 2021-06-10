@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/pkgconfig/
+      GITCONVEX_TEST_REPO: /home/starfleet
 
     steps:
       - name: Install libgit2 from Homebrew
@@ -42,7 +43,7 @@ jobs:
           git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
           sudo mkdir -p /usr/local/gitconvex
           sudo chown $(whoami) /usr/local/gitconvex/
-          export GITCONVEX_TEST_REPO=/home/starfleet && sudo go test -v ./...
+          sudo go test -v ./...
 
   gitconvex-build:
     needs:
