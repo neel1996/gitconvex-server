@@ -46,7 +46,7 @@ jobs:
 
   gitconvex-build:
     needs:
-      - gitconvex-test
+      - gitconvex-integration-test
       - libgit2-setup-test
 
     name: Gitconvex Build
