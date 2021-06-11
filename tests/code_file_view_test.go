@@ -23,7 +23,7 @@ func TestCodeFileView(t *testing.T) {
 			repo     *git.Repository
 			repoPath string
 			fileName string
-		}{repo: r, repoPath: r.Path(), fileName: "README.md"}},
+		}{repo: r, repoPath: r.Workdir(), fileName: "README.md"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
