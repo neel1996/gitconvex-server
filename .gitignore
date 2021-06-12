@@ -7,3 +7,5 @@ env_config.json
 gitclient
 /*.exe
 /*.dll
+gitconvex
+gitconvex-server
