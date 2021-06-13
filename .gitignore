@@ -9,3 +9,4 @@ gitclient
 /*.dll
 gitconvex
 gitconvex-server
+/local_env_set.sh
