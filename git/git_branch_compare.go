@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-type BranchCompareInterface interface {
+type BranchCompare interface {
 	CompareBranch() []*model.BranchCompareResults
 }
 
-type BranchCompareInputs struct {
+type branchCompare struct {
 	Repo       *git2go.Repository
 	BaseBranch string
 	DiffBranch string
@@ -28,7 +28,7 @@ func returnBranchCompareError(errString string) []*model.BranchCompareResults {
 
 // CompareBranch compares two branches and returns the commits which are different from each other
 // The function uses the git client to fetch the results as go-git lacks this feature
-func (b BranchCompareInputs) CompareBranch() []*model.BranchCompareResults {
+func (b branchCompare) CompareBranch() []*model.BranchCompareResults {
 	var diffCommits []*model.BranchCompareResults
 	var filteredCommits []model.GitCommits
 	repo := b.Repo
@@ -164,4 +164,12 @@ func sortCommitsBasedOnDate(commitMap map[string][]*model.GitCommits, diffCommit
 		})
 	}
 	return diffCommits
+}
+
+func NewBranchCompare(repo *git2go.Repository, baseBranch string, diffBranch string) BranchCompare {
+	return branchCompare{
+		Repo:       repo,
+		BaseBranch: baseBranch,
+		DiffBranch: diffBranch,
+	}
 }
