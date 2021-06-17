@@ -14,14 +14,14 @@ type Branch interface {
 	GitCompareBranches() ([]*model.BranchCompareResults, error)
 }
 
-type branch struct {
-	addBranch       AddBranch
-	checkoutBranch  BranchCheckout
-	compareBranches BranchCompare
+type Operation struct {
+	Add      Add
+	Checkout Checkout
+	Compare  Compare
 }
 
-func (b branch) GitAddBranch() (string, error) {
-	addBranchResult := b.addBranch.AddBranch()
+func (b Operation) GitAddBranch() (string, error) {
+	addBranchResult := b.Add.AddBranch()
 
 	if addBranchResult == global.BranchAddError {
 		return "", errors.New(global.BranchAddError)
@@ -30,8 +30,8 @@ func (b branch) GitAddBranch() (string, error) {
 	return addBranchResult, nil
 }
 
-func (b branch) GitCheckoutBranch() (string, error) {
-	checkoutBranchResult := b.checkoutBranch.CheckoutBranch()
+func (b Operation) GitCheckoutBranch() (string, error) {
+	checkoutBranchResult := b.Checkout.CheckoutBranch()
 
 	if checkoutBranchResult == global.BranchCheckoutError {
 		return "", errors.New(global.BranchCheckoutError)
@@ -40,20 +40,12 @@ func (b branch) GitCheckoutBranch() (string, error) {
 	return checkoutBranchResult, nil
 }
 
-func (b branch) GitCompareBranches() ([]*model.BranchCompareResults, error) {
-	branchDiff := b.compareBranches.CompareBranch()
+func (b Operation) GitCompareBranches() ([]*model.BranchCompareResults, error) {
+	branchDiff := b.Compare.CompareBranch()
 
 	if len(branchDiff) == 0 {
 		return []*model.BranchCompareResults{}, errors.New("no difference between the two branches")
 	}
 
 	return branchDiff, nil
-}
-
-func NewBranchOperation(addBranch AddBranch, branchCheckout BranchCheckout, branchCompare BranchCompare) Branch {
-	return branch{
-		addBranch:       addBranch,
-		checkoutBranch:  branchCheckout,
-		compareBranches: branchCompare,
-	}
 }

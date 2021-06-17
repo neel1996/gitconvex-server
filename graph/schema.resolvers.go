@@ -44,8 +44,9 @@ func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchN
 	}
 
 	addBranch := branch.NewAddBranch(repo.GitRepo, branchName, false, nil)
-	b := branch.NewBranchOperation(addBranch, nil, nil)
-
+	b := branch.Operation{
+		Add: addBranch,
+	}
 	return b.GitAddBranch()
 }
 
@@ -65,8 +66,9 @@ func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, br
 	}
 
 	checkOutBranch := branch.NewBranchCheckout(repo.GitRepo, branchName)
-	b := branch.NewBranchOperation(nil, checkOutBranch, nil)
-
+	b := branch.Operation{
+		Checkout: checkOutBranch,
+	}
 	return b.GitCheckoutBranch()
 }
 
@@ -676,7 +678,9 @@ func (r *queryResolver) BranchCompare(ctx context.Context, repoID string, baseBr
 	}
 
 	branchCompare := branch.NewBranchCompare(repo.GitRepo, baseBranch, compareBranch)
-	b := branch.NewBranchOperation(nil, nil, branchCompare)
+	b := branch.Operation{
+		Compare: branchCompare,
+	}
 	return b.GitCompareBranches()
 }
 
