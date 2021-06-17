@@ -18,6 +18,7 @@ type Operation struct {
 	Add      Add
 	Checkout Checkout
 	Compare  Compare
+	Delete   Delete
 }
 
 func (b Operation) GitAddBranch() (string, error) {
@@ -48,4 +49,14 @@ func (b Operation) GitCompareBranches() ([]*model.BranchCompareResults, error) {
 	}
 
 	return branchDiff, nil
+}
+
+func (b Operation) GitDeleteBranch() (*model.BranchDeleteStatus, error) {
+	deleteStatus := b.Delete.DeleteBranch()
+
+	if deleteStatus.Status == global.BranchDeleteError {
+		return nil, errors.New("branch deletion failed")
+	}
+
+	return deleteStatus, nil
 }
