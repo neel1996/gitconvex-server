@@ -3,6 +3,9 @@
 build/
 .idea/
 database/
+ui/
+dist/
+
 env_config.json
 gitclient
 /*.exe
