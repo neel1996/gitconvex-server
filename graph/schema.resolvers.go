@@ -87,12 +87,11 @@ func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, bran
 		}, nil
 	}
 
-	var deleteBranchObject git.DeleteBranchInterface
-	deleteBranchObject = git.DeleteBranchInputs{
-		Repo:       repo.GitRepo,
-		BranchName: branchName,
+	deleteBranch := branch.NewDeleteBranch(repo.GitRepo, branchName)
+	b := branch.Operation{
+		Delete: deleteBranch,
 	}
-	return deleteBranchObject.DeleteBranch(), nil
+	return b.GitDeleteBranch()
 }
 
 func (r *mutationResolver) FetchFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.FetchResult, error) {

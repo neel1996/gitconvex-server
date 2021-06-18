@@ -12,6 +12,7 @@ type Branch interface {
 	GitAddBranch() (string, error)
 	GitCheckoutBranch() (string, error)
 	GitCompareBranches() ([]*model.BranchCompareResults, error)
+	GitListBranches(chan ListOfBranches)
 }
 
 type Operation struct {
@@ -19,6 +20,7 @@ type Operation struct {
 	Checkout Checkout
 	Compare  Compare
 	Delete   Delete
+	List     List
 }
 
 func (b Operation) GitAddBranch() (string, error) {
@@ -59,4 +61,8 @@ func (b Operation) GitDeleteBranch() (*model.BranchDeleteStatus, error) {
 	}
 
 	return deleteStatus, nil
+}
+
+func (b Operation) GitListBranches(branchChannel chan ListOfBranches) {
+	b.List.ListBranches(branchChannel)
 }
