@@ -79,6 +79,7 @@ jobs:
       #    uses a compiled language
 
       - run: |
+          export GITCONVEX_DEFAULT_PATH=$(pwd)
           make build-server
 
       - name: Perform CodeQL Analysis
