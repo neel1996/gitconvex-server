@@ -4,6 +4,7 @@ import (
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/git"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
@@ -31,43 +32,28 @@ func TestMain(m *testing.M) {
 		Password:   "",
 	}
 
-	if testRepoSetup(testObject) {
-		return
-	}
+	cloneTestRepo(testObject)
 
 	logger.Info("Initiating integration tests")
 	m.Run()
 	tearDownTests()
 }
 
-func testRepoSetup(testObject git.CloneInterface) bool {
-	cloneTestRepo(testObject)
-
-	if stageAndCommit() {
-		return true
-	}
-
-	return false
-}
-
-func stageAndCommit() bool {
+func SetupTestRepoStageAndCommit(msg string) bool {
 	repository, repoErr := git2go.OpenRepository(TestRepo)
 	if repoErr != nil {
 		return true
 	}
 
+	initFile := "init_file.txt"
+	_ = ioutil.WriteFile(TestRepo+"/"+initFile, []byte{byte(63)}, 0755)
+
 	git.StageAllStruct{Repo: repository}.StageAllItems()
 	git.CommitStruct{
 		Repo:          repository,
-		CommitMessage: "Initial commit",
+		CommitMessage: msg,
 		RepoPath:      TestRepo,
 	}.CommitChanges()
-
-	git.AddRemoteStruct{
-		Repo:       repository,
-		RemoteName: "origin",
-		RemoteURL:  "https://github.com/neel1996/gitconvex-test.git",
-	}.AddRemote()
 
 	return false
 }
