@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.0/lib/pkgconfig/
-      GITCONVEX_TEST_REPO: /home/runner/work/gitconvex-server/starfleet
+      GITCONVEX_TEST_REPO: /home/runner/work/gitconvex-server/gitconvex-test
       GITCONVEX_DEFAULT_PATH: /usr/local/gitconvex
 
     steps:

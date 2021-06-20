@@ -1,6 +1,7 @@
 package tests
 
 import (
+	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/git"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -23,21 +24,60 @@ func TestMain(m *testing.M) {
 	testObject = git.CloneStruct{
 		RepoName:   "",
 		RepoPath:   TestRepo,
-		RepoURL:    "https://github.com/neel1996/starfleet.git",
+		RepoURL:    "https://github.com/neel1996/gitconvex-test.git",
 		AuthOption: "noauth",
 		SSHKeyPath: "",
 		UserName:   "",
 		Password:   "",
 	}
-	_, err := testObject.CloneRepo()
-	if err != nil {
-		logger.Error("Unable to clone the test repo")
-		os.Exit(2)
+
+	if testRepoSetup(testObject) {
+		return
 	}
 
 	logger.Info("Initiating integration tests")
 	m.Run()
 	tearDownTests()
+}
+
+func testRepoSetup(testObject git.CloneInterface) bool {
+	cloneTestRepo(testObject)
+
+	if stageAndCommit() {
+		return true
+	}
+
+	return false
+}
+
+func stageAndCommit() bool {
+	repository, repoErr := git2go.OpenRepository(TestRepo)
+	if repoErr != nil {
+		return true
+	}
+
+	git.StageAllStruct{Repo: repository}.StageAllItems()
+	git.CommitStruct{
+		Repo:          repository,
+		CommitMessage: "Initial commit",
+		RepoPath:      TestRepo,
+	}.CommitChanges()
+
+	git.AddRemoteStruct{
+		Repo:       repository,
+		RemoteName: "origin",
+		RemoteURL:  "https://github.com/neel1996/gitconvex-test.git",
+	}.AddRemote()
+
+	return false
+}
+
+func cloneTestRepo(testObject git.CloneInterface) {
+	_, err := testObject.CloneRepo()
+	if err != nil {
+		logger.Error("Unable to clone the test repo")
+		os.Exit(2)
+	}
 }
 
 func tearDownTests() {
