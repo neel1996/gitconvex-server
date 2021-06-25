@@ -45,7 +45,8 @@ jobs:
           sudo mkdir -p /usr/local/gitconvex
           sudo chown $(whoami) /usr/local/gitconvex/
           go generate
-          go test -v ./...
+          go test ./tests -count=1 -v
+          go test $(go list ./... | grep -v "tests") -count=1 -v
 
   gitconvex-build:
     needs:
