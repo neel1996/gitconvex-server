@@ -11,6 +11,7 @@ import (
 type RemoteEditTestSuite struct {
 	suite.Suite
 	repo       *git2go.Repository
+	validation Validation
 	editRemote Edit
 }
 
@@ -24,7 +25,8 @@ func (suite *RemoteEditTestSuite) SetupTest() {
 		fmt.Println(err)
 	}
 	suite.repo = r
-	suite.editRemote = NewEditRemote(r, "origin", "https://github.com/neel1996/gitconvex-test.git")
+	suite.validation = NewRemoteValidation()
+	suite.editRemote = NewEditRemote(r, "origin", "https://github.com/neel1996/gitconvex-test.git", suite.validation)
 }
 
 func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteIsEdited_ShouldReturnNil() {
@@ -34,7 +36,7 @@ func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteIsEdited_ShouldReturn
 }
 
 func (suite *RemoteEditTestSuite) TestEditRemote_WhenRepoIsNil_ShouldReturnError() {
-	suite.editRemote = NewEditRemote(nil, "origin", "https://github.com/neel1996/gitconvex-test.git")
+	suite.editRemote = NewEditRemote(nil, "origin", "https://github.com/neel1996/gitconvex-test.git", suite.validation)
 
 	wantErr := suite.editRemote.EditRemote()
 
@@ -44,7 +46,7 @@ func (suite *RemoteEditTestSuite) TestEditRemote_WhenRepoIsNil_ShouldReturnError
 func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteCollectionIsNil_ShouldReturnError() {
 	suite.editRemote = NewEditRemote(&git2go.Repository{
 		Remotes: git2go.RemoteCollection{},
-	}, "origin", "https://github.com/neel1996/gitconvex-test.git")
+	}, "origin", "https://github.com/neel1996/gitconvex-test.git", suite.validation)
 
 	wantErr := suite.editRemote.EditRemote()
 
@@ -52,7 +54,7 @@ func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteCollectionIsNil_Shoul
 }
 
 func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteEditFieldsAreEmpty_ShouldReturnError() {
-	suite.editRemote = NewEditRemote(suite.repo, "", "")
+	suite.editRemote = NewEditRemote(suite.repo, "", "", suite.validation)
 
 	wantErr := suite.editRemote.EditRemote()
 

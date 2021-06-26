@@ -14,6 +14,7 @@ type editRemote struct {
 	repo       *git2go.Repository
 	remoteName string
 	remoteURL  string
+	validate   Validation
 }
 
 func (e editRemote) EditRemote() error {
@@ -34,7 +35,6 @@ func (e editRemote) EditRemote() error {
 	}
 
 	err := repo.Remotes.SetUrl(e.remoteName, e.remoteURL)
-
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
 		return err
@@ -45,12 +45,9 @@ func (e editRemote) EditRemote() error {
 }
 
 func (e editRemote) validateRemoteFields() error {
-	if e.repo == nil {
-		return errors.New("repo is nil")
-	}
-
-	if e.repo.Remotes == (git2go.RemoteCollection{}) {
-		return errors.New("remote collection is empty")
+	validationError := e.validate.ValidateRemoteFields(e.repo)
+	if validationError != nil {
+		return validationError
 	}
 
 	if e.remoteName == "" || e.remoteURL == "" {
@@ -59,10 +56,11 @@ func (e editRemote) validateRemoteFields() error {
 	return nil
 }
 
-func NewEditRemote(repo *git2go.Repository, remoteName string, remoteURL string) Edit {
+func NewEditRemote(repo *git2go.Repository, remoteName string, remoteURL string, validation Validation) Edit {
 	return editRemote{
 		repo:       repo,
 		remoteName: remoteName,
 		remoteURL:  remoteURL,
+		validate:   validation,
 	}
 }
