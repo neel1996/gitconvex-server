@@ -5,6 +5,7 @@ build/
 database/
 ui/
 dist/
+gitconvex-test/
 
 env_config.json
 gitclient
