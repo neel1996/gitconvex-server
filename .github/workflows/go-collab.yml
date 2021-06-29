@@ -45,7 +45,7 @@ jobs:
           sudo mkdir -p /usr/local/gitconvex
           sudo chown $(whoami) /usr/local/gitconvex/
           go generate
-          ../../build_scripts/clone_test_repo.sh
+          $GITHUB_WORKSPACE/build_scripts/clone_test_repo.sh
           go test ./... -count=1 -v
 
   gitconvex-build:
