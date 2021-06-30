@@ -14,7 +14,6 @@ type editRemote struct {
 	repo       *git2go.Repository
 	remoteName string
 	remoteURL  string
-	validate   Validation
 }
 
 func (e editRemote) EditRemote() error {
@@ -45,7 +44,7 @@ func (e editRemote) EditRemote() error {
 }
 
 func (e editRemote) validateRemoteFields() error {
-	validationError := e.validate.ValidateRemoteFields(e.repo)
+	validationError := NewRemoteValidation(e.repo).ValidateRemoteFields()
 	if validationError != nil {
 		return validationError
 	}
@@ -56,11 +55,10 @@ func (e editRemote) validateRemoteFields() error {
 	return nil
 }
 
-func NewEditRemote(repo *git2go.Repository, remoteName string, remoteURL string, validation Validation) Edit {
+func NewEditRemote(repo *git2go.Repository, remoteName string, remoteURL string) Edit {
 	return editRemote{
 		repo:       repo,
 		remoteName: remoteName,
 		remoteURL:  remoteURL,
-		validate:   validation,
 	}
 }

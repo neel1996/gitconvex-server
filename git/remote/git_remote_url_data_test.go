@@ -10,7 +10,6 @@ import (
 type RemoteUrlDataTestSuite struct {
 	suite.Suite
 	listRemoteUrl ListRemoteUrl
-	validation    Validation
 }
 
 func TestRemoteUrlDataTestSuite(t *testing.T) {
@@ -19,8 +18,7 @@ func TestRemoteUrlDataTestSuite(t *testing.T) {
 
 func (suite *RemoteUrlDataTestSuite) SetupTest() {
 	r, _ := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
-	suite.validation = NewRemoteValidation()
-	suite.listRemoteUrl = NewRemoteUrlData(r, suite.validation)
+	suite.listRemoteUrl = NewRemoteUrlData(r)
 }
 
 func (suite *RemoteUrlDataTestSuite) TestGetAllRemoteUrl_WhenRemotesArePresent_ShouldReturnRemoteUrlList() {
@@ -31,7 +29,7 @@ func (suite *RemoteUrlDataTestSuite) TestGetAllRemoteUrl_WhenRemotesArePresent_S
 }
 
 func (suite *RemoteUrlDataTestSuite) TestGetAllRemoteUrl_WhenRepoIsNil_ShouldReturnNil() {
-	suite.listRemoteUrl = NewRemoteUrlData(nil, suite.validation)
+	suite.listRemoteUrl = NewRemoteUrlData(nil)
 
 	urlList := suite.listRemoteUrl.GetAllRemoteUrl()
 
@@ -39,12 +37,9 @@ func (suite *RemoteUrlDataTestSuite) TestGetAllRemoteUrl_WhenRepoIsNil_ShouldRet
 }
 
 func (suite *RemoteUrlDataTestSuite) TestGetAllRemoteUrl_WhenRemotesAreNil_ShouldReturnNil() {
-	suite.listRemoteUrl = NewRemoteUrlData(
-		&git2go.Repository{
-			Remotes: git2go.RemoteCollection{},
-		},
-		suite.validation,
-	)
+	suite.listRemoteUrl = NewRemoteUrlData(&git2go.Repository{
+		Remotes: git2go.RemoteCollection{},
+	})
 
 	urlList := suite.listRemoteUrl.GetAllRemoteUrl()
 

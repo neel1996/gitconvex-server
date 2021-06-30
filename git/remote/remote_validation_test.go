@@ -24,11 +24,11 @@ func (suite *RemoteValidationTestSuite) SetupTest() {
 		fmt.Println(err)
 	}
 	suite.repo = r
-	suite.validateRemoteFields = NewRemoteValidation()
+	suite.validateRemoteFields = NewRemoteValidation(suite.repo)
 }
 
 func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenAllFieldsAreValid_ShouldReturnNil() {
-	wantErr := suite.validateRemoteFields.ValidateRemoteFields(suite.repo)
+	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
 
 	fmt.Println(wantErr)
 
@@ -36,7 +36,8 @@ func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenAllFieldsAr
 }
 
 func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRepoIsNil_ShouldReturnError() {
-	wantErr := suite.validateRemoteFields.ValidateRemoteFields(nil)
+	suite.validateRemoteFields = NewRemoteValidation(nil)
+	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
 	wantErrorText := "repo is nil"
 
 	suite.NotNil(wantErr)
@@ -44,9 +45,10 @@ func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRepoIsNil_S
 }
 
 func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRemoteCollectionIsNil_ShouldReturnError() {
-	wantErr := suite.validateRemoteFields.ValidateRemoteFields(&git2go.Repository{
+	suite.validateRemoteFields = NewRemoteValidation(&git2go.Repository{
 		Remotes: git2go.RemoteCollection{},
 	})
+	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
 	wantErrorText := "remote collection is nil"
 
 	suite.NotNil(wantErr)

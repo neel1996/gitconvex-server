@@ -14,12 +14,11 @@ type Delete interface {
 type deleteRemote struct {
 	repo       *git2go.Repository
 	remoteName string
-	validate   Validation
 }
 
 // DeleteRemote deletes the remote based on the specified remoteName
 func (d deleteRemote) DeleteRemote() error {
-	if validationError := d.validateRemoteFields(); validationError != nil {
+	if validationError := NewRemoteValidation(d.repo).ValidateRemoteFields(); validationError != nil {
 		return validationError
 	}
 
@@ -54,10 +53,9 @@ func (d *deleteRemote) deleteSelectedRemote(remoteEntry string) error {
 	return nil
 }
 
-func NewDeleteRemote(repo *git2go.Repository, remoteName string, validate Validation) Delete {
+func NewDeleteRemote(repo *git2go.Repository, remoteName string) Delete {
 	return deleteRemote{
 		repo:       repo,
 		remoteName: remoteName,
-		validate:   validate,
 	}
 }

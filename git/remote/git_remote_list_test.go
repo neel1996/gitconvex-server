@@ -11,13 +11,11 @@ import (
 type ListRemoteTestSuite struct {
 	suite.Suite
 	listRemote List
-	validate   Validation
 }
 
 func (suite *ListRemoteTestSuite) SetupTest() {
 	r, _ := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
-	suite.validate = NewRemoteValidation()
-	suite.listRemote = NewRemoteList(r, suite.validate)
+	suite.listRemote = NewRemoteList(r)
 }
 
 func TestListRemoteTestSuite(t *testing.T) {
@@ -38,7 +36,7 @@ func (suite *ListRemoteTestSuite) TestGetAllRemotes_WhenRepoIsValid_ShouldReturn
 }
 
 func (suite *ListRemoteTestSuite) TestGetAllRemotes_WhenRepoIsNil_ShouldReturnNil() {
-	suite.listRemote = NewRemoteList(nil, suite.validate)
+	suite.listRemote = NewRemoteList(nil)
 
 	remoteList := suite.listRemote.GetAllRemotes()
 
@@ -50,7 +48,7 @@ func (suite *ListRemoteTestSuite) TestGetAllRemotes_WhenRepoHasNoRemotes_ShouldR
 		Remotes: git2go.RemoteCollection{},
 	}
 
-	suite.listRemote = NewRemoteList(r, suite.validate)
+	suite.listRemote = NewRemoteList(r)
 
 	remoteList := suite.listRemote.GetAllRemotes()
 

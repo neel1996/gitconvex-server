@@ -6,16 +6,14 @@ import (
 )
 
 type Validation interface {
-	ValidateRemoteFields(*git2go.Repository) error
+	ValidateRemoteFields() error
 }
 
 type validation struct {
 	repo *git2go.Repository
 }
 
-func (v validation) ValidateRemoteFields(repository *git2go.Repository) error {
-	v.repo = repository
-
+func (v validation) ValidateRemoteFields() error {
 	validateRepoErr := v.validateRepo()
 	if validateRepoErr != nil {
 		return validateRepoErr
@@ -45,6 +43,8 @@ func (v validation) validateRemoteCollection() error {
 	return nil
 }
 
-func NewRemoteValidation() Validation {
-	return validation{}
+func NewRemoteValidation(repo *git2go.Repository) Validation {
+	return validation{
+		repo: repo,
+	}
 }

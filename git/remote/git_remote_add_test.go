@@ -10,8 +10,7 @@ import (
 
 type RemoteAddTestSuite struct {
 	suite.Suite
-	addRemote  Add
-	validation Validation
+	addRemote Add
 }
 
 func TestRemoteAddTestSuite(t *testing.T) {
@@ -23,8 +22,7 @@ func (suite *RemoteAddTestSuite) SetupTest() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	suite.validation = NewRemoteValidation()
-	suite.addRemote = NewAddRemote(r, "new_origin", "https://github.com/neel1996/gitconvex-test.git", suite.validation)
+	suite.addRemote = NewAddRemote(r, "new_origin", "https://github.com/neel1996/gitconvex-test.git")
 }
 
 func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenNewRemoteIsAdded_ShouldReturnNoError() {
@@ -34,7 +32,7 @@ func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenNewRemoteIsAdded_ShouldRet
 }
 
 func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenRequiredFieldsAreEmpty_ShouldReturnError() {
-	suite.addRemote = NewAddRemote(nil, "", "", suite.validation)
+	suite.addRemote = NewAddRemote(nil, "", "")
 
 	err := suite.addRemote.NewRemote()
 
@@ -44,7 +42,7 @@ func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenRequiredFieldsAreEmpty_Sho
 func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenRemoteCreationFails_ShouldReturnError() {
 	r, _ := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
 
-	suite.addRemote = NewAddRemote(r, "new_origin", "https://github.com/neel1996/gitconvex-test.git", suite.validation)
+	suite.addRemote = NewAddRemote(r, "new_origin", "https://github.com/neel1996/gitconvex-test.git")
 
 	err := suite.addRemote.NewRemote()
 
