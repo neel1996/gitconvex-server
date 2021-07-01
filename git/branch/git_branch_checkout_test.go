@@ -24,13 +24,12 @@ func (suite *BranchCheckoutTestSuite) SetupTest() {
 	if err != nil {
 		fmt.Println(err)
 	}
-
+	suite.repo = r
 	suite.branchName = "test_checkout"
-	addErr := NewAddBranch(r, suite.branchName, false, nil).AddBranch()
+	addErr := NewAddBranch(suite.repo, suite.branchName, false, nil).AddBranch()
 	if addErr != nil {
 		fmt.Println(addErr)
 	}
-	suite.repo = r
 	suite.checkoutBranch = NewBranchCheckout(suite.repo, suite.branchName)
 }
 
