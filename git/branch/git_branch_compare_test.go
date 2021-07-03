@@ -25,17 +25,6 @@ func TestBranchCompareTestSuite(t *testing.T) {
 	suite.Run(t, new(BranchCompareTestSuite))
 }
 
-func (suite *BranchCompareTestSuite) SetupTest() {
-	r, err := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
-	if err != nil {
-		fmt.Println(err)
-	}
-	suite.repo = r
-	suite.baseBranch = "master"
-	suite.compareBranch = "new_compare"
-	suite.branchCompare = NewBranchCompare(suite.repo, suite.baseBranch, suite.compareBranch)
-}
-
 func (suite *BranchCompareTestSuite) SetupSuite() {
 	r, err := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
 	if err != nil {
@@ -50,6 +39,17 @@ func (suite *BranchCompareTestSuite) SetupSuite() {
 		fmt.Println(addErr)
 	}
 	suite.stageAndCommitTestFile()
+}
+
+func (suite *BranchCompareTestSuite) SetupTest() {
+	r, err := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
+	if err != nil {
+		fmt.Println(err)
+	}
+	suite.repo = r
+	suite.baseBranch = "master"
+	suite.compareBranch = "new_compare"
+	suite.branchCompare = NewBranchCompare(suite.repo, suite.baseBranch, suite.compareBranch)
 }
 
 func (suite *BranchCompareTestSuite) TearDownSuite() {
@@ -118,14 +118,14 @@ func (suite *BranchCompareTestSuite) TestCompareBranch_WhenBranchDoesNotDiffer_S
 }
 
 func (suite *BranchCompareTestSuite) stageAndCommitTestFile() {
-	err := ioutil.WriteFile(suite.testFile, []byte{0}, 0644)
-	if err != nil {
-		logger.Log(err.Error(), global.StatusError)
-		return
-	}
 	checkoutErr := NewBranchCheckout(suite.repo, suite.compareBranch).CheckoutBranch()
 	if checkoutErr != nil {
 		logger.Log(checkoutErr.Error(), global.StatusError)
+		return
+	}
+	err := ioutil.WriteFile(suite.testFile, []byte{0}, 0644)
+	if err != nil {
+		logger.Log(err.Error(), global.StatusError)
 		return
 	}
 	git.StageItemStruct{

@@ -15,7 +15,6 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	logger.Log("Collecting repo status information", global.StatusInfo)
 
 	repoChan := make(chan git.RepoDetails)
-	branchChan := make(chan branch.ListOfBranches)
 	commitChan := make(chan git.AllCommitData)
 	trackedFileCountChan := make(chan int)
 
@@ -84,12 +83,11 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		*remoteURL = *remotes[0]
 	}
 
-	branchListObj := branch.NewBranchListInterface(repo)
+	branchListObj := branch.NewBranchList(repo)
 	b := branch.Operation{List: branchListObj}
-	go b.GitListBranches(branchChan)
+	branchList, _ := b.GitListBranches()
 
-	branchList := <-branchChan
-	currentBranch := &branchList.CurrentBranch
+	currentBranch := branchList.CurrentBranch
 	branches := branchList.BranchList
 	allBranches := branchList.AllBranchList
 
@@ -116,9 +114,9 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	return &model.GitRepoStatusResults{
 		GitRemoteData:        remoteURL,
 		GitRepoName:          repoName,
-		GitBranchList:        branches,
-		GitAllBranchList:     allBranches,
-		GitCurrentBranch:     currentBranch,
+		GitBranchList:        utils.GeneratePointerArrayFrom(branches),
+		GitAllBranchList:     utils.GeneratePointerArrayFrom(allBranches),
+		GitCurrentBranch:     &currentBranch,
 		GitRemoteHost:        &remoteName,
 		GitTotalCommits:      totalCommitsPtr,
 		GitLatestCommit:      latestCommit,

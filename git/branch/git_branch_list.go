@@ -14,10 +14,13 @@ type List interface {
 }
 
 type listBranch struct {
-	repo            *git2go.Repository
+	repo *git2go.Repository
+}
+
+var (
 	localBranchList []string
 	allBranchList   []string
-}
+)
 
 // ListBranches fetches all the branches from the target repository
 // The result will be returned as a struct with the current branch and all the available branches
@@ -39,8 +42,8 @@ func (l listBranch) ListBranches() (model.ListOfBranches, error) {
 
 	currentBranch = getCurrentBranchName(head)
 
-	l.allBranchList = append(l.allBranchList, currentBranch)
-	l.localBranchList = append(l.localBranchList, currentBranch)
+	allBranchList = append(allBranchList, currentBranch)
+	localBranchList = append(localBranchList, currentBranch)
 
 	localBranchIterator, itrErr := repo.NewBranchIterator(git2go.BranchAll)
 	if itrErr != nil {
@@ -56,8 +59,8 @@ func (l listBranch) ListBranches() (model.ListOfBranches, error) {
 
 	return model.ListOfBranches{
 		CurrentBranch: currentBranch,
-		BranchList:    l.localBranchList,
-		AllBranchList: l.allBranchList,
+		BranchList:    localBranchList,
+		AllBranchList: allBranchList,
 	}, nil
 }
 
@@ -81,8 +84,8 @@ func (l listBranch) classifyRemoteAndLocalBranches(branch *git2go.Branch, branch
 	if branch.IsRemote() && strings.Contains(branchName, "/") {
 		l.getRemoteBranchName(branchName, currentBranch)
 	} else {
-		l.allBranchList = append(l.allBranchList, branchName)
-		l.localBranchList = append(l.localBranchList, branchName)
+		allBranchList = append(allBranchList, branchName)
+		localBranchList = append(localBranchList, branchName)
 	}
 }
 
@@ -92,7 +95,7 @@ func (l listBranch) getRemoteBranchName(branchName string, currentBranch string)
 
 	if splitBranch != "HEAD" && splitBranch != currentBranch {
 		concatRemote := "remotes/" + strings.Join(splitString, "/")
-		l.allBranchList = append(l.allBranchList, concatRemote)
+		allBranchList = append(allBranchList, concatRemote)
 	}
 }
 
