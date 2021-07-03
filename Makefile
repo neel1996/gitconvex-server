@@ -34,8 +34,20 @@ test:
 	rm -rf $$GITCONVEX_TEST_REPO && \
  	go clean --cache && \
  	./build_scripts/clone_test_repo.sh && \
- 	go test ./... -count=1 && \
+ 	go test ./... -count=1 -cover -coverprofile=coverage.out && \
 	rm -rf $$GITCONVEX_TEST_REPO
+
+test-pretty:
+	export GITCONVEX_TEST_REPO="$(PWD)/gitconvex-test" && \
+	export GITCONVEX_DEFAULT_PATH="$(PWD)/gitconvex-test" && \
+	rm -rf $$GITCONVEX_TEST_REPO && \
+ 	go clean --cache && \
+ 	./build_scripts/clone_test_repo.sh && \
+ 	gotestsum ./... -count=1 -cover -coverprofile=coverage.out && \
+	rm -rf $$GITCONVEX_TEST_REPO
+
+show-coverage:
+	go tool cover -html=coverage.out
 
 start:
 	./dist/gitconvex

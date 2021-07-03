@@ -5,6 +5,7 @@ import (
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/stretchr/testify/suite"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -13,6 +14,7 @@ type BranchDeleteTestSuite struct {
 	branchDelete Delete
 	branchName   string
 	repo         *git2go.Repository
+	noHeadRepo   *git2go.Repository
 }
 
 func TestBranchDeleteTestSuite(t *testing.T) {
@@ -24,7 +26,12 @@ func (suite *BranchDeleteTestSuite) SetupTest() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	noHeadPath := os.Getenv("GITCONVEX_TEST_REPO") + string(filepath.Separator) + "no_head"
+	noHeadRepo, _ := git2go.OpenRepository(noHeadPath)
+
 	suite.repo = r
+	suite.noHeadRepo = noHeadRepo
 	suite.branchName = "delete_branch"
 	suite.branchDelete = NewDeleteBranch(suite.repo, suite.branchName)
 }
@@ -65,6 +72,13 @@ func (suite *BranchDeleteTestSuite) TestDeleteBranch_WhenRepoIsNil_ShouldReturnE
 
 func (suite *BranchDeleteTestSuite) TestDeleteBranch_WhenBranchNameIsEmpty_ShouldReturnError() {
 	suite.branchDelete = NewDeleteBranch(suite.repo, "")
+	err := suite.branchDelete.DeleteBranch()
+
+	suite.NotNil(err)
+}
+
+func (suite *BranchDeleteTestSuite) TestDeleteBranch_WhenRepoHasNoHead_ShouldReturnError() {
+	suite.branchDelete = NewDeleteBranch(suite.noHeadRepo, suite.branchName)
 	err := suite.branchDelete.DeleteBranch()
 
 	suite.NotNil(err)

@@ -5,6 +5,7 @@ import (
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/stretchr/testify/suite"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -13,18 +14,24 @@ type BranchCheckoutTestSuite struct {
 	branchName     string
 	checkoutBranch Checkout
 	repo           *git2go.Repository
+	noHeadRepo     *git2go.Repository
 }
 
 func TestBranchCheckoutTestSuite(t *testing.T) {
 	suite.Run(t, new(BranchCheckoutTestSuite))
 }
 
-func (suite *BranchCheckoutTestSuite) SetupTest() {
+func (suite *BranchCheckoutTestSuite) SetupSuite() {
 	r, err := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	noHeadPath := os.Getenv("GITCONVEX_TEST_REPO") + string(filepath.Separator) + "no_head"
+	noHeadRepo, _ := git2go.OpenRepository(noHeadPath)
+
 	suite.repo = r
+	suite.noHeadRepo = noHeadRepo
 	suite.branchName = "test_checkout"
 	addErr := NewAddBranch(suite.repo, suite.branchName, false, nil).AddBranch()
 	if addErr != nil {
@@ -39,7 +46,7 @@ func (suite *BranchCheckoutTestSuite) TearDownSuite() {
 	if err != nil {
 		return
 	}
-	NewDeleteBranch(suite.repo, suite.branchName).DeleteBranch()
+	_ = NewDeleteBranch(suite.repo, suite.branchName).DeleteBranch()
 }
 
 func (suite *BranchCheckoutTestSuite) TestCheckoutBranch_WhenBranchIsCheckedOut_ShouldReturnNil() {
@@ -69,6 +76,13 @@ func (suite *BranchCheckoutTestSuite) TestCheckoutBranch_WhenBranchNameIsEmpty_S
 
 	suite.NotNil(err)
 	suite.Equal("branch name is empty", err.Error())
+}
+
+func (suite *BranchCheckoutTestSuite) TestCheckoutBranch_WhenRepoHasNoHead_ShouldReturnError() {
+	suite.checkoutBranch = NewBranchCheckout(suite.noHeadRepo, suite.branchName)
+	err := suite.checkoutBranch.CheckoutBranch()
+
+	suite.NotNil(err)
 }
 
 func (suite *BranchCheckoutTestSuite) TestCheckoutBranch_WhenNonExistingBranchIsSelected_ShouldReturnError() {

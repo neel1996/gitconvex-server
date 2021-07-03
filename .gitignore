@@ -9,6 +9,7 @@ gitconvex-test/
 
 env_config.json
 gitclient
+coverage.out
 /*.exe
 /*.dll
 gitconvex

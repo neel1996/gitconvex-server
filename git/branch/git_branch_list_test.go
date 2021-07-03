@@ -26,7 +26,7 @@ func (suite *BranchListTestSuite) SetupTest() {
 		fmt.Println(err)
 	}
 	noHeadPath := os.Getenv("GITCONVEX_TEST_REPO") + string(filepath.Separator) + "no_head"
-	noHeadRepo, _ := git2go.InitRepository(noHeadPath, false)
+	noHeadRepo, _ := git2go.OpenRepository(noHeadPath)
 
 	suite.repo = r
 	suite.noHeadRepo = noHeadRepo

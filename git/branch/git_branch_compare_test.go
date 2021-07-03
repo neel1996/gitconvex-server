@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -31,7 +32,7 @@ func (suite *BranchCompareTestSuite) SetupSuite() {
 		fmt.Println(err)
 	}
 	suite.repo = r
-	suite.testFile = os.Getenv("GITCONVEX_TEST_REPO") + "/" + "compare_test.txt"
+	suite.testFile = os.Getenv("GITCONVEX_TEST_REPO") + string(filepath.Separator) + "compare_test.txt"
 	suite.baseBranch = "master"
 	suite.compareBranch = "new_compare"
 	addErr := NewAddBranch(r, suite.compareBranch, false, nil).AddBranch()
@@ -53,7 +54,7 @@ func (suite *BranchCompareTestSuite) SetupTest() {
 }
 
 func (suite *BranchCompareTestSuite) TearDownSuite() {
-	checkoutErr := NewBranchCheckout(suite.repo, suite.baseBranch).CheckoutBranch()
+	checkoutErr := NewBranchCheckout(suite.repo, "master").CheckoutBranch()
 	if checkoutErr != nil {
 		logger.Log(checkoutErr.Error(), global.StatusError)
 		return
@@ -80,9 +81,10 @@ func (suite *BranchCompareTestSuite) TestCompareBranch_WhenBranchesHaveDifferent
 		time.UTC,
 	).String()
 
-	suite.Len(compareResults, 1)
+	suite.NotNil(compareResults)
+	suite.NotZero(len(compareResults))
+	suite.NotZero(len(compareResults[0].Commits))
 
-	suite.Len(compareResults[0].Commits, 1)
 	suite.NotNil(*compareResults[0].Commits[0])
 	suite.NotEmpty(*compareResults[0].Commits[0].CommitMessage)
 	suite.Contains(timeString, compareResults[0].Date)
