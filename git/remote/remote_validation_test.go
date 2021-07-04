@@ -11,6 +11,7 @@ import (
 type RemoteValidationTestSuite struct {
 	suite.Suite
 	repo                 *git2go.Repository
+	remoteFields         []string
 	validateRemoteFields Validation
 }
 
@@ -23,8 +24,10 @@ func (suite *RemoteValidationTestSuite) SetupTest() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	suite.remoteFields = []string{"origin", "origin_1"}
 	suite.repo = r
-	suite.validateRemoteFields = NewRemoteValidation(suite.repo)
+	suite.validateRemoteFields = NewRemoteValidation(suite.repo, suite.remoteFields[0], suite.remoteFields[1])
 }
 
 func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenAllFieldsAreValid_ShouldReturnNil() {
@@ -50,6 +53,15 @@ func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRemoteColle
 	})
 	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
 	wantErrorText := "remote collection is nil"
+
+	suite.NotNil(wantErr)
+	suite.Equal(wantErrorText, wantErr.Error())
+}
+
+func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRemoteFieldsAreEmpty_ShouldReturnError() {
+	suite.validateRemoteFields = NewRemoteValidation(suite.repo, "", "")
+	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
+	wantErrorText := "one or more remote fields are empty"
 
 	suite.NotNil(wantErr)
 	suite.Equal(wantErrorText, wantErr.Error())

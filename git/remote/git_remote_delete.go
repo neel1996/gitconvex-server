@@ -1,7 +1,6 @@
 package remote
 
 import (
-	"errors"
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/global"
@@ -18,7 +17,8 @@ type deleteRemote struct {
 
 // DeleteRemote deletes the remote based on the specified remoteName
 func (d deleteRemote) DeleteRemote() error {
-	if validationError := NewRemoteValidation(d.repo).ValidateRemoteFields(); validationError != nil {
+	validationError := NewRemoteValidation(d.repo, d.remoteName).ValidateRemoteFields()
+	if validationError != nil {
 		return validationError
 	}
 
@@ -28,17 +28,6 @@ func (d deleteRemote) DeleteRemote() error {
 		return err
 	}
 
-	return nil
-}
-
-func (d deleteRemote) validateRemoteFields() error {
-	if d.repo == nil {
-		return errors.New("repo is nil")
-	}
-
-	if d.remoteName == "" {
-		return errors.New("remote name cannot be empty")
-	}
 	return nil
 }
 

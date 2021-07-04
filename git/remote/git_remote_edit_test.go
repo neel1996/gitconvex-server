@@ -5,12 +5,16 @@ import (
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/stretchr/testify/suite"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
 type RemoteEditTestSuite struct {
 	suite.Suite
 	repo       *git2go.Repository
+	noHeadRepo *git2go.Repository
+	remoteName string
+	remoteUrl  string
 	validation Validation
 	editRemote Edit
 }
@@ -24,8 +28,14 @@ func (suite *RemoteEditTestSuite) SetupTest() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	noHeadPath := os.Getenv("GITCONVEX_TEST_REPO") + string(filepath.Separator) + "no_head"
+	noHeadRepo, _ := git2go.OpenRepository(noHeadPath)
+
 	suite.repo = r
-	suite.editRemote = NewEditRemote(r, "origin", "https://github.com/neel1996/gitconvex-test.git")
+	suite.noHeadRepo = noHeadRepo
+	suite.remoteName = "origin"
+	suite.remoteUrl = "https://github.com/neel1996/gitconvex-test.git"
+	suite.editRemote = NewEditRemote(r, suite.remoteName, suite.remoteUrl)
 }
 
 func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteIsEdited_ShouldReturnNil() {
@@ -35,7 +45,7 @@ func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteIsEdited_ShouldReturn
 }
 
 func (suite *RemoteEditTestSuite) TestEditRemote_WhenRepoIsNil_ShouldReturnError() {
-	suite.editRemote = NewEditRemote(nil, "origin", "https://github.com/neel1996/gitconvex-test.git")
+	suite.editRemote = NewEditRemote(nil, suite.remoteName, suite.remoteUrl)
 
 	wantErr := suite.editRemote.EditRemote()
 
@@ -45,15 +55,39 @@ func (suite *RemoteEditTestSuite) TestEditRemote_WhenRepoIsNil_ShouldReturnError
 func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteCollectionIsNil_ShouldReturnError() {
 	suite.editRemote = NewEditRemote(&git2go.Repository{
 		Remotes: git2go.RemoteCollection{},
-	}, "origin", "https://github.com/neel1996/gitconvex-test.git")
+	}, suite.remoteName, suite.remoteUrl)
 
 	wantErr := suite.editRemote.EditRemote()
 
 	suite.NotNil(wantErr)
 }
 
-func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteEditFieldsAreEmpty_ShouldReturnError() {
-	suite.editRemote = NewEditRemote(suite.repo, "", "")
+func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteNameIsEmpty_ShouldReturnError() {
+	suite.editRemote = NewEditRemote(suite.repo, "", suite.remoteUrl)
+
+	wantErr := suite.editRemote.EditRemote()
+
+	suite.NotNil(wantErr)
+}
+
+func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteUrlIsEmpty_ShouldReturnError() {
+	suite.editRemote = NewEditRemote(suite.repo, suite.remoteName, "")
+
+	wantErr := suite.editRemote.EditRemote()
+
+	suite.NotNil(wantErr)
+}
+
+func (suite *RemoteEditTestSuite) TestEditRemote_WhenRepoHasNoRemotes_ShouldReturnError() {
+	suite.editRemote = NewEditRemote(suite.noHeadRepo, suite.remoteName, suite.remoteUrl)
+
+	wantErr := suite.editRemote.EditRemote()
+
+	suite.NotNil(wantErr)
+}
+
+func (suite *RemoteEditTestSuite) TestEditRemote_WhenRemoteIsNotPresent_ShouldReturnError() {
+	suite.editRemote = NewEditRemote(suite.repo, "no_exists_remote", suite.remoteUrl)
 
 	wantErr := suite.editRemote.EditRemote()
 

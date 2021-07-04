@@ -1,7 +1,6 @@
 package remote
 
 import (
-	"errors"
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/global"
@@ -35,13 +34,9 @@ func (a addRemote) NewRemote() error {
 }
 
 func (a addRemote) validateRemoteFields() error {
-	validationErr := NewRemoteValidation(a.repo).ValidateRemoteFields()
+	validationErr := NewRemoteValidation(a.repo, a.remoteName, a.remoteURL).ValidateRemoteFields()
 	if validationErr != nil {
 		return validationErr
-	}
-
-	if a.remoteURL == "" {
-		return errors.New("remote URL is empty")
 	}
 
 	return nil

@@ -10,6 +10,8 @@ import (
 
 type RemoteDeleteTestSuite struct {
 	suite.Suite
+	repo         *git2go.Repository
+	remoteName   string
 	deleteRemote Delete
 }
 
@@ -17,12 +19,23 @@ func TestRemoteDeleteTestSuite(t *testing.T) {
 	suite.Run(t, new(RemoteDeleteTestSuite))
 }
 
+func (suite *RemoteDeleteTestSuite) SetupSuite() {
+	r, err := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
+	if err != nil {
+		fmt.Println(err)
+	}
+	suite.remoteName = "new_origin"
+	_ = NewAddRemote(r, suite.remoteName, "remote://some_url").NewRemote()
+}
+
 func (suite *RemoteDeleteTestSuite) SetupTest() {
 	r, err := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
 	if err != nil {
 		fmt.Println(err)
 	}
-	suite.deleteRemote = NewDeleteRemote(r, "new_origin")
+	suite.repo = r
+	suite.remoteName = "new_origin"
+	suite.deleteRemote = NewDeleteRemote(r, suite.remoteName)
 }
 
 func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenNewRemoteIsDeleted_ShouldReturnNoError() {
@@ -31,8 +44,16 @@ func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenNewRemoteIsDeleted_S
 	suite.Nil(err)
 }
 
-func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenRequiredFieldsAreEmpty_ShouldReturnError() {
-	suite.deleteRemote = NewDeleteRemote(nil, "")
+func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenRepoIsNil_ShouldReturnError() {
+	suite.deleteRemote = NewDeleteRemote(nil, suite.remoteName)
+
+	err := suite.deleteRemote.DeleteRemote()
+
+	suite.NotNil(err)
+}
+
+func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenRemoteNameIsEmpty_ShouldReturnError() {
+	suite.deleteRemote = NewDeleteRemote(suite.repo, "")
 
 	err := suite.deleteRemote.DeleteRemote()
 

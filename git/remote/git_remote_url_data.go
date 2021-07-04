@@ -23,18 +23,14 @@ func (u listRemoteUrl) GetAllRemoteUrl() []*string {
 		return nil
 	}
 
-	remotes, listErr := repo.Remotes.List()
-	if listErr != nil {
-		logger.Log(listErr.Error(), global.StatusError)
+	remoteList := NewRemoteList(u.repo).GetAllRemotes()
+	if remoteList == nil {
+		logger.Log("repo has no remotes", global.StatusError)
 		return nil
 	}
 
-	for _, remoteName := range remotes {
-		remote, _ := repo.Remotes.Lookup(remoteName)
-		if remote != nil {
-			url := remote.Url()
-			remoteURL = append(remoteURL, &url)
-		}
+	for _, remote := range remoteList {
+		remoteURL = append(remoteURL, &remote.RemoteURL)
 	}
 
 	if len(remoteURL) == 0 {

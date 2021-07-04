@@ -3,6 +3,7 @@ package remote
 import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/global"
 	"github.com/stretchr/testify/suite"
 	"os"
 	"testing"
@@ -10,7 +11,10 @@ import (
 
 type RemoteAddTestSuite struct {
 	suite.Suite
-	addRemote Add
+	repo       *git2go.Repository
+	remoteName string
+	remoteUrl  string
+	addRemote  Add
 }
 
 func TestRemoteAddTestSuite(t *testing.T) {
@@ -22,7 +26,18 @@ func (suite *RemoteAddTestSuite) SetupTest() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	suite.addRemote = NewAddRemote(r, "new_origin", "https://github.com/neel1996/gitconvex-test.git")
+	suite.repo = r
+	suite.remoteName = "new_origin"
+	suite.remoteUrl = "https://github.com/neel1996/gitconvex-test.git"
+	suite.addRemote = NewAddRemote(suite.repo, suite.remoteName, suite.remoteUrl)
+}
+
+func (suite *RemoteAddTestSuite) TearDownSuite() {
+	err := NewDeleteRemote(suite.repo, suite.remoteName).DeleteRemote()
+	if err != nil {
+		logger.Log(err.Error(), global.StatusWarning)
+		return
+	}
 }
 
 func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenNewRemoteIsAdded_ShouldReturnNoError() {
@@ -31,8 +46,24 @@ func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenNewRemoteIsAdded_ShouldRet
 	suite.Nil(err)
 }
 
-func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenRequiredFieldsAreEmpty_ShouldReturnError() {
-	suite.addRemote = NewAddRemote(nil, "", "")
+func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenRepoIsNil_ShouldReturnError() {
+	suite.addRemote = NewAddRemote(nil, suite.remoteName, suite.remoteUrl)
+
+	err := suite.addRemote.NewRemote()
+
+	suite.NotNil(err)
+}
+
+func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenRemoteNameIsEmpty_ShouldReturnError() {
+	suite.addRemote = NewAddRemote(suite.repo, "", suite.remoteUrl)
+
+	err := suite.addRemote.NewRemote()
+
+	suite.NotNil(err)
+}
+
+func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenRemoteUrlIsEmpty_ShouldReturnError() {
+	suite.addRemote = NewAddRemote(suite.repo, suite.remoteName, "")
 
 	err := suite.addRemote.NewRemote()
 
