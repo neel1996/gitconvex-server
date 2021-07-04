@@ -46,6 +46,12 @@ test-pretty:
  	gotestsum ./... -count=1 -cover -coverprofile=coverage.out && \
 	rm -rf $$GITCONVEX_TEST_REPO
 
+test-ci:
+	go clean --cache && \
+    ./build_scripts/clone_test_repo.sh && \
+    go test ./... -count=1 -cover -coverprofile=coverage.out && \
+    rm -rf $$GITCONVEX_TEST_REPO
+
 show-coverage:
 	go tool cover -html=coverage.out
 
