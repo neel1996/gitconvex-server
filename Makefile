@@ -28,6 +28,10 @@ build: clean build-ui bundle build-server
 	@echo "📬 Use ./dist/gitconvex to start Gitconvex on port 9001"
 	@echo "📬 Try ./dist/gitconvex --port PORT_NUMBER to run gitconvex on the desired port"
 
+git-testuser-setup:
+	git config user.name test
+	git config user.email test@test.com
+
 test:
 	export GITCONVEX_TEST_REPO="$(PWD)/gitconvex-test" && \
 	export GITCONVEX_DEFAULT_PATH="$(PWD)/gitconvex-test" && \
@@ -46,11 +50,15 @@ test-pretty:
  	gotestsum ./... -count=1 -cover -coverprofile=coverage.out && \
 	rm -rf $$GITCONVEX_TEST_REPO
 
-test-ci:
+test-ci: git-testuser-setup
+	go generate && \
 	go clean --cache && \
-    ./build_scripts/clone_test_repo.sh && \
+    sh ./build_scripts/clone_test_repo.sh && \
     go test ./... -count=1 -cover -coverprofile=coverage.out && \
     rm -rf $$GITCONVEX_TEST_REPO
+
+dockerise-test:
+	docker-compose -f docker-compose.test.yaml up
 
 show-coverage:
 	go tool cover -html=coverage.out

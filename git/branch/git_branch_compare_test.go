@@ -33,7 +33,6 @@ func (suite *BranchCompareTestSuite) SetupSuite() {
 	}
 	suite.repo = r
 	suite.testFile = os.Getenv("GITCONVEX_TEST_REPO") + string(filepath.Separator) + "compare_test.txt"
-	suite.baseBranch = "master"
 	suite.compareBranch = "new_compare"
 	addErr := NewAddBranch(r, suite.compareBranch, false, nil).AddBranch()
 	if addErr != nil {

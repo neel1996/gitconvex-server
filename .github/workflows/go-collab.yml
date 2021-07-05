@@ -44,8 +44,7 @@ jobs:
           git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
           sudo mkdir -p /usr/local/gitconvex
           sudo chown $(whoami) /usr/local/gitconvex/
-          go generate
-          make test-ci
+          make dockerise-test
 
   gitconvex-build:
     needs:
