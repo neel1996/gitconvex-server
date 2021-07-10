@@ -1,4 +1,4 @@
-package git
+package commit
 
 import (
 	"fmt"
@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-type CommitInterface interface {
+type Changes interface {
 	CommitChanges() string
 }
 
-type CommitStruct struct {
+type changes struct {
 	Repo          *git2go.Repository
 	CommitMessage string
 	RepoPath      string
@@ -29,7 +29,7 @@ func checkCommitError(err error) bool {
 
 // CommitChanges commits the staged changes to the repo
 // Rewrites the repo index tree with the staged files to commit the changes
-func (c CommitStruct) CommitChanges() string {
+func (c CommitStruct) AddChanges() string {
 	var errStatus bool
 	var headCommit *git2go.Commit
 
