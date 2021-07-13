@@ -3,105 +3,75 @@ package commit
 import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
-	"github.com/neel1996/gitconvex/global"
-	"runtime/debug"
-	"strings"
+	"github.com/stretchr/testify/suite"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
 )
 
-type Changes interface {
-	CommitChanges() string
+type CommitChangesTestSuite struct {
+	suite.Suite
+	repo          *git2go.Repository
+	noHeadRepo    *git2go.Repository
+	commitChanges Changes
+	commitMessage []string
 }
 
-type changes struct {
-	Repo          *git2go.Repository
-	CommitMessage string
-	RepoPath      string
+func TestCommitChangesTestSuite(t *testing.T) {
+	suite.Run(t, new(CommitChangesTestSuite))
 }
 
-func checkCommitError(err error) bool {
+func (suite *CommitChangesTestSuite) SetupTest() {
+	r, err := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
 	if err != nil {
-		logger.Log(err.Error(), global.StatusError)
-		panic(err)
-		return true
+		fmt.Println(err)
 	}
-	return false
+
+	noHeadPath := os.Getenv("GITCONVEX_TEST_REPO") + string(filepath.Separator) + "no_head_for_commit"
+	noHeadRepo, _ := git2go.OpenRepository(noHeadPath)
+
+	suite.repo = r
+	suite.noHeadRepo = noHeadRepo
+
+	config, _ := suite.noHeadRepo.Config()
+	_ = config.SetString("user.name", "test")
+	_ = config.SetString("user.email", "test@test.com")
+
+	suite.commitMessage = []string{"Test commit message " + time.Now().String()}
+	suite.commitChanges = NewCommitChanges(suite.repo, suite.commitMessage)
 }
 
-// CommitChanges commits the staged changes to the repo
-// Rewrites the repo index tree with the staged files to commit the changes
-func (c CommitStruct) AddChanges() string {
-	var errStatus bool
-	var headCommit *git2go.Commit
+func (suite *CommitChangesTestSuite) TestAdd_WhenChangesAreCommitted_ShouldReturnNil() {
+	err := suite.commitChanges.Add()
 
-	commitMessage := c.CommitMessage
-	repo := c.Repo
+	suite.Nil(err)
+}
 
-	defer func() string {
-		if r := recover(); r != nil {
-			logger.Log(string(debug.Stack()), global.StatusError)
-			return global.CommitChangeError
-		}
-		return ""
-	}()
+func (suite *CommitChangesTestSuite) TestAdd_WhenCommitMessageIsMultiLine_ShouldCommitToRepo() {
+	suite.commitChanges = NewCommitChanges(suite.repo, []string{"Multi line commit", "Test 1"})
 
-	var formattedMessage = commitMessage
-	signature, signatureErr := repo.DefaultSignature()
+	err := suite.commitChanges.Add()
 
-	if signatureErr != nil {
-		logger.Log(fmt.Sprintf("Error occurred while fetching repo signature -> %s", signatureErr.Error()), global.StatusError)
-		logger.Log("Setup you user name and email using `git config user.name and git config user.email`", global.StatusWarning)
-		return global.CommitChangeError
-	}
+	suite.Nil(err)
+}
 
-	if strings.Contains(commitMessage, "||") {
-		splitMessage := strings.Split(commitMessage, "||")
-		formattedMessage = strings.Join(splitMessage, "\n")
-	}
+func (suite *CommitChangesTestSuite) TestAdd_WhenRepoHasNoSignature_ShouldReturnError() {
+	suite.commitChanges = NewCommitChanges(suite.noHeadRepo, []string{})
 
-	head, headErr := repo.Head()
-	if headErr != nil {
-		logger.Log("Repo has no HEAD. Proceeding with a NIL HEAD", global.StatusWarning)
-		headCommit = nil
-	} else {
-		var headCommitErr error
-		headCommit, headCommitErr = repo.LookupCommit(head.Target())
-		errStatus = checkCommitError(headCommitErr)
-	}
+	config, _ := suite.noHeadRepo.Config()
+	_ = config.SetString("user.name", "")
+	_ = config.SetString("user.email", "")
 
-	repoIndex, indexErr := repo.Index()
-	errStatus = checkCommitError(indexErr)
+	err := suite.commitChanges.Add()
 
-	newTreeId, writeTreeErr := repoIndex.WriteTree()
-	errStatus = checkCommitError(writeTreeErr)
+	suite.NotNil(err)
+}
 
-	newTree, newTreeErr := repo.LookupTree(newTreeId)
-	errStatus = checkCommitError(newTreeErr)
+func (suite *CommitChangesTestSuite) TestAdd_WhenRepoHasNoHead_ShouldCommitToHead() {
+	suite.commitChanges = NewCommitChanges(suite.noHeadRepo, []string{"Initial commit"})
 
-	var (
-		newCommitId    *git2go.Oid
-		newCommitIdErr error
-	)
-	if headErr != nil {
-		newCommitId, newCommitIdErr = repo.CreateCommit("HEAD", signature, signature, formattedMessage, newTree)
-	} else {
-		newCommitId, newCommitIdErr = repo.CreateCommit("HEAD", signature, signature, formattedMessage, newTree, headCommit)
-	}
-	errStatus = checkCommitError(newCommitIdErr)
+	err := suite.commitChanges.Add()
 
-	_, newCommitErr := repo.LookupCommit(newCommitId)
-	errStatus = checkCommitError(newCommitErr)
-
-	head, headErr = repo.Head()
-	errStatus = checkCommitError(headErr)
-
-	newRef, newRefErr := head.SetTarget(newCommitId, formattedMessage)
-	errStatus = checkCommitError(newRefErr)
-
-	if errStatus {
-		return global.CommitChangeError
-	} else {
-		logger.Log(fmt.Sprintf("New commit %s created", newCommitId.String()), global.StatusInfo)
-		logger.Log(newRef.Name(), global.StatusInfo)
-		return global.CommitChangeSuccess
-	}
+	suite.Nil(err)
 }
