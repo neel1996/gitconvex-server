@@ -10,6 +10,7 @@ type Commit interface {
 
 type Operation struct {
 	Changes Changes
+	Total   Total
 }
 
 func (c Operation) GitCommitChange() (string, error) {
@@ -21,4 +22,8 @@ func (c Operation) GitCommitChange() (string, error) {
 	}
 
 	return global.CommitChangeSuccess, nil
+}
+
+func (c Operation) GitTotalCommits() int {
+	return c.Total.Get()
 }
