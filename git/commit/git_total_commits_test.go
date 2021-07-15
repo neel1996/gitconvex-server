@@ -1,8 +1,11 @@
 package commit
 
 import (
+	"errors"
 	"fmt"
+	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
 	"os"
 	"path/filepath"
@@ -11,9 +14,12 @@ import (
 
 type TotalCommitsTestSuite struct {
 	suite.Suite
-	total      Total
-	repo       *git2go.Repository
-	noHeadRepo *git2go.Repository
+	mockController *gomock.Controller
+	total          Total
+	repo           *git2go.Repository
+	mockRepo       *mocks.MockRepository
+	mockWalker     *mocks.MockRevWalk
+	noHeadRepo     *git2go.Repository
 }
 
 func TestTotalCommitsTestSuite(t *testing.T) {
@@ -29,9 +35,12 @@ func (suite *TotalCommitsTestSuite) SetupTest() {
 	noHeadPath := os.Getenv("GITCONVEX_TEST_REPO") + string(filepath.Separator) + "no_head"
 	noHeadRepo, _ := git2go.OpenRepository(noHeadPath)
 
+	suite.mockController = gomock.NewController(suite.T())
 	suite.repo = r
 	suite.noHeadRepo = noHeadRepo
-	suite.total = NewTotalCommits(suite.repo)
+	suite.mockWalker = mocks.NewMockRevWalk(suite.mockController)
+	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
+	suite.total = NewTotalCommits(suite.mockRepo)
 }
 
 func (suite *TotalCommitsTestSuite) TestGet_WhenLogsAreAvailable_ShouldReturnTotal() {
@@ -41,7 +50,8 @@ func (suite *TotalCommitsTestSuite) TestGet_WhenLogsAreAvailable_ShouldReturnTot
 }
 
 func (suite *TotalCommitsTestSuite) TestGet_WhenRepoHasNoLogs_ShouldReturnZero() {
-	suite.total = NewTotalCommits(suite.noHeadRepo)
+	suite.total = NewTotalCommits(suite.mockRepo)
+	suite.mockRepo.EXPECT().Walk().Return(nil, errors.New("WALKER_ERROR"))
 
 	got := suite.total.Get()
 

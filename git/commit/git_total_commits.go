@@ -3,6 +3,7 @@ package commit
 import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
+	libgit_interface "github.com/neel1996/gitconvex/git/interface"
 	"github.com/neel1996/gitconvex/global"
 )
 
@@ -11,7 +12,8 @@ type Total interface {
 }
 
 type totalCommits struct {
-	repo *git2go.Repository
+	repo    libgit_interface.Repository
+	revWalk libgit_interface.RevWalk
 }
 
 // Get function returns the total number of commits from the repo and commit message of the most recent commit
@@ -25,7 +27,7 @@ func (t totalCommits) Get() int {
 		return total
 	}
 
-	commits, err := t.iterateCommitLogs(logItr)
+	commits, err := t.allCommitLogs(logItr)
 	if err != nil {
 		logger.Log(fmt.Sprintf("Unable to obtain commits for the repo"), global.StatusError)
 		return total
@@ -42,22 +44,26 @@ func (t totalCommits) Get() int {
 	return total
 }
 
-func (t totalCommits) iterateCommitLogs(logItr *git2go.RevWalk) ([]git2go.Commit, error) {
+func (t totalCommits) allCommitLogs(logItr libgit_interface.RevWalk) ([]git2go.Commit, error) {
 	var commits []git2go.Commit
 	_ = logItr.PushHead()
 
-	err := logItr.Iterate(func(commit *git2go.Commit) bool {
+	err := logItr.Iterate(revIterator(commits))
+
+	return commits, err
+}
+
+func revIterator(commits []git2go.Commit) git2go.RevWalkIterator {
+	return func(commit *git2go.Commit) bool {
 		if commit != nil {
 			commits = append(commits, *commit)
 			return true
 		} else {
 			return false
 		}
-	})
-
-	return commits, err
+	}
 }
 
-func NewTotalCommits(repo *git2go.Repository) Total {
+func NewTotalCommits(repo libgit_interface.Repository) Total {
 	return totalCommits{repo: repo}
 }
