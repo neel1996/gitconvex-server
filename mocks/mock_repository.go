@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	git "github.com/libgit2/git2go/v31"
 	middleware "github.com/neel1996/gitconvex/git/middleware"
 )
 
@@ -32,6 +33,36 @@ func NewMockRepository(ctrl *gomock.Controller) *MockRepository {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
+}
+
+// Head mocks base method.
+func (m *MockRepository) Head() (middleware.Reference, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Head")
+	ret0, _ := ret[0].(middleware.Reference)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Head indicates an expected call of Head.
+func (mr *MockRepositoryMockRecorder) Head() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Head", reflect.TypeOf((*MockRepository)(nil).Head))
+}
+
+// LookupCommit mocks base method.
+func (m *MockRepository) LookupCommit(oid *git.Oid) (*git.Commit, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LookupCommit", oid)
+	ret0, _ := ret[0].(*git.Commit)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LookupCommit indicates an expected call of LookupCommit.
+func (mr *MockRepositoryMockRecorder) LookupCommit(oid interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupCommit", reflect.TypeOf((*MockRepository)(nil).LookupCommit), oid)
 }
 
 // Walk mocks base method.

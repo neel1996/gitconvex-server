@@ -1,4 +1,4 @@
-package libgit_interface
+package middleware
 
 import git "github.com/libgit2/git2go/v31"
 
