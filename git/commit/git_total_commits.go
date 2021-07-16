@@ -3,7 +3,7 @@ package commit
 import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
-	libgit_interface "github.com/neel1996/gitconvex/git/interface"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/global"
 )
 
@@ -12,8 +12,12 @@ type Total interface {
 }
 
 type totalCommits struct {
-	repo    libgit_interface.Repository
-	revWalk libgit_interface.RevWalk
+	repo    middleware.Repository
+	revWalk middleware.RevWalk
+}
+
+type commitType struct {
+	commits []git2go.Commit
 }
 
 // Get function returns the total number of commits from the repo and commit message of the most recent commit
@@ -31,7 +35,6 @@ func (t totalCommits) Get() int {
 	if err != nil {
 		logger.Log(fmt.Sprintf("Unable to obtain commits for the repo"), global.StatusError)
 		return total
-
 	}
 
 	total = len(commits)
@@ -44,19 +47,19 @@ func (t totalCommits) Get() int {
 	return total
 }
 
-func (t totalCommits) allCommitLogs(logItr libgit_interface.RevWalk) ([]git2go.Commit, error) {
-	var commits []git2go.Commit
+func (t totalCommits) allCommitLogs(logItr middleware.RevWalk) ([]git2go.Commit, error) {
+	var c commitType
 	_ = logItr.PushHead()
 
-	err := logItr.Iterate(revIterator(commits))
+	err := logItr.Iterate(revIterator(&c))
 
-	return commits, err
+	return c.commits, err
 }
 
-func revIterator(commits []git2go.Commit) git2go.RevWalkIterator {
+func revIterator(c *commitType) git2go.RevWalkIterator {
 	return func(commit *git2go.Commit) bool {
 		if commit != nil {
-			commits = append(commits, *commit)
+			c.commits = append(c.commits, *commit)
 			return true
 		} else {
 			return false
@@ -64,6 +67,6 @@ func revIterator(commits []git2go.Commit) git2go.RevWalkIterator {
 	}
 }
 
-func NewTotalCommits(repo libgit_interface.Repository) Total {
+func NewTotalCommits(repo middleware.Repository) Total {
 	return totalCommits{repo: repo}
 }

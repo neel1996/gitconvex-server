@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
 	"os"
@@ -16,7 +17,7 @@ type TotalCommitsTestSuite struct {
 	suite.Suite
 	mockController *gomock.Controller
 	total          Total
-	repo           *git2go.Repository
+	repo           middleware.Repository
 	mockRepo       *mocks.MockRepository
 	mockWalker     *mocks.MockRevWalk
 	noHeadRepo     *git2go.Repository
@@ -36,21 +37,22 @@ func (suite *TotalCommitsTestSuite) SetupTest() {
 	noHeadRepo, _ := git2go.OpenRepository(noHeadPath)
 
 	suite.mockController = gomock.NewController(suite.T())
-	suite.repo = r
+	suite.repo = middleware.NewRepository(r)
 	suite.noHeadRepo = noHeadRepo
-	suite.mockWalker = mocks.NewMockRevWalk(suite.mockController)
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
+	suite.mockWalker = mocks.NewMockRevWalk(suite.mockController)
 	suite.total = NewTotalCommits(suite.mockRepo)
 }
 
 func (suite *TotalCommitsTestSuite) TestGet_WhenLogsAreAvailable_ShouldReturnTotal() {
+	suite.total = NewTotalCommits(suite.repo)
+
 	got := suite.total.Get()
 
 	suite.NotZero(got)
 }
 
 func (suite *TotalCommitsTestSuite) TestGet_WhenRepoHasNoLogs_ShouldReturnZero() {
-	suite.total = NewTotalCommits(suite.mockRepo)
 	suite.mockRepo.EXPECT().Walk().Return(nil, errors.New("WALKER_ERROR"))
 
 	got := suite.total.Get()
