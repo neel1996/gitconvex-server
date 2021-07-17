@@ -21,6 +21,7 @@ type TotalCommitsTestSuite struct {
 	mockRepo       *mocks.MockRepository
 	mockWalker     *mocks.MockRevWalk
 	noHeadRepo     *git2go.Repository
+	stub           middleware.RevWalk
 }
 
 func TestTotalCommitsTestSuite(t *testing.T) {
@@ -52,8 +53,24 @@ func (suite *TotalCommitsTestSuite) TestGet_WhenLogsAreAvailable_ShouldReturnTot
 	suite.NotZero(got)
 }
 
-func (suite *TotalCommitsTestSuite) TestGet_WhenRepoHasNoLogs_ShouldReturnZero() {
+func (suite *TotalCommitsTestSuite) TestGet_WhenRepoWalkFails_ShouldReturnZero() {
 	suite.mockRepo.EXPECT().Walk().Return(nil, errors.New("WALKER_ERROR"))
+
+	got := suite.total.Get()
+
+	suite.Zero(got)
+}
+
+func (suite *TotalCommitsTestSuite) TestGet_WhenRepoHasNoCommits_ShouldReturnZero() {
+	suite.mockRepo.EXPECT().Walk().Return(NewRevWalkStub(false), nil)
+
+	got := suite.total.Get()
+
+	suite.Zero(got)
+}
+
+func (suite *TotalCommitsTestSuite) TestGet_WhenIteratorReturnsError_ShouldReturnZero() {
+	suite.mockRepo.EXPECT().Walk().Return(NewRevWalkStub(true), nil)
 
 	got := suite.total.Get()
 

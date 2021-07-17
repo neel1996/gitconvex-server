@@ -61,9 +61,9 @@ func revIterator(c *commitType) git2go.RevWalkIterator {
 		if commit != nil {
 			c.commits = append(c.commits, *commit)
 			return true
-		} else {
-			return false
 		}
+
+		return false
 	}
 }
 
