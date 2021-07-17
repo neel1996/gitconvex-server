@@ -34,6 +34,21 @@ func (m *MockReference) EXPECT() *MockReferenceMockRecorder {
 	return m.recorder
 }
 
+// SetTarget mocks base method.
+func (m *MockReference) SetTarget(id *git.Oid, message string) (*git.Reference, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetTarget", id, message)
+	ret0, _ := ret[0].(*git.Reference)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetTarget indicates an expected call of SetTarget.
+func (mr *MockReferenceMockRecorder) SetTarget(id, message interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTarget", reflect.TypeOf((*MockReference)(nil).SetTarget), id, message)
+}
+
 // Target mocks base method.
 func (m *MockReference) Target() *git.Oid {
 	m.ctrl.T.Helper()
