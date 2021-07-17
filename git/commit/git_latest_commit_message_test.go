@@ -39,6 +39,9 @@ func (suite *LatestMessageTestSuite) SetupTest() {
 
 	suite.mockController = gomock.NewController(suite.T())
 	suite.repo = middleware.NewRepository(r)
+
+	_ = NewCommitChanges(suite.repo, []string{"New commit"}).Add()
+
 	suite.noHeadRepo = noHeadRepo
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
 	suite.mockWalker = mocks.NewMockRevWalk(suite.mockController)
@@ -47,11 +50,33 @@ func (suite *LatestMessageTestSuite) SetupTest() {
 }
 
 func (suite *LatestMessageTestSuite) TestGet_WhenHeadIsValid_ShouldReturnCommitMessage() {
+	_ = NewCommitChanges(suite.repo, []string{"New commit"}).Add()
+
 	suite.latestMessage = NewLatestMessage(suite.repo)
 
 	got := suite.latestMessage.Get()
 
 	suite.NotEmpty(got)
+	suite.Equal("New commit", got)
+}
+
+func (suite *LatestMessageTestSuite) TestGet_WhenCommitMessageIsMultiLine_ShouldReturnFirstLineOfTheMessage() {
+	_ = NewCommitChanges(suite.repo, []string{"New commit", "with two lines"}).Add()
+	suite.latestMessage = NewLatestMessage(suite.repo)
+
+	got := suite.latestMessage.Get()
+
+	suite.NotEmpty(got)
+	suite.Equal("New commit", got)
+}
+
+func (suite *LatestMessageTestSuite) TestGet_WhenCommitMessageIsEmpty_ShouldReturnEmptyMessage() {
+	_ = NewCommitChanges(suite.repo, []string{""}).Add()
+	suite.latestMessage = NewLatestMessage(suite.repo)
+
+	got := suite.latestMessage.Get()
+
+	suite.Empty(got)
 }
 
 func (suite *LatestMessageTestSuite) TestGet_WhenHeadIsInValid_ShouldReturnEmptyMessage() {
