@@ -143,6 +143,53 @@ func (suite *CommitChangesTestSuite) TestAdd_WhenCommitCreation_ShouldReturnErro
 	suite.NotNil(err)
 }
 
+func (suite *CommitChangesTestSuite) TestAdd_WhenNewCommitLookupFails_ShouldReturnError() {
+	oid, _ := git2go.NewOid("test")
+	commitMessage := strings.Join(suite.commitMessage, "")
+
+	suite.mockRepo.EXPECT().DefaultSignature().Return(&git2go.Signature{}, nil)
+	suite.mockRepo.EXPECT().Head().Return(nil, errors.New("NO_HEAD"))
+	suite.mockRepo.EXPECT().Index().Return(suite.mockIndex, nil)
+	suite.mockIndex.EXPECT().WriteTree().Return(oid, nil)
+	suite.mockRepo.EXPECT().LookupTree(oid).Return(&git2go.Tree{}, nil)
+	suite.mockRepo.EXPECT().CreateCommit(
+		"HEAD",
+		&git2go.Signature{},
+		&git2go.Signature{},
+		commitMessage,
+		&git2go.Tree{},
+	).Return(oid, nil)
+	suite.mockRepo.EXPECT().LookupCommit(oid).Return(nil, errors.New("LOOKUP_ERROR"))
+
+	err := suite.commitChanges.Add()
+
+	suite.NotNil(err)
+}
+
+func (suite *CommitChangesTestSuite) TestAdd_WhenNewHeadIsInvalid_ShouldReturnError() {
+	oid, _ := git2go.NewOid("test")
+	commitMessage := strings.Join(suite.commitMessage, "")
+
+	suite.mockRepo.EXPECT().DefaultSignature().Return(&git2go.Signature{}, nil)
+	suite.mockRepo.EXPECT().Head().Return(nil, errors.New("NO_HEAD"))
+	suite.mockRepo.EXPECT().Index().Return(suite.mockIndex, nil)
+	suite.mockIndex.EXPECT().WriteTree().Return(oid, nil)
+	suite.mockRepo.EXPECT().LookupTree(oid).Return(&git2go.Tree{}, nil)
+	suite.mockRepo.EXPECT().CreateCommit(
+		"HEAD",
+		&git2go.Signature{},
+		&git2go.Signature{},
+		commitMessage,
+		&git2go.Tree{},
+	).Return(oid, nil)
+	suite.mockRepo.EXPECT().LookupCommit(oid).Return(nil, nil)
+	suite.mockRepo.EXPECT().Head().Return(nil, errors.New("HEAD_ERR"))
+
+	err := suite.commitChanges.Add()
+
+	suite.NotNil(err)
+}
+
 func (suite *CommitChangesTestSuite) TestAdd_WhenSetNewHeadFails_ShouldReturnError() {
 	oid, _ := git2go.NewOid("test")
 	commitMessage := strings.Join(suite.commitMessage, "")
