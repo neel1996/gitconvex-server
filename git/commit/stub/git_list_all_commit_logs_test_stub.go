@@ -1,4 +1,4 @@
-package commit
+package stub
 
 import (
 	"errors"
@@ -9,6 +9,10 @@ import (
 type revWalkStub struct {
 	walk                     *git2go.RevWalk
 	shouldIterateReturnError bool
+}
+
+func (w *revWalkStub) Push(id *git2go.Oid) error {
+	return nil
 }
 
 func (w *revWalkStub) PushHead() error {
