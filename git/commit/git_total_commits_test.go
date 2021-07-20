@@ -15,13 +15,13 @@ import (
 
 type TotalCommitsTestSuite struct {
 	suite.Suite
-	mockController *gomock.Controller
-	total          Total
-	repo           middleware.Repository
-	mockRepo       *mocks.MockRepository
-	mockWalker     *mocks.MockRevWalk
-	noHeadRepo     *git2go.Repository
-	stub           middleware.RevWalk
+	mockController    *gomock.Controller
+	total             Total
+	repo              middleware.Repository
+	mockRepo          *mocks.MockRepository
+	mockWalker        *mocks.MockRevWalk
+	noHeadRepo        *git2go.Repository
+	mockAllCommitLogs *mocks.MockListAllLogs
 }
 
 func TestTotalCommitsTestSuite(t *testing.T) {
@@ -42,19 +42,20 @@ func (suite *TotalCommitsTestSuite) SetupTest() {
 	suite.noHeadRepo = noHeadRepo
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
 	suite.mockWalker = mocks.NewMockRevWalk(suite.mockController)
-	suite.total = NewTotalCommits(suite.mockRepo)
+	suite.mockAllCommitLogs = mocks.NewMockListAllLogs(suite.mockController)
+	suite.total = NewTotalCommits(suite.mockAllCommitLogs)
 }
 
 func (suite *TotalCommitsTestSuite) TestGet_WhenLogsAreAvailable_ShouldReturnTotal() {
-	suite.total = NewTotalCommits(suite.repo)
+	suite.mockAllCommitLogs.EXPECT().Get().Return([]git2go.Commit{{}, {}}, nil)
 
 	got := suite.total.Get()
 
 	suite.NotZero(got)
 }
 
-func (suite *TotalCommitsTestSuite) TestGet_WhenRepoWalkFails_ShouldReturnZero() {
-	suite.mockRepo.EXPECT().Walk().Return(nil, errors.New("WALKER_ERROR"))
+func (suite *TotalCommitsTestSuite) TestGet_WhenListLogReturnsError_ShouldReturnZero() {
+	suite.mockAllCommitLogs.EXPECT().Get().Return(nil, errors.New("LIST_ERROR"))
 
 	got := suite.total.Get()
 
@@ -62,15 +63,7 @@ func (suite *TotalCommitsTestSuite) TestGet_WhenRepoWalkFails_ShouldReturnZero()
 }
 
 func (suite *TotalCommitsTestSuite) TestGet_WhenRepoHasNoCommits_ShouldReturnZero() {
-	suite.mockRepo.EXPECT().Walk().Return(NewRevWalkStub(false), nil)
-
-	got := suite.total.Get()
-
-	suite.Zero(got)
-}
-
-func (suite *TotalCommitsTestSuite) TestGet_WhenIteratorReturnsError_ShouldReturnZero() {
-	suite.mockRepo.EXPECT().Walk().Return(NewRevWalkStub(true), nil)
+	suite.mockAllCommitLogs.EXPECT().Get().Return([]git2go.Commit{}, nil)
 
 	got := suite.total.Get()
 

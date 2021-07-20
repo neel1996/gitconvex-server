@@ -3,7 +3,6 @@ package commit
 import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
-	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/global"
 )
 
@@ -12,8 +11,7 @@ type Total interface {
 }
 
 type totalCommits struct {
-	repo    middleware.Repository
-	revWalk middleware.RevWalk
+	listAllLogs ListAllLogs
 }
 
 type commitType struct {
@@ -23,9 +21,8 @@ type commitType struct {
 // Get function returns the total number of commits from the repo and commit message of the most recent commit
 func (t totalCommits) Get() int {
 	var total = 0
-	repo := t.repo
+	allLogs := t.listAllLogs
 
-	allLogs := NewListAllLogs(repo)
 	commits, err := allLogs.Get()
 	if err != nil {
 		logger.Log(fmt.Sprintf("Unable to obtain commits for the repo : %v", err.Error()), global.StatusError)
@@ -42,6 +39,6 @@ func (t totalCommits) Get() int {
 	return total
 }
 
-func NewTotalCommits(repo middleware.Repository) Total {
-	return totalCommits{repo: repo}
+func NewTotalCommits(listAllLogs ListAllLogs) Total {
+	return totalCommits{listAllLogs: listAllLogs}
 }
