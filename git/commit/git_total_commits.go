@@ -25,15 +25,10 @@ func (t totalCommits) Get() int {
 	var total = 0
 	repo := t.repo
 
-	logItr, itrErr := repo.Walk()
-	if itrErr != nil {
-		logger.Log(fmt.Sprintf("Repo has no logs -> %s", itrErr.Error()), global.StatusError)
-		return total
-	}
-
-	commits, err := t.allCommitLogs(logItr)
+	allLogs := NewListAllLogs(repo)
+	commits, err := allLogs.Get()
 	if err != nil {
-		logger.Log(fmt.Sprintf("Unable to obtain commits for the repo"), global.StatusError)
+		logger.Log(fmt.Sprintf("Unable to obtain commits for the repo : %v", err.Error()), global.StatusError)
 		return total
 	}
 
@@ -45,26 +40,6 @@ func (t totalCommits) Get() int {
 
 	logger.Log(fmt.Sprintf("Total commits in the repo -> %v", total), global.StatusInfo)
 	return total
-}
-
-func (t totalCommits) allCommitLogs(logItr middleware.RevWalk) ([]git2go.Commit, error) {
-	var c commitType
-	_ = logItr.PushHead()
-
-	err := logItr.Iterate(revIterator(&c))
-
-	return c.commits, err
-}
-
-func revIterator(c *commitType) git2go.RevWalkIterator {
-	return func(commit *git2go.Commit) bool {
-		if commit != nil {
-			c.commits = append(c.commits, *commit)
-			return true
-		}
-
-		return false
-	}
 }
 
 func NewTotalCommits(repo middleware.Repository) Total {
