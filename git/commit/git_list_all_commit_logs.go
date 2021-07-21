@@ -12,7 +12,13 @@ type ListAllLogs interface {
 }
 
 type listAllLogs struct {
-	repo middleware.Repository
+	repo      middleware.Repository
+	limit     *uint
+	reference *git2go.Oid
+}
+
+type commitType struct {
+	commits []git2go.Commit
 }
 
 func (l listAllLogs) Get() ([]git2go.Commit, error) {
@@ -34,12 +40,39 @@ func (l listAllLogs) Get() ([]git2go.Commit, error) {
 }
 
 func (l listAllLogs) allCommitLogs(logItr middleware.RevWalk) ([]git2go.Commit, error) {
-	var c commitType
-	_ = logItr.PushHead()
+	var (
+		c commitType
+	)
 
-	err := logItr.Iterate(revIterator(&c))
+	pushErr := l.pushCommitReference(logItr)
+	if pushErr != nil {
+		logger.Log(pushErr.Error(), global.StatusError)
+		return nil, pushErr
+	}
+
+	err := l.iterate(logItr, &c)
 
 	return c.commits, err
+}
+
+func (l listAllLogs) iterate(logItr middleware.RevWalk, c *commitType) error {
+	if l.limit == nil {
+		logger.Log("Iterating commit logs without limit", global.StatusInfo)
+		return logItr.Iterate(revIterator(c))
+	}
+
+	logger.Log(fmt.Sprintf("Iterating commit logs with limit %v", *l.limit), global.StatusInfo)
+	return logItr.Iterate(revIteratorWithLimit(c, *l.limit))
+}
+
+func (l listAllLogs) pushCommitReference(logItr middleware.RevWalk) error {
+	if l.reference != nil {
+		logger.Log(fmt.Sprintf("Iterating commits from reference %s", l.reference), global.StatusInfo)
+		return logItr.Push(l.reference)
+	}
+
+	logger.Log(fmt.Sprintf("Iterating commits from HEAD"), global.StatusInfo)
+	return logItr.PushHead()
 }
 
 func revIterator(c *commitType) git2go.RevWalkIterator {
@@ -53,8 +86,24 @@ func revIterator(c *commitType) git2go.RevWalkIterator {
 	}
 }
 
-func NewListAllLogs(repo middleware.Repository) ListAllLogs {
+func revIteratorWithLimit(c *commitType, limit uint) git2go.RevWalkIterator {
+	var commitCounter uint
+
+	return func(commit *git2go.Commit) bool {
+		if commit != nil && commitCounter < limit {
+			c.commits = append(c.commits, *commit)
+			commitCounter++
+			return true
+		}
+
+		return false
+	}
+}
+
+func NewListAllLogs(repo middleware.Repository, limit *uint, reference *git2go.Oid) ListAllLogs {
 	return listAllLogs{
-		repo: repo,
+		repo:      repo,
+		limit:     limit,
+		reference: reference,
 	}
 }

@@ -2,7 +2,6 @@ package commit
 
 import (
 	"fmt"
-	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/global"
 )
 
@@ -12,10 +11,6 @@ type Total interface {
 
 type totalCommits struct {
 	listAllLogs ListAllLogs
-}
-
-type commitType struct {
-	commits []git2go.Commit
 }
 
 // Get function returns the total number of commits from the repo and commit message of the most recent commit

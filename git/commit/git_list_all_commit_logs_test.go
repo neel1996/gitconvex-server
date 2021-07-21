@@ -19,6 +19,7 @@ type ListAllCommitLogsTestSuite struct {
 	mockRepo          *mocks.MockRepository
 	mockRevWalk       *mocks.MockRevWalk
 	repo              middleware.Repository
+	totalCommits      Total
 	listAllCommitLogs ListAllLogs
 }
 
@@ -37,14 +38,40 @@ func (suite *ListAllCommitLogsTestSuite) SetupTest() {
 	}
 
 	suite.repo = middleware.NewRepository(r)
-	suite.listAllCommitLogs = NewListAllLogs(suite.mockRepo)
+	suite.listAllCommitLogs = NewListAllLogs(suite.mockRepo, nil, nil)
+	suite.totalCommits = NewTotalCommits(NewListAllLogs(suite.repo, nil, nil))
 }
 
 func (suite *ListAllCommitLogsTestSuite) TestGet_WhenLogsAreAvailable_ShouldReturnCommitLogs() {
-	suite.listAllCommitLogs = NewListAllLogs(suite.repo)
+	suite.listAllCommitLogs = NewListAllLogs(suite.repo, nil, nil)
 	got, err := suite.listAllCommitLogs.Get()
 
 	suite.NotZero(len(got))
+	suite.Nil(err)
+}
+
+func (suite *ListAllCommitLogsTestSuite) TestGet_WhenLogLimitIsGiven_ShouldReturnCommitLogsUptoLimit() {
+	var limit uint = 3
+
+	suite.listAllCommitLogs = NewListAllLogs(suite.repo, &limit, nil)
+	got, err := suite.listAllCommitLogs.Get()
+
+	suite.Equal(int(limit), len(got))
+	suite.Nil(err)
+}
+
+func (suite *ListAllCommitLogsTestSuite) TestGet_WhenReferenceIsGiven_ShouldReturnCommitLogsAfterTheReference() {
+	var limit uint = 3
+
+	commits, _ := NewListAllLogs(suite.repo, &limit, nil).Get()
+	commitId, _ := git2go.NewOid(commits[limit-1].Id().String())
+	total := suite.totalCommits.Get()
+
+	suite.listAllCommitLogs = NewListAllLogs(suite.repo, nil, commitId)
+	got, err := suite.listAllCommitLogs.Get()
+	want := total - (int(limit) - 1)
+
+	suite.Equal(want, len(got))
 	suite.Nil(err)
 }
 
