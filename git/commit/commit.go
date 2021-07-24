@@ -1,6 +1,8 @@
 package commit
 
-import "github.com/neel1996/gitconvex/global"
+import (
+	"github.com/neel1996/gitconvex/global"
+)
 
 var logger global.Logger
 
@@ -18,7 +20,7 @@ func (c Operation) GitCommitChange() (string, error) {
 
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
-		return global.CommitChangeError, err
+		return "", CommitLogsError
 	}
 
 	return global.CommitChangeSuccess, nil

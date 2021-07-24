@@ -1,26 +1,24 @@
 package commit
 
 import (
-	"errors"
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
-	"github.com/neel1996/gitconvex/constants"
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/global"
 	"github.com/neel1996/gitconvex/graph/model"
+	"reflect"
 )
 
 type FileHistory interface {
-	Get(*git2go.Commit) ([]*model.GitCommitFileResult, error)
+	Get(commit middleware.Commit) ([]*model.GitCommitFileResult, error)
 }
 
 type fileHistory struct {
 	repo middleware.Repository
 }
 
-func (f fileHistory) Get(commit *git2go.Commit) ([]*model.GitCommitFileResult, error) {
+func (f fileHistory) Get(commit middleware.Commit) ([]*model.GitCommitFileResult, error) {
 	commitHash := commit.Id().String()
-
 	logger.Log(fmt.Sprintf("Fetching file details for commit %v", commitHash), global.StatusInfo)
 
 	prevTree, commitTree, treeErr := f.treesOf(commit)
@@ -29,6 +27,28 @@ func (f fileHistory) Get(commit *git2go.Commit) ([]*model.GitCommitFileResult, e
 	}
 
 	return f.diffBetweenTrees(prevTree, commitTree)
+}
+
+func (f fileHistory) treesOf(commit middleware.Commit) (*git2go.Tree, *git2go.Tree, error) {
+	var treeErr error
+	logger.Log("Getting current and previous trees", global.StatusInfo)
+
+	parents := commit.ParentCount()
+	if parents == 0 {
+		logger.Log("Commit has no parent", global.StatusError)
+		return nil, nil, CommitFileHistoryNoParentError
+	}
+
+	previousCommit := commit.Parent(0)
+
+	previousTree, treeErr := previousCommit.Tree()
+	currentTree, treeErr := commit.Tree()
+	if treeErr != nil {
+		logger.Log(treeErr.Error(), global.StatusError)
+		return nil, nil, CommitFileHistoryTreeError
+	}
+
+	return previousTree, currentTree, nil
 }
 
 func (f fileHistory) diffBetweenTrees(previousTree *git2go.Tree, currentTree *git2go.Tree) ([]*model.GitCommitFileResult, error) {
@@ -54,33 +74,15 @@ func (f fileHistory) diffBetweenTrees(previousTree *git2go.Tree, currentTree *gi
 		})
 	}
 
-	fmt.Println(numDelta, history)
 	return history, nil
-}
-
-func (f fileHistory) treesOf(commit *git2go.Commit) (*git2go.Tree, *git2go.Tree, error) {
-	var treeErr error
-	logger.Log("Getting current and previous trees", global.StatusInfo)
-
-	parents := commit.ParentCount()
-	if parents == 0 {
-		return nil, nil, errors.New("commit has no parents")
-	}
-
-	previousCommit := commit.Parent(0)
-
-	previousTree, treeErr := previousCommit.Tree()
-	currentTree, treeErr := commit.Tree()
-	if treeErr != nil {
-		return nil, nil, treeErr
-	}
-
-	return previousTree, currentTree, nil
 }
 
 func fileHistoryError(err error) ([]*model.GitCommitFileResult, error) {
 	logger.Log(err.Error(), global.StatusError)
-	return nil, constants.CommitFileHistoryError
+	if reflect.TypeOf(err) != reflect.TypeOf(Error{}) {
+		return nil, CommitFileHistoryError
+	}
+	return nil, err
 }
 
 func NewFileHistory(repo middleware.Repository) FileHistory {

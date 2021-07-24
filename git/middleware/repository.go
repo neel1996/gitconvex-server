@@ -10,6 +10,7 @@ type Repository interface {
 	LookupTree(id *git.Oid) (*git.Tree, error)
 	Index() (Index, error)
 	CreateCommit(s string, signature *git.Signature, signature2 *git.Signature, message string, tree *git.Tree, parents ...*git.Commit) (*git.Oid, error)
+	DiffTreeToTree(tree *git.Tree, tree2 *git.Tree, options *git.DiffOptions) (*git.Diff, error)
 }
 
 type repository struct {
@@ -53,6 +54,10 @@ func (r repository) DefaultSignature() (*git.Signature, error) {
 
 func (r repository) LookupTree(id *git.Oid) (*git.Tree, error) {
 	return r.repo.LookupTree(id)
+}
+
+func (r repository) DiffTreeToTree(tree *git.Tree, tree2 *git.Tree, options *git.DiffOptions) (*git.Diff, error) {
+	return r.repo.DiffTreeToTree(tree, tree2, options)
 }
 
 func NewRepository(repo *git.Repository) Repository {

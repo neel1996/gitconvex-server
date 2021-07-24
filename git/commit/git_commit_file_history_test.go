@@ -1,6 +1,7 @@
 package commit
 
 import (
+	"errors"
 	"fmt"
 	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
@@ -16,6 +17,7 @@ type FileHistoryTestSuite struct {
 	mockController *gomock.Controller
 	repo           middleware.Repository
 	mockRepo       *mocks.MockRepository
+	mockCommit     *mocks.MockCommit
 	fileHistory    FileHistory
 }
 
@@ -32,6 +34,7 @@ func (suite *FileHistoryTestSuite) SetupTest() {
 	suite.mockController = gomock.NewController(suite.T())
 	suite.repo = middleware.NewRepository(r)
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
+	suite.mockCommit = mocks.NewMockCommit(suite.mockController)
 	suite.fileHistory = NewFileHistory(suite.mockRepo)
 }
 
@@ -41,8 +44,68 @@ func (suite *FileHistoryTestSuite) TestGet_WhenRepoHasMoreThanOneCommit_ShouldRe
 	head, _ := suite.repo.Head()
 	commit, _ := suite.repo.LookupCommit(head.Target())
 
-	gotHistory, err := suite.fileHistory.Get(commit)
+	gotHistory, err := suite.fileHistory.Get(middleware.NewCommit(commit))
 
 	suite.Nil(err)
 	suite.NotZero(len(gotHistory))
+}
+
+func (suite *FileHistoryTestSuite) TestGet_WhenCommitIsTheFirstCommitWithNoParents_ShouldReturnNoParentError() {
+	oid, _ := git2go.NewOid("5e0c30593a8819a05135f908e1729278d3ee086e")
+
+	suite.mockCommit.EXPECT().Id().Return(oid)
+	suite.mockCommit.EXPECT().ParentCount().Return(uint(0))
+
+	_, err := suite.fileHistory.Get(suite.mockCommit)
+
+	suite.NotNil(err)
+	suite.Equal(CommitFileHistoryNoParentError, err)
+}
+
+func (suite *FileHistoryTestSuite) TestGet_WhenCommitTreeIsInvalid_ShouldReturnTreeError() {
+	oid, _ := git2go.NewOid("5e0c30593a8819a05135f908e1729278d3ee086e")
+
+	suite.mockCommit.EXPECT().Id().Return(oid)
+	suite.mockCommit.EXPECT().ParentCount().Return(uint(1))
+	suite.mockCommit.EXPECT().Parent(uint(0)).Return(suite.mockCommit)
+	suite.mockCommit.EXPECT().Tree().Return(nil, errors.New("TREE_ERROR")).Times(2)
+
+	_, err := suite.fileHistory.Get(suite.mockCommit)
+
+	suite.NotNil(err)
+	suite.Equal(CommitFileHistoryTreeError, err)
+}
+
+func (suite *FileHistoryTestSuite) TestGet_WhenDiffTreeFails_ShouldReturnError() {
+	oid, _ := git2go.NewOid("5e0c30593a8819a05135f908e1729278d3ee086e")
+	treePtr := &git2go.Tree{Object: git2go.Object{}}
+
+	suite.mockCommit.EXPECT().Id().Return(oid)
+	suite.mockCommit.EXPECT().ParentCount().Return(uint(1))
+	suite.mockCommit.EXPECT().Parent(uint(0)).Return(suite.mockCommit)
+	suite.mockCommit.EXPECT().Tree().Return(treePtr, nil).Times(2)
+
+	suite.mockRepo.EXPECT().DiffTreeToTree(treePtr, treePtr, nil).Return(nil, errors.New("DIFF_ERROR"))
+
+	_, err := suite.fileHistory.Get(suite.mockCommit)
+
+	suite.NotNil(err)
+	suite.Equal(CommitFileHistoryError, err)
+}
+
+func (suite *FileHistoryTestSuite) TestGet_WhenDiffNumDeltaIsZero_ShouldReturnError() {
+	oid, _ := git2go.NewOid("5e0c30593a8819a05135f908e1729278d3ee086e")
+	treePtr := &git2go.Tree{Object: git2go.Object{}}
+
+	suite.mockCommit.EXPECT().Id().Return(oid)
+	suite.mockCommit.EXPECT().ParentCount().Return(uint(1))
+	suite.mockCommit.EXPECT().Parent(uint(0)).Return(suite.mockCommit)
+	suite.mockCommit.EXPECT().Tree().Return(treePtr, nil).Times(2)
+
+	suite.mockRepo.EXPECT().DiffTreeToTree(treePtr, treePtr, nil).Return(&git2go.Diff{}, nil)
+
+	_, err := suite.fileHistory.Get(suite.mockCommit)
+
+	suite.NotNil(err)
+	suite.Equal(CommitFileHistoryError, err)
 }
