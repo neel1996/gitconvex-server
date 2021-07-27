@@ -59,7 +59,7 @@ func (suite *FileHistoryTestSuite) TestGet_WhenCommitIsTheFirstCommitWithNoParen
 	_, err := suite.fileHistory.Get(suite.mockCommit)
 
 	suite.NotNil(err)
-	suite.Equal(CommitFileHistoryNoParentError, err)
+	suite.Equal(FileHistoryNoParentError, err)
 }
 
 func (suite *FileHistoryTestSuite) TestGet_WhenCommitTreeIsInvalid_ShouldReturnTreeError() {
@@ -73,7 +73,7 @@ func (suite *FileHistoryTestSuite) TestGet_WhenCommitTreeIsInvalid_ShouldReturnT
 	_, err := suite.fileHistory.Get(suite.mockCommit)
 
 	suite.NotNil(err)
-	suite.Equal(CommitFileHistoryTreeError, err)
+	suite.Equal(FileHistoryTreeError, err)
 }
 
 func (suite *FileHistoryTestSuite) TestGet_WhenDiffTreeFails_ShouldReturnError() {
@@ -90,7 +90,7 @@ func (suite *FileHistoryTestSuite) TestGet_WhenDiffTreeFails_ShouldReturnError()
 	_, err := suite.fileHistory.Get(suite.mockCommit)
 
 	suite.NotNil(err)
-	suite.Equal(CommitFileHistoryError, err)
+	suite.Equal(FileHistoryError, err)
 }
 
 func (suite *FileHistoryTestSuite) TestGet_WhenDiffNumDeltaIsZero_ShouldReturnError() {
@@ -107,5 +107,5 @@ func (suite *FileHistoryTestSuite) TestGet_WhenDiffNumDeltaIsZero_ShouldReturnEr
 	_, err := suite.fileHistory.Get(suite.mockCommit)
 
 	suite.NotNil(err)
-	suite.Equal(CommitFileHistoryError, err)
+	suite.Equal(FileHistoryError, err)
 }

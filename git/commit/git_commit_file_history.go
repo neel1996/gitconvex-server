@@ -36,7 +36,7 @@ func (f fileHistory) treesOf(commit middleware.Commit) (*git2go.Tree, *git2go.Tr
 	parents := commit.ParentCount()
 	if parents == 0 {
 		logger.Log("Commit has no parent", global.StatusError)
-		return nil, nil, CommitFileHistoryNoParentError
+		return nil, nil, FileHistoryNoParentError
 	}
 
 	previousCommit := commit.Parent(0)
@@ -45,7 +45,7 @@ func (f fileHistory) treesOf(commit middleware.Commit) (*git2go.Tree, *git2go.Tr
 	currentTree, treeErr := commit.Tree()
 	if treeErr != nil {
 		logger.Log(treeErr.Error(), global.StatusError)
-		return nil, nil, CommitFileHistoryTreeError
+		return nil, nil, FileHistoryTreeError
 	}
 
 	return previousTree, currentTree, nil
@@ -80,7 +80,7 @@ func (f fileHistory) diffBetweenTrees(previousTree *git2go.Tree, currentTree *gi
 func fileHistoryError(err error) ([]*model.GitCommitFileResult, error) {
 	logger.Log(err.Error(), global.StatusError)
 	if reflect.TypeOf(err) != reflect.TypeOf(Error{}) {
-		return nil, CommitFileHistoryError
+		return nil, FileHistoryError
 	}
 	return nil, err
 }
