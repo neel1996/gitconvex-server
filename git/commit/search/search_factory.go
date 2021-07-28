@@ -7,7 +7,7 @@ import (
 type Type int
 
 const (
-	CommitHash = iota
+	CommitHash = iota + 1
 	CommitMessage
 	CommitAuthor
 )
@@ -34,7 +34,7 @@ func GetSearchAction(searchType string, commits []git2go.Commit) Search {
 		return commitAuthorSearch{
 			commits: commits,
 		}
+	default:
+		return nil
 	}
-
-	return nil
 }
