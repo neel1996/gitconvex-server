@@ -12,6 +12,7 @@ var (
 	FileHistoryError         = Error{ErrorCode: "LISTING_COMMIT_FILE_HISTORY_FAILED", ErrorString: "Failed to get the list of file changes for the commit"}
 	FileHistoryNoParentError = Error{ErrorCode: "LISTING_COMMIT_FILE_HISTORY_NO_PARENT", ErrorString: "The HEAD commit is the only commit in the repo and has no previous histories"}
 	FileHistoryTreeError     = Error{ErrorCode: "LISTING_COMMIT_FILE_HISTORY_INVALID_TREE", ErrorString: "The commit tree is invalid"}
+	InvalidSearchCategory    = Error{ErrorCode: "COMMIT_SEARCH_INVALID_SEARCH_TYPE", ErrorString: "The selected search category is invalid"}
 )
 
 func (e Error) Error() string {
