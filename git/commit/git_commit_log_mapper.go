@@ -13,7 +13,6 @@ type Mapper interface {
 }
 
 type mapper struct {
-	repo        middleware.Repository
 	fileHistory FileHistory
 }
 
@@ -71,9 +70,8 @@ func (m mapper) commitFileHistory(commit git2go.Commit) int {
 	return len(fileHistory)
 }
 
-func NewMapper(repo middleware.Repository, commitFile FileHistory) Mapper {
+func NewMapper(commitFile FileHistory) Mapper {
 	return mapper{
-		repo:        repo,
 		fileHistory: commitFile,
 	}
 }

@@ -44,11 +44,11 @@ func (suite *CommitLogMapperTestSuite) SetupTest() {
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
 	suite.mockFileHistory = mocks.NewMockFileHistory(suite.mockController)
 
-	suite.mapper = NewMapper(suite.mockRepo, suite.mockFileHistory)
+	suite.mapper = NewMapper(suite.mockFileHistory)
 }
 
 func (suite *CommitLogMapperTestSuite) TestMap_ShouldMapCommitLogFieldsToModel() {
-	suite.mapper = NewMapper(suite.repo, suite.fileHistory)
+	suite.mapper = NewMapper(suite.fileHistory)
 
 	got := suite.mapper.Map(suite.commits)
 
@@ -63,7 +63,7 @@ func (suite *CommitLogMapperTestSuite) TestMap_ShouldMapCommitLogFieldsToModel()
 }
 
 func (suite *CommitLogMapperTestSuite) TestMap_WhenCommitListIsEmpty_ShouldReturnEmptyModelSlice() {
-	suite.mapper = NewMapper(suite.repo, suite.fileHistory)
+	suite.mapper = NewMapper(suite.fileHistory)
 
 	got := suite.mapper.Map([]git2go.Commit{})
 
@@ -71,7 +71,7 @@ func (suite *CommitLogMapperTestSuite) TestMap_WhenCommitListIsEmpty_ShouldRetur
 }
 
 func (suite *CommitLogMapperTestSuite) TestMap_WhenCommitFileHistoryReturnsError_ShouldConsiderFileHistoryAsZero() {
-	suite.mapper = NewMapper(suite.repo, suite.mockFileHistory)
+	suite.mapper = NewMapper(suite.mockFileHistory)
 
 	suite.mockFileHistory.EXPECT().Get(middleware.NewCommit(&suite.commits[0])).Return(nil, errors.New("FILE_HISTORY_ERROR")).Times(3)
 
