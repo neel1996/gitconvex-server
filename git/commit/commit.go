@@ -12,6 +12,7 @@ type Commit interface {
 	GitTotalCommits() int
 	GitCommitLogs() ([]*model.GitCommits, error)
 	GitCommitFileHistory(string) ([]*model.GitCommitFileResult, error)
+	GitSearchCommitLogs(string, string) ([]*model.GitCommits, error)
 }
 
 type Operation struct {
@@ -20,6 +21,7 @@ type Operation struct {
 	ListAllLogs ListAllLogs
 	FileHistory FileHistory
 	Lookup      Lookup
+	SearchLogs  SearchLogs
 }
 
 func (c Operation) GitCommitChange() (string, error) {
@@ -58,4 +60,8 @@ func (c Operation) GitCommitFileHistory(commitHash string) ([]*model.GitCommitFi
 	}
 
 	return c.FileHistory.Get(commit)
+}
+
+func (c Operation) GitSearchCommitLogs(searchType string, searchKey string) ([]*model.GitCommits, error) {
+	return c.SearchLogs.GetMatchingLogs(searchType, searchKey)
 }

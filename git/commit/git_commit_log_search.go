@@ -33,7 +33,7 @@ func (s searchLogs) GetMatchingLogs(searchType string, searchKey string) ([]*mod
 	searchFactory := search.GetSearchAction(searchType, commits)
 	if searchFactory == nil {
 		logger.Log("Invalid search category", global.StatusError)
-		return nil, InvalidSearchCategory
+		return nil, InvalidSearchCategoryError
 	}
 
 	return s.mapper.Map(searchFactory.Search(searchKey)), nil
