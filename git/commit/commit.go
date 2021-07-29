@@ -9,6 +9,9 @@ var logger global.Logger
 
 type Commit interface {
 	GitCommitChange() (string, error)
+	GitTotalCommits() int
+	GitCommitLogs() ([]*model.GitCommits, error)
+	GitCommitFileHistory(string) ([]*model.GitCommitFileResult, error)
 }
 
 type Operation struct {
@@ -16,7 +19,7 @@ type Operation struct {
 	Total       Total
 	ListAllLogs ListAllLogs
 	FileHistory FileHistory
-	Mapper      Mapper
+	Lookup      Lookup
 }
 
 func (c Operation) GitCommitChange() (string, error) {
@@ -41,5 +44,18 @@ func (c Operation) GitCommitLogs() ([]*model.GitCommits, error) {
 		return nil, LogsError
 	}
 
-	return c.Mapper.Map(commits), nil
+	return NewMapper(c.FileHistory).Map(commits), nil
+}
+
+func (c Operation) GitCommitFileHistory(commitHash string) ([]*model.GitCommitFileResult, error) {
+	if commitHash == "" {
+		return nil, EmptyCommitHashError
+	}
+
+	commit, err := c.Lookup.WithReferenceId(commitHash)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.FileHistory.Get(commit)
 }
