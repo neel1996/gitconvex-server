@@ -107,7 +107,7 @@ func (suite *SearchLogsTestSuite) TestGetMatchingLogs_WhenSearchTypeIsInvalid_Sh
 	_, err := suite.searchLogs.GetMatchingLogs("invalid", searchKey)
 
 	suite.NotNil(err)
-	suite.Equal(InvalidSearchCategory, err)
+	suite.Equal(InvalidSearchCategoryError, err)
 }
 
 func (suite *SearchLogsTestSuite) TestGetMatchingLogs_WhenListLogsReturnsError_ShouldReturnError() {

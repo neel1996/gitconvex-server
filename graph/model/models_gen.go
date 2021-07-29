@@ -70,7 +70,7 @@ type GitRepoStatusResults struct {
 	// Remote host name based on the remote URL (E.g: https://github.com/github/repo.git -> Github)
 	GitRemoteHost *string `json:"gitRemoteHost"`
 	// Total number of commits tracked by the current branch
-	GitTotalCommits *float64 `json:"gitTotalCommits"`
+	GitTotalCommits *int `json:"gitTotalCommits"`
 	// The latest commit (HEAD commit)
 	GitLatestCommit *string `json:"gitLatestCommit"`
 	// Total number of files tracked by git repo

@@ -5,14 +5,14 @@ package graph
 
 import (
 	"context"
-	"github.com/neel1996/gitconvex/constants"
-	"github.com/neel1996/gitconvex/controller"
-	"github.com/neel1996/gitconvex/git/middleware"
 
 	"github.com/neel1996/gitconvex/api"
+	"github.com/neel1996/gitconvex/constants"
+	"github.com/neel1996/gitconvex/controller"
 	"github.com/neel1996/gitconvex/git"
 	"github.com/neel1996/gitconvex/git/branch"
 	"github.com/neel1996/gitconvex/git/commit"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/git/remote"
 	"github.com/neel1996/gitconvex/global"
 	"github.com/neel1996/gitconvex/graph/generated"

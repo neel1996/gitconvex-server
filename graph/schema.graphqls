@@ -43,7 +43,7 @@ type GitRepoStatusResults {
     "Remote host name based on the remote URL (E.g: https://github.com/github/repo.git -> Github)"
     gitRemoteHost: String
     "Total number of commits tracked by the current branch"
-    gitTotalCommits: Float
+    gitTotalCommits: Int
     "The latest commit (HEAD commit)"
     gitLatestCommit: String
     "Total number of files tracked by git repo"
