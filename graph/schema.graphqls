@@ -66,7 +66,7 @@ Returns the total number of commits in the repo and the array of 10 commit log e
 """
 type GitCommitLogResults {
     "Total number of commits tracked by the branch"
-    totalCommits: Float
+    totalCommits: Int
     "Array of commit log entries `gitCommits`"
     commits: [gitCommits]
 }

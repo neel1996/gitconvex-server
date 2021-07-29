@@ -1131,7 +1131,7 @@ Returns the total number of commits in the repo and the array of 10 commit log e
 """
 type GitCommitLogResults {
     "Total number of commits tracked by the branch"
-    totalCommits: Float
+    totalCommits: Int
     "Array of commit log entries ` + "`" + `gitCommits` + "`" + `"
     commits: [gitCommits]
 }
@@ -2831,9 +2831,9 @@ func (ec *executionContext) _GitCommitLogResults_totalCommits(ctx context.Contex
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*float64)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _GitCommitLogResults_commits(ctx context.Context, field graphql.CollectedField, obj *model.GitCommitLogResults) (ret graphql.Marshaler) {

@@ -41,7 +41,7 @@ type FetchResult struct {
 // Returns the total number of commits in the repo and the array of 10 commit log entries
 type GitCommitLogResults struct {
 	// Total number of commits tracked by the branch
-	TotalCommits *float64 `json:"totalCommits"`
+	TotalCommits *int `json:"totalCommits"`
 	// Array of commit log entries `gitCommits`
 	Commits []*GitCommits `json:"commits"`
 }
