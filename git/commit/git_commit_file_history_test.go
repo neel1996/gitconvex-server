@@ -40,9 +40,9 @@ func (suite *FileHistoryTestSuite) SetupTest() {
 
 func (suite *FileHistoryTestSuite) TestGet_WhenRepoHasMoreThanOneCommit_ShouldReturnDiffForChosenCommit() {
 	suite.fileHistory = NewFileHistory(suite.repo)
+	commitLogs := suite.commitLogs()
 
-	head, _ := suite.repo.Head()
-	commit, _ := suite.repo.LookupCommit(head.Target())
+	commit, _ := suite.repo.LookupCommit(commitLogs[len(commitLogs)-2].Id())
 
 	gotHistory, err := suite.fileHistory.Get(middleware.NewCommit(commit))
 
@@ -108,4 +108,13 @@ func (suite *FileHistoryTestSuite) TestGet_WhenDiffNumDeltaIsZero_ShouldReturnEr
 
 	suite.NotNil(err)
 	suite.Equal(FileHistoryError, err)
+}
+
+func (suite *FileHistoryTestSuite) commitLogs() []git2go.Commit {
+	commits, err := NewListAllLogs(suite.repo, nil, nil).Get()
+	if err != nil {
+		return nil
+	}
+
+	return commits
 }
