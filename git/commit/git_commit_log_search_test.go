@@ -57,7 +57,10 @@ func (suite *SearchLogsTestSuite) TestGetMatchingLogs_WhenSearchTypeIsHash_Shoul
 	want := bindWithModel([]git.Commit{wantCommit})
 
 	suite.mockListLogs.EXPECT().Get().Return(commits, nil)
-	suite.mockFileHistory.EXPECT().Get(middleware.NewCommit(&wantCommit)).Return([]*model.GitCommitFileResult{{}}, nil)
+	suite.mockFileHistory.EXPECT().Get(middleware.NewCommit(&wantCommit)).Return(
+		[]*model.GitCommitFileResult{{}},
+		nil,
+	).MaxTimes(constants.SearchLimit)
 
 	got, err := suite.searchLogs.GetMatchingLogs("hash", searchKey)
 
@@ -67,13 +70,16 @@ func (suite *SearchLogsTestSuite) TestGetMatchingLogs_WhenSearchTypeIsHash_Shoul
 
 func (suite *SearchLogsTestSuite) TestGetMatchingLogs_WhenSearchTypeIsMessage_ShouldReturnMatchingCommits() {
 	commits := suite.commitLogs()
-	wantCommit := commits[0]
+	wantCommit := commits[len(commits)-1]
 	searchKey := strings.Split(wantCommit.Message(), " ")[0]
 
 	want := bindWithModel([]git.Commit{wantCommit})
 
 	suite.mockListLogs.EXPECT().Get().Return(commits, nil)
-	suite.mockFileHistory.EXPECT().Get(middleware.NewCommit(&wantCommit)).Return([]*model.GitCommitFileResult{{}}, nil)
+	suite.mockFileHistory.EXPECT().Get(middleware.NewCommit(&wantCommit)).Return(
+		[]*model.GitCommitFileResult{{}},
+		nil,
+	).MaxTimes(constants.SearchLimit)
 
 	got, err := suite.searchLogs.GetMatchingLogs("message", searchKey)
 
@@ -89,7 +95,10 @@ func (suite *SearchLogsTestSuite) TestGetMatchingLogs_WhenSearchTypeIsAuthor_Sho
 	want := bindWithModel([]git.Commit{wantCommit})
 
 	suite.mockListLogs.EXPECT().Get().Return(commits, nil)
-	suite.mockFileHistory.EXPECT().Get(middleware.NewCommit(&wantCommit)).Return([]*model.GitCommitFileResult{{}}, nil)
+	suite.mockFileHistory.EXPECT().Get(middleware.NewCommit(&wantCommit)).Return(
+		[]*model.GitCommitFileResult{{}},
+		nil,
+	).MaxTimes(constants.SearchLimit)
 
 	got, err := suite.searchLogs.GetMatchingLogs("author", searchKey)
 
@@ -130,7 +139,10 @@ func (suite *SearchLogsTestSuite) TestGetMatchingLogs_WhenCommitLogsExceedsSearc
 	want := bindWithModel([]git.Commit{wantCommit})
 
 	suite.mockListLogs.EXPECT().Get().Return(suite.commitLogsExceedingLimit(wantCommit), nil)
-	suite.mockFileHistory.EXPECT().Get(middleware.NewCommit(&wantCommit)).Return([]*model.GitCommitFileResult{{}}, nil).MaxTimes(constants.SearchLimit)
+	suite.mockFileHistory.EXPECT().Get(middleware.NewCommit(&wantCommit)).Return(
+		[]*model.GitCommitFileResult{{}},
+		nil,
+	).MaxTimes(constants.SearchLimit)
 
 	got, err := suite.searchLogs.GetMatchingLogs("hash", searchKey)
 

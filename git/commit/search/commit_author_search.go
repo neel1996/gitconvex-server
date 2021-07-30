@@ -4,6 +4,7 @@ import (
 	git "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/constants"
 	"regexp"
+	"strings"
 )
 
 type commitAuthorSearch struct {
@@ -25,14 +26,17 @@ func (h commitAuthorSearch) Search(searchKey string) []git.Commit {
 			break
 		}
 
-		if isMatch, _ := regexp.MatchString(searchKey, commit.Author().Name); isMatch {
+		if isMatch, _ := regexp.MatchString(h.ToLower(searchKey), h.ToLower(commit.Author().Name)); isMatch {
 			matchingCommits = append(matchingCommits, commit)
+			counter++
 		}
-
-		counter++
 	}
 
 	return matchingCommits
+}
+
+func (h commitAuthorSearch) ToLower(value string) string {
+	return strings.ToLower(strings.TrimSpace(value))
 }
 
 func (h commitAuthorSearch) isExceedingSearchLimit(searchLimitCounter int) bool {

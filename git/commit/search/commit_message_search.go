@@ -4,6 +4,7 @@ import (
 	git "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/constants"
 	"regexp"
+	"strings"
 )
 
 type commitMessageSearch struct {
@@ -25,14 +26,17 @@ func (m commitMessageSearch) Search(searchKey string) []git.Commit {
 			break
 		}
 
-		if isMatch, _ := regexp.MatchString(searchKey, commit.Message()); isMatch {
+		if isMatch, _ := regexp.MatchString(m.ToLower(searchKey), m.ToLower(commit.Message())); isMatch {
 			matchingCommits = append(matchingCommits, commit)
+			counter++
 		}
-
-		counter++
 	}
 
 	return matchingCommits
+}
+
+func (m commitMessageSearch) ToLower(value string) string {
+	return strings.ToLower(strings.TrimSpace(value))
 }
 
 func (m commitMessageSearch) isExceedingSearchLimit(searchLimitCounter int) bool {

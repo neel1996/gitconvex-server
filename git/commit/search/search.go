@@ -7,4 +7,5 @@ import (
 type Search interface {
 	Search(string) []git2go.Commit
 	New([]git2go.Commit) Search
+	ToLower(string) string
 }

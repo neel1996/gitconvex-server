@@ -27,12 +27,15 @@ func (h commitHashSearch) Search(searchKey string) []git.Commit {
 
 		if isMatch, _ := regexp.MatchString(searchKey, commit.Id().String()); isMatch {
 			matchingCommits = append(matchingCommits, commit)
+			counter++
 		}
-
-		counter++
 	}
 
 	return matchingCommits
+}
+
+func (h commitHashSearch) ToLower(_ string) string {
+	panic("Not applicable for hash search")
 }
 
 func (h commitHashSearch) isExceedingSearchLimit(searchLimitCounter int) bool {
