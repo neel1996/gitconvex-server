@@ -27,6 +27,11 @@ type mapperCommitType struct {
 func (m mapper) Map(commits []git2go.Commit) []*model.GitCommits {
 	var mappedCommits []*model.GitCommits
 
+	if len(commits) == 0 {
+		logger.Log("No commits received for mapping", global.StatusWarning)
+		return nil
+	}
+
 	for _, commit := range commits {
 		commitFields := m.commitFields(commit)
 
