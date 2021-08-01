@@ -3,6 +3,7 @@ package middleware
 import git "github.com/libgit2/git2go/v31"
 
 type Repository interface {
+	Remotes() Remotes
 	Walk() (RevWalk, error)
 	Head() (Reference, error)
 	LookupCommit(oid *git.Oid) (*git.Commit, error)
@@ -15,6 +16,10 @@ type Repository interface {
 
 type repository struct {
 	repo *git.Repository
+}
+
+func (r repository) Remotes() Remotes {
+	return NewRemotes(r.repo.Remotes)
 }
 
 func (r repository) CreateCommit(s string, signature *git.Signature, signature2 *git.Signature,
