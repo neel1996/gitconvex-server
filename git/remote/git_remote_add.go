@@ -2,7 +2,7 @@ package remote
 
 import (
 	"fmt"
-	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/global"
 )
 
@@ -11,7 +11,7 @@ type Add interface {
 }
 
 type addRemote struct {
-	repo       *git2go.Repository
+	repo       middleware.Repository
 	remoteName string
 	remoteURL  string
 }
@@ -23,7 +23,7 @@ func (a addRemote) NewRemote() error {
 		return validationErr
 	}
 
-	remote, err := a.repo.Remotes.Create(a.remoteName, a.remoteURL)
+	remote, err := a.repo.Remotes().Create(a.remoteName, a.remoteURL)
 	if err != nil {
 		logger.Log("Remote addition Failed -> "+err.Error(), global.StatusError)
 		return err
@@ -42,7 +42,7 @@ func (a addRemote) validateRemoteFields() error {
 	return nil
 }
 
-func NewAddRemote(repo *git2go.Repository, remoteName string, remoteURL string) Add {
+func NewAddRemote(repo middleware.Repository, remoteName string, remoteURL string) Add {
 	return addRemote{
 		repo:       repo,
 		remoteName: remoteName,

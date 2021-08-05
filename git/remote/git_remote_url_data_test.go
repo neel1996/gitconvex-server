@@ -2,18 +2,21 @@ package remote
 
 import (
 	"fmt"
+	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
+	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
 type RemoteUrlDataTestSuite struct {
 	suite.Suite
-	repo          *git2go.Repository
-	noHeadRepo    *git2go.Repository
-	listRemoteUrl ListRemoteUrl
+	repo           middleware.Repository
+	mockController *gomock.Controller
+	mockRepo       *mocks.MockRepository
+	listRemoteUrl  ListRemoteUrl
 }
 
 func TestRemoteUrlDataTestSuite(t *testing.T) {
@@ -25,15 +28,16 @@ func (suite *RemoteUrlDataTestSuite) SetupTest() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	noHeadPath := os.Getenv("GITCONVEX_TEST_REPO") + string(filepath.Separator) + "no_head"
-	noHeadRepo, _ := git2go.OpenRepository(noHeadPath)
 
-	suite.repo = r
-	suite.noHeadRepo = noHeadRepo
-	suite.listRemoteUrl = NewRemoteUrlData(r)
+	suite.repo = middleware.NewRepository(r)
+	suite.mockController = gomock.NewController(suite.T())
+	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
+	suite.listRemoteUrl = NewRemoteUrlData(suite.mockRepo)
 }
 
 func (suite *RemoteUrlDataTestSuite) TestGetAllRemoteUrl_WhenRemotesArePresent_ShouldReturnRemoteUrlList() {
+	suite.listRemoteUrl = NewRemoteUrlData(suite.repo)
+
 	urlList := suite.listRemoteUrl.GetAllRemoteUrl()
 
 	suite.NotZero(len(urlList))
@@ -49,7 +53,7 @@ func (suite *RemoteUrlDataTestSuite) TestGetAllRemoteUrl_WhenRepoIsNil_ShouldRet
 }
 
 func (suite *RemoteUrlDataTestSuite) TestGetAllRemoteUrl_WhenRepoHasNoRemotes_ShouldReturnNil() {
-	suite.listRemoteUrl = NewRemoteUrlData(suite.noHeadRepo)
+	suite.listRemoteUrl = NewRemoteUrlData(suite.mockRepo)
 
 	urlList := suite.listRemoteUrl.GetAllRemoteUrl()
 
@@ -57,9 +61,7 @@ func (suite *RemoteUrlDataTestSuite) TestGetAllRemoteUrl_WhenRepoHasNoRemotes_Sh
 }
 
 func (suite *RemoteUrlDataTestSuite) TestGetAllRemoteUrl_WhenRemotesAreNil_ShouldReturnNil() {
-	suite.listRemoteUrl = NewRemoteUrlData(&git2go.Repository{
-		Remotes: git2go.RemoteCollection{},
-	})
+	suite.listRemoteUrl = NewRemoteUrlData(suite.mockRepo)
 
 	urlList := suite.listRemoteUrl.GetAllRemoteUrl()
 

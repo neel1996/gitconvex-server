@@ -145,6 +145,20 @@ func (mr *MockRepositoryMockRecorder) LookupTree(id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupTree", reflect.TypeOf((*MockRepository)(nil).LookupTree), id)
 }
 
+// Remotes mocks base method.
+func (m *MockRepository) Remotes() middleware.Remotes {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Remotes")
+	ret0, _ := ret[0].(middleware.Remotes)
+	return ret0
+}
+
+// Remotes indicates an expected call of Remotes.
+func (mr *MockRepositoryMockRecorder) Remotes() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remotes", reflect.TypeOf((*MockRepository)(nil).Remotes))
+}
+
 // Walk mocks base method.
 func (m *MockRepository) Walk() (middleware.RevWalk, error) {
 	m.ctrl.T.Helper()

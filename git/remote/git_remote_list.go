@@ -2,7 +2,7 @@ package remote
 
 import (
 	"fmt"
-	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/global"
 	"github.com/neel1996/gitconvex/graph/model"
 )
@@ -12,7 +12,7 @@ type List interface {
 }
 
 type listRemotes struct {
-	repo *git2go.Repository
+	repo middleware.Repository
 }
 
 func (l listRemotes) GetAllRemotes() []*model.RemoteDetails {
@@ -24,14 +24,14 @@ func (l listRemotes) GetAllRemotes() []*model.RemoteDetails {
 		return nil
 	}
 
-	list, listErr := repo.Remotes.List()
+	list, listErr := repo.Remotes().List()
 	if listErr != nil {
 		logger.Log(listErr.Error(), global.StatusError)
 		return nil
 	}
 
 	for _, remoteEntry := range list {
-		remote, remoteErr := repo.Remotes.Lookup(remoteEntry)
+		remote, remoteErr := repo.Remotes().Lookup(remoteEntry)
 		if remoteErr != nil {
 			logger.Log(remoteErr.Error(), global.StatusError)
 			continue
@@ -54,6 +54,6 @@ func (l listRemotes) GetAllRemotes() []*model.RemoteDetails {
 	return remoteList
 }
 
-func NewRemoteList(repo *git2go.Repository) List {
+func NewRemoteList(repo middleware.Repository) List {
 	return listRemotes{repo: repo}
 }

@@ -2,7 +2,7 @@ package remote
 
 import (
 	"fmt"
-	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/global"
 )
 
@@ -11,7 +11,7 @@ type Delete interface {
 }
 
 type deleteRemote struct {
-	repo       *git2go.Repository
+	repo       middleware.Repository
 	remoteName string
 }
 
@@ -32,7 +32,7 @@ func (d deleteRemote) DeleteRemote() error {
 }
 
 func (d *deleteRemote) deleteSelectedRemote(remoteEntry string) error {
-	err := d.repo.Remotes.Delete(remoteEntry)
+	err := d.repo.Remotes().Delete(remoteEntry)
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
 		return err
@@ -42,7 +42,7 @@ func (d *deleteRemote) deleteSelectedRemote(remoteEntry string) error {
 	return nil
 }
 
-func NewDeleteRemote(repo *git2go.Repository, remoteName string) Delete {
+func NewDeleteRemote(repo middleware.Repository, remoteName string) Delete {
 	return deleteRemote{
 		repo:       repo,
 		remoteName: remoteName,

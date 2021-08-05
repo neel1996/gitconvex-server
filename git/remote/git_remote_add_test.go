@@ -3,6 +3,7 @@ package remote
 import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/global"
 	"github.com/stretchr/testify/suite"
 	"os"
@@ -11,7 +12,7 @@ import (
 
 type RemoteAddTestSuite struct {
 	suite.Suite
-	repo       *git2go.Repository
+	repo       middleware.Repository
 	remoteName string
 	remoteUrl  string
 	addRemote  Add
@@ -26,7 +27,7 @@ func (suite *RemoteAddTestSuite) SetupTest() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	suite.repo = r
+	suite.repo = middleware.NewRepository(r)
 	suite.remoteName = "new_origin"
 	suite.remoteUrl = "https://github.com/neel1996/gitconvex-test.git"
 	suite.addRemote = NewAddRemote(suite.repo, suite.remoteName, suite.remoteUrl)
@@ -40,7 +41,7 @@ func (suite *RemoteAddTestSuite) TearDownSuite() {
 	}
 }
 
-func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenNewRemoteIsAdded_ShouldReturnNoError() {
+func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenNewRemoteIsAdded_ShouldReturnNil() {
 	err := suite.addRemote.NewRemote()
 
 	suite.Nil(err)
@@ -73,7 +74,7 @@ func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenRemoteUrlIsEmpty_ShouldRet
 func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenRemoteCreationFails_ShouldReturnError() {
 	r, _ := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
 
-	suite.addRemote = NewAddRemote(r, "new_origin", "https://github.com/neel1996/gitconvex-test.git")
+	suite.addRemote = NewAddRemote(middleware.NewRepository(r), "new_origin", "https://github.com/neel1996/gitconvex-test.git")
 
 	err := suite.addRemote.NewRemote()
 

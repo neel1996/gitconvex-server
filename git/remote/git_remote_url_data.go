@@ -1,7 +1,7 @@
 package remote
 
 import (
-	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/global"
 )
 
@@ -10,7 +10,7 @@ type ListRemoteUrl interface {
 }
 
 type listRemoteUrl struct {
-	repo *git2go.Repository
+	repo middleware.Repository
 }
 
 func (u listRemoteUrl) GetAllRemoteUrl() []*string {
@@ -41,6 +41,6 @@ func (u listRemoteUrl) GetAllRemoteUrl() []*string {
 	return remoteURL
 }
 
-func NewRemoteUrlData(repo *git2go.Repository) ListRemoteUrl {
+func NewRemoteUrlData(repo middleware.Repository) ListRemoteUrl {
 	return listRemoteUrl{repo: repo}
 }

@@ -3,7 +3,7 @@ package remote
 import (
 	"errors"
 	"fmt"
-	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/global"
 )
 
@@ -12,7 +12,7 @@ type Edit interface {
 }
 
 type editRemote struct {
-	repo       *git2go.Repository
+	repo       middleware.Repository
 	remoteName string
 	remoteURL  string
 }
@@ -26,8 +26,7 @@ func (e editRemote) EditRemote() error {
 		return validationErr
 	}
 
-	remoteCollection := repo.Remotes
-	_, listErr := remoteCollection.List()
+	_, listErr := repo.Remotes().List()
 
 	if listErr != nil {
 		logger.Log(listErr.Error(), global.StatusError)
@@ -39,7 +38,7 @@ func (e editRemote) EditRemote() error {
 		return remoteAvailabilityErr
 	}
 
-	err := repo.Remotes.SetUrl(e.remoteName, e.remoteURL)
+	err := repo.Remotes().SetUrl(e.remoteName, e.remoteURL)
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
 		return err
@@ -69,7 +68,7 @@ func (e editRemote) isRemotePresentInRepo() error {
 	return err
 }
 
-func NewEditRemote(repo *git2go.Repository, remoteName string, remoteURL string) Edit {
+func NewEditRemote(repo middleware.Repository, remoteName string, remoteURL string) Edit {
 	return editRemote{
 		repo:       repo,
 		remoteName: remoteName,

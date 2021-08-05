@@ -3,6 +3,7 @@ package remote
 import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/stretchr/testify/suite"
 	"os"
 	"testing"
@@ -10,7 +11,7 @@ import (
 
 type RemoteDeleteTestSuite struct {
 	suite.Suite
-	repo         *git2go.Repository
+	repo         middleware.Repository
 	remoteName   string
 	deleteRemote Delete
 }
@@ -25,7 +26,7 @@ func (suite *RemoteDeleteTestSuite) SetupSuite() {
 		fmt.Println(err)
 	}
 	suite.remoteName = "new_origin"
-	_ = NewAddRemote(r, suite.remoteName, "remote://some_url").NewRemote()
+	_ = NewAddRemote(middleware.NewRepository(r), suite.remoteName, "remote://some_url").NewRemote()
 }
 
 func (suite *RemoteDeleteTestSuite) SetupTest() {
@@ -33,9 +34,9 @@ func (suite *RemoteDeleteTestSuite) SetupTest() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	suite.repo = r
+	suite.repo = middleware.NewRepository(r)
 	suite.remoteName = "new_origin"
-	suite.deleteRemote = NewDeleteRemote(r, suite.remoteName)
+	suite.deleteRemote = NewDeleteRemote(suite.repo, suite.remoteName)
 }
 
 func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenNewRemoteIsDeleted_ShouldReturnNoError() {
@@ -61,9 +62,7 @@ func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenRemoteNameIsEmpty_Sh
 }
 
 func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenRemoteDeletionFails_ShouldReturnError() {
-	r, _ := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
-
-	suite.deleteRemote = NewDeleteRemote(r, "new_origin")
+	suite.deleteRemote = NewDeleteRemote(suite.repo, "new_origin")
 
 	err := suite.deleteRemote.DeleteRemote()
 

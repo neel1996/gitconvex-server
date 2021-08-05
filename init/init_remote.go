@@ -3,6 +3,7 @@ package initialize
 import (
 	"context"
 	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/git/remote"
 )
 
@@ -22,7 +23,8 @@ type Remote struct {
 }
 
 func RemoteObjects(ctx context.Context) Remote {
-	repo := ctx.Value(Repo).(*git2go.Repository)
+	r := ctx.Value(Repo).(*git2go.Repository)
+	repo := middleware.NewRepository(r)
 	remoteName := ctx.Value(RemoteName).(string)
 	remoteUrl := ctx.Value(RemoteUrl).(string)
 

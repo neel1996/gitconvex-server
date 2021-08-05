@@ -2,7 +2,10 @@ package remote
 
 import (
 	"fmt"
+	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
+	"github.com/neel1996/gitconvex/git/middleware"
+	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
 	"os"
 	"testing"
@@ -10,7 +13,9 @@ import (
 
 type RemoteValidationTestSuite struct {
 	suite.Suite
-	repo                 *git2go.Repository
+	repo                 middleware.Repository
+	mockController       *gomock.Controller
+	mockRepo             *mocks.MockRepository
 	remoteFields         []string
 	validateRemoteFields Validation
 }
@@ -26,11 +31,15 @@ func (suite *RemoteValidationTestSuite) SetupTest() {
 	}
 
 	suite.remoteFields = []string{"origin", "origin_1"}
-	suite.repo = r
-	suite.validateRemoteFields = NewRemoteValidation(suite.repo, suite.remoteFields[0], suite.remoteFields[1])
+	suite.mockController = gomock.NewController(suite.T())
+	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
+	suite.repo = middleware.NewRepository(r)
+	suite.validateRemoteFields = NewRemoteValidation(suite.mockRepo, suite.remoteFields[0], suite.remoteFields[1])
 }
 
 func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenAllFieldsAreValid_ShouldReturnNil() {
+	suite.validateRemoteFields = NewRemoteValidation(suite.repo)
+
 	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
 
 	fmt.Println(wantErr)
@@ -48,9 +57,7 @@ func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRepoIsNil_S
 }
 
 func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRemoteCollectionIsNil_ShouldReturnError() {
-	suite.validateRemoteFields = NewRemoteValidation(&git2go.Repository{
-		Remotes: git2go.RemoteCollection{},
-	})
+	suite.validateRemoteFields = NewRemoteValidation(suite.mockRepo)
 	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
 	wantErrorText := "remote collection is nil"
 
