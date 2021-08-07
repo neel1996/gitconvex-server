@@ -10,19 +10,19 @@ type Name interface {
 }
 
 type remoteName struct {
-	repo      middleware.Repository
-	remoteUrl string
+	repo             middleware.Repository
+	remoteUrl        string
+	remoteValidation Validation
+	remoteList       List
 }
 
 func (r remoteName) GetRemoteNameWithUrl() string {
-	repo := r.repo
-
-	if validationErr := NewRemoteValidation(repo).ValidateRemoteFields(); validationErr != nil {
+	if validationErr := r.remoteValidation.ValidateRemoteFields(); validationErr != nil {
 		logger.Log(validationErr.Error(), global.StatusError)
 		return ""
 	}
 
-	remoteList := NewRemoteList(r.repo).GetAllRemotes()
+	remoteList := r.remoteList.GetAllRemotes()
 	if remoteList == nil {
 		logger.Log("repo has no remotes", global.StatusError)
 		return ""
@@ -38,9 +38,11 @@ func (r remoteName) GetRemoteNameWithUrl() string {
 	return ""
 }
 
-func NewGetRemoteName(repo middleware.Repository, remoteUrl string) Name {
+func NewGetRemoteName(repo middleware.Repository, remoteUrl string, remoteValidation Validation, remoteList List) Name {
 	return remoteName{
-		repo:      repo,
-		remoteUrl: remoteUrl,
+		repo:             repo,
+		remoteUrl:        remoteUrl,
+		remoteValidation: remoteValidation,
+		remoteList:       remoteList,
 	}
 }
