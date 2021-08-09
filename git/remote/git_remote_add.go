@@ -11,9 +11,10 @@ type Add interface {
 }
 
 type addRemote struct {
-	repo       middleware.Repository
-	remoteName string
-	remoteURL  string
+	repo             middleware.Repository
+	remoteName       string
+	remoteURL        string
+	remoteValidation Validation
 }
 
 // NewRemote adds a new remote to the target git repo
@@ -34,7 +35,7 @@ func (a addRemote) NewRemote() error {
 }
 
 func (a addRemote) validateRemoteFields() error {
-	validationErr := NewRemoteValidation(a.repo, a.remoteName, a.remoteURL).ValidateRemoteFields()
+	validationErr := a.remoteValidation.ValidateRemoteFields()
 	if validationErr != nil {
 		return validationErr
 	}
@@ -42,10 +43,11 @@ func (a addRemote) validateRemoteFields() error {
 	return nil
 }
 
-func NewAddRemote(repo middleware.Repository, remoteName string, remoteURL string) Add {
+func NewAddRemote(repo middleware.Repository, remoteName string, remoteURL string, remoteValidation Validation) Add {
 	return addRemote{
-		repo:       repo,
-		remoteName: remoteName,
-		remoteURL:  remoteURL,
+		repo:             repo,
+		remoteName:       remoteName,
+		remoteURL:        remoteURL,
+		remoteValidation: remoteValidation,
 	}
 }
