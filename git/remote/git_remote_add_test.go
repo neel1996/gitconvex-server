@@ -49,7 +49,9 @@ func (suite *RemoteAddTestSuite) SetupTest() {
 }
 
 func (suite *RemoteAddTestSuite) TearDownSuite() {
-	err := NewDeleteRemote(suite.repo, suite.remoteName).DeleteRemote()
+	suite.remoteValidation = NewRemoteValidation(suite.repo, suite.remoteName)
+
+	err := NewDeleteRemote(suite.repo, suite.remoteName, suite.remoteValidation).DeleteRemote()
 	if err != nil {
 		logger.Log(err.Error(), global.StatusWarning)
 		return

@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+//TODO: This is a temporary function and will be replaced with an clean interface over the course of refactoring
+
 // RepoStatus collects the basic details of the target repo and returns the consolidated result
 func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	logger.Log("Collecting repo status information", global.StatusInfo)
@@ -61,7 +63,12 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 	}
 
 	if len(remotes) > 0 && *remotes[0] != "" {
-		remoteNameObject := remote.NewGetRemoteName(repoForRemote, *remotes[0])
+		remoteNameObject := remote.NewGetRemoteName(
+			repoForRemote,
+			*remotes[0],
+			remote.NewRemoteValidation(repoForRemote),
+			remote.NewRemoteList(repoForRemote),
+		)
 		remoteName = remoteNameObject.GetRemoteNameWithUrl()
 		sRemote := strings.Split(*remotes[0], "/")
 		repoName = &sRemote[len(sRemote)-1]
