@@ -44,12 +44,12 @@ func (suite *RemoteAddTestSuite) SetupTest() {
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
 	suite.mockRemotes = mocks.NewMockRemotes(suite.mockController)
 	suite.mockRemoteValidation = mocks.NewMockValidation(suite.mockController)
-	suite.remoteValidation = NewRemoteValidation(suite.repo, suite.remoteName, suite.remoteUrl)
+	suite.remoteValidation = NewRemoteValidation(suite.repo)
 	suite.addRemote = NewAddRemote(suite.mockRepo, suite.remoteName, suite.remoteUrl, suite.mockRemoteValidation)
 }
 
 func (suite *RemoteAddTestSuite) TearDownSuite() {
-	suite.remoteValidation = NewRemoteValidation(suite.repo, suite.remoteName)
+	suite.remoteValidation = NewRemoteValidation(suite.repo)
 
 	err := NewDeleteRemote(suite.repo, suite.remoteName, suite.remoteValidation).DeleteRemote()
 	if err != nil {
@@ -67,7 +67,7 @@ func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenNewRemoteIsAdded_ShouldRet
 }
 
 func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenValidationFails_ShouldReturnError() {
-	suite.mockRemoteValidation.EXPECT().ValidateRemoteFields().Return(errors.New("VALIDATION_ERROR"))
+	suite.mockRemoteValidation.EXPECT().ValidateRemoteFields(suite.remoteName, suite.remoteUrl).Return(errors.New("VALIDATION_ERROR"))
 
 	err := suite.addRemote.NewRemote()
 
@@ -75,7 +75,7 @@ func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenValidationFails_ShouldRetu
 }
 
 func (suite *RemoteAddTestSuite) TestAddNewRemote_WhenRemoteCreationFails_ShouldReturnError() {
-	suite.mockRemoteValidation.EXPECT().ValidateRemoteFields().Return(nil)
+	suite.mockRemoteValidation.EXPECT().ValidateRemoteFields(suite.remoteName, suite.remoteUrl).Return(nil)
 	suite.mockRepo.EXPECT().Remotes().Return(suite.mockRemotes)
 	suite.mockRemotes.EXPECT().Create(suite.remoteName, suite.remoteUrl).Return(&git2go.Remote{}, errors.New("REMOTE_ERROR"))
 

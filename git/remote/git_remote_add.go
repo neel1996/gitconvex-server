@@ -19,7 +19,7 @@ type addRemote struct {
 
 // NewRemote adds a new remote to the target git repo
 func (a addRemote) NewRemote() error {
-	if validationErr := a.validateRemoteFields(); validationErr != nil {
+	if validationErr := a.remoteValidation.ValidateRemoteFields(a.remoteName, a.remoteURL); validationErr != nil {
 		logger.Log(validationErr.Error(), global.StatusError)
 		return validationErr
 	}
@@ -31,15 +31,6 @@ func (a addRemote) NewRemote() error {
 	}
 
 	logger.Log(fmt.Sprintf("New remote %s added to the repo", remote.Name()), global.StatusInfo)
-	return nil
-}
-
-func (a addRemote) validateRemoteFields() error {
-	validationErr := a.remoteValidation.ValidateRemoteFields()
-	if validationErr != nil {
-		return validationErr
-	}
-
 	return nil
 }
 
