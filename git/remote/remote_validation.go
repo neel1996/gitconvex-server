@@ -7,7 +7,7 @@ import (
 )
 
 type Validation interface {
-	ValidateRemoteFields() error
+	ValidateRemoteFields(remoteFields ...string) error
 }
 
 type validation struct {
@@ -15,7 +15,8 @@ type validation struct {
 	remoteFields []string
 }
 
-func (v validation) ValidateRemoteFields() error {
+func (v validation) ValidateRemoteFields(remoteFields ...string) error {
+	v.remoteFields = remoteFields
 	validateRepoErr := v.validateRepo()
 	if validateRepoErr != nil {
 		return validateRepoErr
@@ -59,9 +60,8 @@ func (v validation) validateRemoteCollection() error {
 	return nil
 }
 
-func NewRemoteValidation(repo middleware.Repository, remoteFields ...string) Validation {
+func NewRemoteValidation(repo middleware.Repository) Validation {
 	return validation{
-		repo:         repo,
-		remoteFields: remoteFields,
+		repo: repo,
 	}
 }

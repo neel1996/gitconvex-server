@@ -34,15 +34,19 @@ func (m *MockValidation) EXPECT() *MockValidationMockRecorder {
 }
 
 // ValidateRemoteFields mocks base method.
-func (m *MockValidation) ValidateRemoteFields() error {
+func (m *MockValidation) ValidateRemoteFields(remoteFields ...string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateRemoteFields")
+	varargs := []interface{}{}
+	for _, a := range remoteFields {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ValidateRemoteFields", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ValidateRemoteFields indicates an expected call of ValidateRemoteFields.
-func (mr *MockValidationMockRecorder) ValidateRemoteFields() *gomock.Call {
+func (mr *MockValidationMockRecorder) ValidateRemoteFields(remoteFields ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateRemoteFields", reflect.TypeOf((*MockValidation)(nil).ValidateRemoteFields))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateRemoteFields", reflect.TypeOf((*MockValidation)(nil).ValidateRemoteFields), remoteFields...)
 }

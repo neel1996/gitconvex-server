@@ -16,6 +16,7 @@ type RemoteValidationTestSuite struct {
 	repo                 middleware.Repository
 	mockController       *gomock.Controller
 	mockRepo             *mocks.MockRepository
+	mockRemotes          *mocks.MockRemotes
 	remoteFields         []string
 	validateRemoteFields Validation
 }
@@ -34,21 +35,21 @@ func (suite *RemoteValidationTestSuite) SetupTest() {
 	suite.mockController = gomock.NewController(suite.T())
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
 	suite.repo = middleware.NewRepository(r)
-	suite.validateRemoteFields = NewRemoteValidation(suite.mockRepo, suite.remoteFields[0], suite.remoteFields[1])
+	suite.mockRemotes = mocks.NewMockRemotes(suite.mockController)
+	suite.validateRemoteFields = NewRemoteValidation(suite.mockRepo)
 }
 
 func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenAllFieldsAreValid_ShouldReturnNil() {
 	suite.validateRemoteFields = NewRemoteValidation(suite.repo)
 
-	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
-
-	fmt.Println(wantErr)
+	wantErr := suite.validateRemoteFields.ValidateRemoteFields(suite.remoteFields[0], suite.remoteFields[1])
 
 	suite.Nil(wantErr)
 }
 
 func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRepoIsNil_ShouldReturnError() {
 	suite.validateRemoteFields = NewRemoteValidation(nil)
+
 	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
 	wantErrorText := "repo is nil"
 
@@ -57,7 +58,9 @@ func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRepoIsNil_S
 }
 
 func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRemoteCollectionIsNil_ShouldReturnError() {
-	suite.validateRemoteFields = NewRemoteValidation(suite.mockRepo)
+	suite.mockRepo.EXPECT().Remotes().Return(suite.mockRemotes)
+	suite.mockRemotes.EXPECT().Get().Return(git2go.RemoteCollection{})
+
 	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
 	wantErrorText := "remote collection is nil"
 
@@ -66,8 +69,12 @@ func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRemoteColle
 }
 
 func (suite *RemoteValidationTestSuite) TestValidateRemoteFields_WhenRemoteFieldsAreEmpty_ShouldReturnError() {
-	suite.validateRemoteFields = NewRemoteValidation(suite.repo, "", "")
-	wantErr := suite.validateRemoteFields.ValidateRemoteFields()
+	suite.mockRepo.EXPECT().Remotes().Return(suite.mockRemotes)
+	suite.mockRemotes.EXPECT().Get().DoAndReturn(func() git2go.RemoteCollection {
+		return suite.repo.Remotes().Get()
+	})
+
+	wantErr := suite.validateRemoteFields.ValidateRemoteFields("", "")
 	wantErrorText := "one or more remote fields are empty"
 
 	suite.NotNil(wantErr)
