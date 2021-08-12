@@ -18,7 +18,7 @@ type deleteRemote struct {
 
 // DeleteRemote deletes the remote based on the specified remoteName
 func (d deleteRemote) DeleteRemote() error {
-	validationError := d.remoteValidation.ValidateRemoteFields()
+	validationError := d.remoteValidation.ValidateRemoteFields(d.remoteName)
 	if validationError != nil {
 		return validationError
 	}

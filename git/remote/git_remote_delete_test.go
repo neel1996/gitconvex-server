@@ -35,7 +35,7 @@ func (suite *RemoteDeleteTestSuite) SetupSuite() {
 	}
 	suite.repo = middleware.NewRepository(r)
 	suite.remoteName = "new_origin"
-	suite.remoteValidation = NewRemoteValidation(suite.repo, suite.remoteName)
+	suite.remoteValidation = NewRemoteValidation(suite.repo)
 
 	_ = NewAddRemote(suite.repo, suite.remoteName, "remote://some_url", suite.remoteValidation).NewRemote()
 }
@@ -47,7 +47,7 @@ func (suite *RemoteDeleteTestSuite) SetupTest() {
 	}
 	suite.repo = middleware.NewRepository(r)
 	suite.remoteName = "new_origin"
-	suite.remoteValidation = NewRemoteValidation(suite.repo, suite.remoteName)
+	suite.remoteValidation = NewRemoteValidation(suite.repo)
 
 	suite.mockController = gomock.NewController(suite.T())
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
@@ -68,7 +68,7 @@ func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenNewRemoteIsDeleted_S
 }
 
 func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenRemoteValidationFails_ShouldReturnError() {
-	suite.mockRemoteValidation.EXPECT().ValidateRemoteFields().Return(errors.New("VALIDATION_ERROR"))
+	suite.mockRemoteValidation.EXPECT().ValidateRemoteFields(suite.remoteName).Return(errors.New("VALIDATION_ERROR"))
 
 	err := suite.deleteRemote.DeleteRemote()
 
@@ -76,7 +76,7 @@ func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenRemoteValidationFail
 }
 
 func (suite *RemoteDeleteTestSuite) TestDeleteNewRemote_WhenRemoteDeletionFails_ShouldReturnError() {
-	suite.mockRemoteValidation.EXPECT().ValidateRemoteFields().Return(nil)
+	suite.mockRemoteValidation.EXPECT().ValidateRemoteFields(suite.remoteName).Return(nil)
 	suite.mockRepo.EXPECT().Remotes().Return(suite.mockRemotes)
 	suite.mockRemotes.EXPECT().Delete(suite.remoteName).Return(errors.New("DELETION_FAILS"))
 
