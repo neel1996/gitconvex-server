@@ -12,22 +12,23 @@ type Edit interface {
 }
 
 type editRemote struct {
-	repo       middleware.Repository
-	remoteName string
-	remoteURL  string
+	repo             middleware.Repository
+	remoteName       string
+	remoteURL        string
+	remoteValidation Validation
+	remoteList       List
 }
 
 func (e editRemote) EditRemote() error {
 	repo := e.repo
 
-	validationErr := NewRemoteValidation(e.repo, e.remoteName, e.remoteURL).ValidateRemoteFields()
+	validationErr := e.remoteValidation.ValidateRemoteFields(e.remoteName, e.remoteURL)
 	if validationErr != nil {
 		logger.Log(validationErr.Error(), global.StatusError)
 		return validationErr
 	}
 
 	_, listErr := repo.Remotes().List()
-
 	if listErr != nil {
 		logger.Log(listErr.Error(), global.StatusError)
 		return listErr
@@ -50,7 +51,7 @@ func (e editRemote) EditRemote() error {
 
 func (e editRemote) isRemotePresentInRepo() error {
 	var err error
-	remoteList := NewRemoteList(e.repo).GetAllRemotes()
+	remoteList := e.remoteList.GetAllRemotes()
 
 	if remoteList == nil {
 		err = errors.New("no remotes are present in the repo")
@@ -68,10 +69,12 @@ func (e editRemote) isRemotePresentInRepo() error {
 	return err
 }
 
-func NewEditRemote(repo middleware.Repository, remoteName string, remoteURL string) Edit {
+func NewEditRemote(repo middleware.Repository, remoteName string, remoteURL string, remoteValidation Validation, remoteList List) Edit {
 	return editRemote{
-		repo:       repo,
-		remoteName: remoteName,
-		remoteURL:  remoteURL,
+		repo:             repo,
+		remoteName:       remoteName,
+		remoteURL:        remoteURL,
+		remoteValidation: remoteValidation,
+		remoteList:       remoteList,
 	}
 }

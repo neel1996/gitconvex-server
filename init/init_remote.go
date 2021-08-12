@@ -28,12 +28,12 @@ func RemoteObjects(ctx context.Context) Remote {
 	remoteName := ctx.Value(RemoteName).(string)
 	remoteUrl := ctx.Value(RemoteUrl).(string)
 
-	remoteValidation := remote.NewRemoteValidation(repo, remoteName, remoteUrl)
+	remoteValidation := remote.NewRemoteValidation(repo)
 
+	listRemote := remote.NewRemoteList(repo)
 	addRemote := remote.NewAddRemote(repo, remoteName, remoteUrl, remoteValidation)
 	deleteRemote := remote.NewDeleteRemote(repo, remoteName, remoteValidation)
-	editRemote := remote.NewEditRemote(repo, remoteName, remoteUrl)
-	listRemote := remote.NewRemoteList(repo)
+	editRemote := remote.NewEditRemote(repo, remoteName, remoteUrl, remoteValidation, listRemote)
 	name := remote.NewGetRemoteName(repo, remoteUrl, remoteValidation, listRemote)
 	listRemoteURL := remote.NewRemoteUrlData(repo)
 
