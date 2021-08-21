@@ -48,7 +48,7 @@ func (suite *RemoteEditTestSuite) SetupTest() {
 	suite.remoteName = "origin"
 	suite.remoteUrl = "https://github.com/neel1996/gitconvex-test.git"
 	suite.remoteValidation = NewRemoteValidation(suite.repo)
-	suite.remoteList = NewRemoteList(suite.repo)
+	suite.remoteList = NewRemoteList(suite.repo, suite.remoteValidation)
 	suite.editRemote = NewEditRemote(
 		suite.mockRepo,
 		suite.remoteName,

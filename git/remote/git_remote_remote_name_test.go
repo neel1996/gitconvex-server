@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/git/middleware"
+	"github.com/neel1996/gitconvex/graph/model"
 	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
 	"os"
@@ -33,7 +34,7 @@ func (suite *GetRemoteNameTestSuite) SetupTest() {
 
 	suite.repo = middleware.NewRepository(r)
 	suite.remoteValidation = NewRemoteValidation(suite.repo)
-	suite.remoteList = NewRemoteList(suite.repo)
+	suite.remoteList = NewRemoteList(suite.repo, suite.remoteValidation)
 	suite.mockController = gomock.NewController(suite.T())
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
 	suite.mockRemoteValidation = mocks.NewMockValidation(suite.mockController)
@@ -80,6 +81,17 @@ func (suite *GetRemoteNameTestSuite) TestGetRemoteName_ShouldReturnEmptyString_W
 
 	suite.mockRemoteValidation.EXPECT().ValidateRemoteFields().Return(nil)
 	suite.mockRemoteList.EXPECT().GetAllRemotes().Return(nil)
+
+	actualRemote := suite.getRemoteName.GetRemoteNameWithUrl()
+
+	suite.Equal(expectedRemote, actualRemote)
+}
+
+func (suite *GetRemoteNameTestSuite) TestGetRemoteName_ShouldReturnEmptyString_WhenRemoteURLIsNotPresentInRepo() {
+	expectedRemote := ""
+
+	suite.mockRemoteValidation.EXPECT().ValidateRemoteFields().Return(nil)
+	suite.mockRemoteList.EXPECT().GetAllRemotes().Return([]*model.RemoteDetails{})
 
 	actualRemote := suite.getRemoteName.GetRemoteNameWithUrl()
 
