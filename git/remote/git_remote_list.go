@@ -12,14 +12,15 @@ type List interface {
 }
 
 type listRemotes struct {
-	repo middleware.Repository
+	repo             middleware.Repository
+	remoteValidation Validation
 }
 
 func (l listRemotes) GetAllRemotes() []*model.RemoteDetails {
 	var remoteList []*model.RemoteDetails
 	repo := l.repo
 
-	if validationErr := NewRemoteValidation(repo).ValidateRemoteFields(); validationErr != nil {
+	if validationErr := l.remoteValidation.ValidateRemoteFields(); validationErr != nil {
 		logger.Log(validationErr.Error(), global.StatusError)
 		return nil
 	}
@@ -54,6 +55,6 @@ func (l listRemotes) GetAllRemotes() []*model.RemoteDetails {
 	return remoteList
 }
 
-func NewRemoteList(repo middleware.Repository) List {
-	return listRemotes{repo: repo}
+func NewRemoteList(repo middleware.Repository, remoteValidation Validation) List {
+	return listRemotes{repo: repo, remoteValidation: remoteValidation}
 }
