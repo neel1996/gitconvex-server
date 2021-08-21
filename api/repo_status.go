@@ -53,7 +53,9 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 
 	repoForRemote := middleware.NewRepository(repo)
 
-	remoteUrlList := remote.NewRemoteUrlData(repoForRemote)
+	remoteValidation := remote.NewRemoteValidation(repoForRemote)
+	remoteList := remote.NewRemoteList(repoForRemote, remoteValidation)
+	remoteUrlList := remote.NewRemoteUrlData(repoForRemote, remoteValidation, remoteList)
 	listRemoteUrl := remote.Operation{ListRemoteUrl: remoteUrlList}
 
 	remotes, remoteErr := listRemoteUrl.GitGetAllRemoteUrl()
@@ -66,8 +68,8 @@ func RepoStatus(repoId string) *model.GitRepoStatusResults {
 		remoteNameObject := remote.NewGetRemoteName(
 			repoForRemote,
 			*remotes[0],
-			remote.NewRemoteValidation(repoForRemote),
-			remote.NewRemoteList(repoForRemote),
+			remoteValidation,
+			remoteList,
 		)
 		remoteName = remoteNameObject.GetRemoteNameWithUrl()
 		sRemote := strings.Split(*remotes[0], "/")
