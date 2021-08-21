@@ -10,20 +10,20 @@ type ListRemoteUrl interface {
 }
 
 type listRemoteUrl struct {
-	repo middleware.Repository
+	repo             middleware.Repository
+	remoteValidation Validation
+	remoteList       List
 }
 
 func (u listRemoteUrl) GetAllRemoteUrl() []*string {
 	var remoteURL []*string
 
-	repo := u.repo
-
-	if validationErr := NewRemoteValidation(repo).ValidateRemoteFields(); validationErr != nil {
+	if validationErr := u.remoteValidation.ValidateRemoteFields(); validationErr != nil {
 		logger.Log(validationErr.Error(), global.StatusError)
 		return nil
 	}
 
-	remoteList := NewRemoteList(u.repo).GetAllRemotes()
+	remoteList := u.remoteList.GetAllRemotes()
 	if remoteList == nil {
 		logger.Log("repo has no remotes", global.StatusError)
 		return nil
@@ -41,6 +41,10 @@ func (u listRemoteUrl) GetAllRemoteUrl() []*string {
 	return remoteURL
 }
 
-func NewRemoteUrlData(repo middleware.Repository) ListRemoteUrl {
-	return listRemoteUrl{repo: repo}
+func NewRemoteUrlData(repo middleware.Repository, remoteValidation Validation, remoteList List) ListRemoteUrl {
+	return listRemoteUrl{
+		repo:             repo,
+		remoteValidation: remoteValidation,
+		remoteList:       remoteList,
+	}
 }
