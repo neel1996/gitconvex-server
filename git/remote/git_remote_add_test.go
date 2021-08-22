@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/git/middleware"
+	remoteMocks "github.com/neel1996/gitconvex/git/remote/mocks"
 	"github.com/neel1996/gitconvex/global"
 	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
@@ -19,8 +20,8 @@ type RemoteAddTestSuite struct {
 	repo                 middleware.Repository
 	remotes              middleware.Remotes
 	mockRepo             *mocks.MockRepository
-	mockRemotes          *mocks.MockRemotes
-	mockRemoteValidation *mocks.MockValidation
+	mockRemotes          *remoteMocks.MockRemotes
+	mockRemoteValidation *remoteMocks.MockValidation
 	remoteName           string
 	remoteUrl            string
 	addRemote            Add
@@ -42,8 +43,8 @@ func (suite *RemoteAddTestSuite) SetupTest() {
 	suite.remoteUrl = "https://github.com/neel1996/gitconvex-test.git"
 	suite.mockController = gomock.NewController(suite.T())
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
-	suite.mockRemotes = mocks.NewMockRemotes(suite.mockController)
-	suite.mockRemoteValidation = mocks.NewMockValidation(suite.mockController)
+	suite.mockRemotes = remoteMocks.NewMockRemotes(suite.mockController)
+	suite.mockRemoteValidation = remoteMocks.NewMockValidation(suite.mockController)
 	suite.remoteValidation = NewRemoteValidation(suite.repo)
 	suite.addRemote = NewAddRemote(suite.mockRepo, suite.remoteName, suite.remoteUrl, suite.mockRemoteValidation)
 }

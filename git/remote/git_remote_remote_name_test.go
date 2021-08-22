@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/git/middleware"
+	remoteMocks "github.com/neel1996/gitconvex/git/remote/mocks"
 	"github.com/neel1996/gitconvex/graph/model"
 	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
@@ -21,8 +22,8 @@ type GetRemoteNameTestSuite struct {
 	remoteList           List
 	mockController       *gomock.Controller
 	mockRepo             *mocks.MockRepository
-	mockRemoteValidation *mocks.MockValidation
-	mockRemoteList       *mocks.MockList
+	mockRemoteValidation *remoteMocks.MockValidation
+	mockRemoteList       *remoteMocks.MockList
 	noHeadRepo           *git2go.Repository
 }
 
@@ -37,8 +38,8 @@ func (suite *GetRemoteNameTestSuite) SetupTest() {
 	suite.remoteList = NewRemoteList(suite.repo, suite.remoteValidation)
 	suite.mockController = gomock.NewController(suite.T())
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
-	suite.mockRemoteValidation = mocks.NewMockValidation(suite.mockController)
-	suite.mockRemoteList = mocks.NewMockList(suite.mockController)
+	suite.mockRemoteValidation = remoteMocks.NewMockValidation(suite.mockController)
+	suite.mockRemoteList = remoteMocks.NewMockList(suite.mockController)
 	suite.getRemoteName = NewGetRemoteName(
 		suite.mockRepo,
 		"https://github.com/neel1996/gitconvex-test.git",

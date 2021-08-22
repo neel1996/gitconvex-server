@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/git/middleware"
+	remoteMocks "github.com/neel1996/gitconvex/git/remote/mocks"
 	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
 	"os"
@@ -20,8 +21,8 @@ type RemoteDeleteTestSuite struct {
 	remoteValidation     Validation
 	mockController       *gomock.Controller
 	mockRepo             *mocks.MockRepository
-	mockRemoteValidation *mocks.MockValidation
-	mockRemotes          *mocks.MockRemotes
+	mockRemoteValidation *remoteMocks.MockValidation
+	mockRemotes          *remoteMocks.MockRemotes
 }
 
 func TestRemoteDeleteTestSuite(t *testing.T) {
@@ -51,8 +52,8 @@ func (suite *RemoteDeleteTestSuite) SetupTest() {
 
 	suite.mockController = gomock.NewController(suite.T())
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
-	suite.mockRemoteValidation = mocks.NewMockValidation(suite.mockController)
-	suite.mockRemotes = mocks.NewMockRemotes(suite.mockController)
+	suite.mockRemoteValidation = remoteMocks.NewMockValidation(suite.mockController)
+	suite.mockRemotes = remoteMocks.NewMockRemotes(suite.mockController)
 	suite.deleteRemote = NewDeleteRemote(suite.mockRepo, suite.remoteName, suite.mockRemoteValidation)
 }
 
