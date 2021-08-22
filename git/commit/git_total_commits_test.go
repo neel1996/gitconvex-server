@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
+	commitMocks "github.com/neel1996/gitconvex/git/commit/mocks"
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
@@ -21,7 +22,7 @@ type TotalCommitsTestSuite struct {
 	mockRepo          *mocks.MockRepository
 	mockWalker        *mocks.MockRevWalk
 	noHeadRepo        *git2go.Repository
-	mockAllCommitLogs *mocks.MockListAllLogs
+	mockAllCommitLogs *commitMocks.MockListAllLogs
 }
 
 func TestTotalCommitsTestSuite(t *testing.T) {
@@ -42,7 +43,7 @@ func (suite *TotalCommitsTestSuite) SetupTest() {
 	suite.noHeadRepo = noHeadRepo
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
 	suite.mockWalker = mocks.NewMockRevWalk(suite.mockController)
-	suite.mockAllCommitLogs = mocks.NewMockListAllLogs(suite.mockController)
+	suite.mockAllCommitLogs = commitMocks.NewMockListAllLogs(suite.mockController)
 	suite.total = NewTotalCommits(suite.mockAllCommitLogs)
 }
 

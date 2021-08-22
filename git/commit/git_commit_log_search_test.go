@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	git "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/constants"
+	commitMocks "github.com/neel1996/gitconvex/git/commit/mocks"
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/graph/model"
 	"github.com/neel1996/gitconvex/mocks"
@@ -19,8 +20,8 @@ type SearchLogsTestSuite struct {
 	suite.Suite
 	mockController  *gomock.Controller
 	mockRepo        *mocks.MockRepository
-	mockListLogs    *mocks.MockListAllLogs
-	mockFileHistory *mocks.MockFileHistory
+	mockListLogs    *commitMocks.MockListAllLogs
+	mockFileHistory *commitMocks.MockFileHistory
 	listAllLogs     ListAllLogs
 	mapper          Mapper
 	searchLogs      SearchLogs
@@ -42,8 +43,8 @@ func (suite *SearchLogsTestSuite) SetupTest() {
 	suite.mockController = gomock.NewController(suite.T())
 
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
-	suite.mockListLogs = mocks.NewMockListAllLogs(suite.mockController)
-	suite.mockFileHistory = mocks.NewMockFileHistory(suite.mockController)
+	suite.mockListLogs = commitMocks.NewMockListAllLogs(suite.mockController)
+	suite.mockFileHistory = commitMocks.NewMockFileHistory(suite.mockController)
 
 	suite.mapper = NewMapper(suite.mockFileHistory)
 	suite.searchLogs = NewSearchLogs(suite.mockRepo, suite.mockListLogs, suite.mapper)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
+	commitMocks "github.com/neel1996/gitconvex/git/commit/mocks"
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
@@ -17,7 +18,7 @@ type FileHistoryTestSuite struct {
 	mockController *gomock.Controller
 	repo           middleware.Repository
 	mockRepo       *mocks.MockRepository
-	mockCommit     *mocks.MockCommit
+	mockCommit     *commitMocks.MockCommit
 	fileHistory    FileHistory
 }
 
@@ -34,7 +35,7 @@ func (suite *FileHistoryTestSuite) SetupTest() {
 	suite.mockController = gomock.NewController(suite.T())
 	suite.repo = middleware.NewRepository(r)
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
-	suite.mockCommit = mocks.NewMockCommit(suite.mockController)
+	suite.mockCommit = commitMocks.NewMockCommit(suite.mockController)
 	suite.fileHistory = NewFileHistory(suite.mockRepo)
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	git2go "github.com/libgit2/git2go/v31"
+	commitMocks "github.com/neel1996/gitconvex/git/commit/mocks"
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
@@ -19,7 +20,7 @@ type CommitLogMapperTestSuite struct {
 	repo            middleware.Repository
 	mockRepo        *mocks.MockRepository
 	fileHistory     FileHistory
-	mockFileHistory *mocks.MockFileHistory
+	mockFileHistory *commitMocks.MockFileHistory
 	commits         []git2go.Commit
 	mapper          Mapper
 }
@@ -42,7 +43,7 @@ func (suite *CommitLogMapperTestSuite) SetupTest() {
 	suite.fileHistory = NewFileHistory(suite.repo)
 	suite.mockController = gomock.NewController(suite.T())
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
-	suite.mockFileHistory = mocks.NewMockFileHistory(suite.mockController)
+	suite.mockFileHistory = commitMocks.NewMockFileHistory(suite.mockController)
 
 	suite.mapper = NewMapper(suite.mockFileHistory)
 }
