@@ -14,7 +14,7 @@ jobs:
           brew install libssh2
           brew install libgit2
 
-  gitconvex-integration-test:
+  gitconvex-test:
     name: Gitconvex server test
     runs-on: ubuntu-latest
     env:
@@ -48,7 +48,7 @@ jobs:
 
   gitconvex-build:
     needs:
-      - gitconvex-integration-test
+      - gitconvex-test
       - libgit2-setup-test
 
     name: Gitconvex Build
@@ -77,7 +77,7 @@ jobs:
   gitconvex-mock-integration:
     needs:
       - libgit2-setup-test
-      - gitconvex-integration-test
+      - gitconvex-test
       - gitconvex-build
 
     name: Mocking Gitconvex Unified Repo Integration
@@ -104,7 +104,7 @@ jobs:
         run: |
           go get -v -t -d ./...
 
-      - name: Integration checkup
+      - name: Test deployment prep to integrated repo
         run: |
           export TARGET_BRANCH=${{ secrets.TARGET_BRANCH }}
           git clone https://github.com/neel1996/gitconvex-server.git $HOME/gitconvex-server
