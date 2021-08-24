@@ -35,6 +35,21 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// CreateBranch mocks base method.
+func (m *MockRepository) CreateBranch(arg0 string, arg1 *git.Commit, arg2 bool) (*git.Branch, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateBranch", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*git.Branch)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateBranch indicates an expected call of CreateBranch.
+func (mr *MockRepositoryMockRecorder) CreateBranch(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBranch", reflect.TypeOf((*MockRepository)(nil).CreateBranch), arg0, arg1, arg2)
+}
+
 // CreateCommit mocks base method.
 func (m *MockRepository) CreateCommit(s string, signature, signature2 *git.Signature, message string, tree *git.Tree, parents ...*git.Commit) (*git.Oid, error) {
 	m.ctrl.T.Helper()

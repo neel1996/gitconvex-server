@@ -12,6 +12,7 @@ type Repository interface {
 	Index() (Index, error)
 	CreateCommit(s string, signature *git.Signature, signature2 *git.Signature, message string, tree *git.Tree, parents ...*git.Commit) (*git.Oid, error)
 	DiffTreeToTree(tree *git.Tree, tree2 *git.Tree, options *git.DiffOptions) (*git.Diff, error)
+	CreateBranch(string, *git.Commit, bool) (*git.Branch, error)
 }
 
 type repository struct {
@@ -25,6 +26,10 @@ func (r repository) Remotes() Remotes {
 func (r repository) CreateCommit(s string, signature *git.Signature, signature2 *git.Signature,
 	message string, tree *git.Tree, parents ...*git.Commit) (*git.Oid, error) {
 	return r.repo.CreateCommit(s, signature, signature2, message, tree, parents...)
+}
+
+func (r repository) CreateBranch(branchName string, commit *git.Commit, force bool) (*git.Branch, error) {
+	return r.repo.CreateBranch(branchName, commit, force)
 }
 
 func (r repository) Head() (Reference, error) {
