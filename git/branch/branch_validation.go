@@ -5,20 +5,23 @@ import (
 )
 
 type Validation interface {
-	ValidateBranchFields() error
+	ValidateBranchFields(branchNames ...string) error
 }
 
 type validateBranch struct {
-	repo       middleware.Repository
-	branchName []string
+	repo middleware.Repository
 }
 
-func (v validateBranch) ValidateBranchFields() error {
+func (v validateBranch) ValidateBranchFields(branchNames ...string) error {
 	if v.repo == nil {
 		return NilRepoError
 	}
 
-	for _, branchName := range v.branchName {
+	if len(branchNames) == 0 {
+		return EmptyBranchNameError
+	}
+
+	for _, branchName := range branchNames {
 		if branchName == "" {
 			return EmptyBranchNameError
 		}
@@ -27,9 +30,8 @@ func (v validateBranch) ValidateBranchFields() error {
 	return nil
 }
 
-func NewBranchFieldsValidation(repo middleware.Repository, branchName ...string) Validation {
+func NewBranchFieldsValidation(repo middleware.Repository) Validation {
 	return validateBranch{
-		repo:       repo,
-		branchName: branchName,
+		repo: repo,
 	}
 }
