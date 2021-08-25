@@ -13,6 +13,7 @@ type Repository interface {
 	CreateCommit(s string, signature *git.Signature, signature2 *git.Signature, message string, tree *git.Tree, parents ...*git.Commit) (*git.Oid, error)
 	DiffTreeToTree(tree *git.Tree, tree2 *git.Tree, options *git.DiffOptions) (*git.Diff, error)
 	CreateBranch(string, *git.Commit, bool) (*git.Branch, error)
+	LookupBranch(name string, remote git.BranchType) (*git.Branch, error)
 }
 
 type repository struct {
@@ -50,6 +51,10 @@ func (r repository) Index() (Index, error) {
 
 func (r repository) LookupCommit(oid *git.Oid) (*git.Commit, error) {
 	return r.repo.LookupCommit(oid)
+}
+
+func (r repository) LookupBranch(branchName string, branchType git.BranchType) (*git.Branch, error) {
+	return r.repo.LookupBranch(branchName, branchType)
 }
 
 func (r repository) Walk() (RevWalk, error) {
