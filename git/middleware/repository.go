@@ -14,10 +14,20 @@ type Repository interface {
 	DiffTreeToTree(tree *git.Tree, tree2 *git.Tree, options *git.DiffOptions) (*git.Diff, error)
 	CreateBranch(string, *git.Commit, bool) (*git.Branch, error)
 	LookupBranch(name string, remote git.BranchType) (*git.Branch, error)
+	CheckoutTree(tree *git.Tree, c *git.CheckoutOptions) error
+	SetHead(name string) error
 }
 
 type repository struct {
 	repo *git.Repository
+}
+
+func (r repository) SetHead(name string) error {
+	return r.repo.SetHead(name)
+}
+
+func (r repository) CheckoutTree(tree *git.Tree, c *git.CheckoutOptions) error {
+	return r.repo.CheckoutTree(tree, c)
 }
 
 func (r repository) Remotes() Remotes {
@@ -57,6 +67,10 @@ func (r repository) LookupBranch(branchName string, branchType git.BranchType) (
 	return r.repo.LookupBranch(branchName, branchType)
 }
 
+func (r repository) LookupTree(id *git.Oid) (*git.Tree, error) {
+	return r.repo.LookupTree(id)
+}
+
 func (r repository) Walk() (RevWalk, error) {
 	walk, err := r.repo.Walk()
 
@@ -65,10 +79,6 @@ func (r repository) Walk() (RevWalk, error) {
 
 func (r repository) DefaultSignature() (*git.Signature, error) {
 	return r.repo.DefaultSignature()
-}
-
-func (r repository) LookupTree(id *git.Oid) (*git.Tree, error) {
-	return r.repo.LookupTree(id)
 }
 
 func (r repository) DiffTreeToTree(tree *git.Tree, tree2 *git.Tree, options *git.DiffOptions) (*git.Diff, error) {

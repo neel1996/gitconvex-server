@@ -35,6 +35,20 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// CheckoutTree mocks base method.
+func (m *MockRepository) CheckoutTree(tree *git.Tree, c *git.CheckoutOptions) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckoutTree", tree, c)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CheckoutTree indicates an expected call of CheckoutTree.
+func (mr *MockRepositoryMockRecorder) CheckoutTree(tree, c interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckoutTree", reflect.TypeOf((*MockRepository)(nil).CheckoutTree), tree, c)
+}
+
 // CreateBranch mocks base method.
 func (m *MockRepository) CreateBranch(arg0 string, arg1 *git.Commit, arg2 bool) (*git.Branch, error) {
 	m.ctrl.T.Helper()
@@ -130,6 +144,21 @@ func (mr *MockRepositoryMockRecorder) Index() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Index", reflect.TypeOf((*MockRepository)(nil).Index))
 }
 
+// LookupBranch mocks base method.
+func (m *MockRepository) LookupBranch(name string, remote git.BranchType) (*git.Branch, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LookupBranch", name, remote)
+	ret0, _ := ret[0].(*git.Branch)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LookupBranch indicates an expected call of LookupBranch.
+func (mr *MockRepositoryMockRecorder) LookupBranch(name, remote interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupBranch", reflect.TypeOf((*MockRepository)(nil).LookupBranch), name, remote)
+}
+
 // LookupCommit mocks base method.
 func (m *MockRepository) LookupCommit(oid *git.Oid) (*git.Commit, error) {
 	m.ctrl.T.Helper()
@@ -172,6 +201,20 @@ func (m *MockRepository) Remotes() middleware.Remotes {
 func (mr *MockRepositoryMockRecorder) Remotes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remotes", reflect.TypeOf((*MockRepository)(nil).Remotes))
+}
+
+// SetHead mocks base method.
+func (m *MockRepository) SetHead(name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetHead", name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetHead indicates an expected call of SetHead.
+func (mr *MockRepositoryMockRecorder) SetHead(name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetHead", reflect.TypeOf((*MockRepository)(nil).SetHead), name)
 }
 
 // Walk mocks base method.
