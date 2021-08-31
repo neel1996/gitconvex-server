@@ -7,6 +7,7 @@ type Repository interface {
 	Walk() (RevWalk, error)
 	Head() (Reference, error)
 	LookupCommit(oid *git.Oid) (*git.Commit, error)
+	LookupCommitV2(oid *git.Oid) (Commit, error)
 	DefaultSignature() (*git.Signature, error)
 	LookupTree(id *git.Oid) (*git.Tree, error)
 	Index() (Index, error)
@@ -63,6 +64,14 @@ func (r repository) Index() (Index, error) {
 
 func (r repository) LookupCommit(oid *git.Oid) (*git.Commit, error) {
 	return r.repo.LookupCommit(oid)
+}
+
+func (r repository) LookupCommitV2(oid *git.Oid) (Commit, error) {
+	gitCommit, err := r.repo.LookupCommit(oid)
+	if err != nil {
+		return nil, err
+	}
+	return NewCommit(gitCommit), nil
 }
 
 func (r repository) LookupBranch(branchName string, branchType git.BranchType) (*git.Branch, error) {

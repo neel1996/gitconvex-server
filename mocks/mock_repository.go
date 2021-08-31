@@ -203,6 +203,21 @@ func (mr *MockRepositoryMockRecorder) LookupCommit(oid interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupCommit", reflect.TypeOf((*MockRepository)(nil).LookupCommit), oid)
 }
 
+// LookupCommitV2 mocks base method.
+func (m *MockRepository) LookupCommitV2(oid *git.Oid) (middleware.Commit, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LookupCommitV2", oid)
+	ret0, _ := ret[0].(middleware.Commit)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LookupCommitV2 indicates an expected call of LookupCommitV2.
+func (mr *MockRepositoryMockRecorder) LookupCommitV2(oid interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupCommitV2", reflect.TypeOf((*MockRepository)(nil).LookupCommitV2), oid)
+}
+
 // LookupTree mocks base method.
 func (m *MockRepository) LookupTree(id *git.Oid) (*git.Tree, error) {
 	m.ctrl.T.Helper()

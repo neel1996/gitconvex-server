@@ -6,6 +6,7 @@ mockgen -source=git/middleware/walk.go -destination=mocks/mock_walk.go -package=
 mockgen -source=git/middleware/reference.go -destination=mocks/mock_reference.go -package=mocks
 mockgen -source=git/middleware/index.go -destination=mocks/mock_index.go -package=mocks
 mockgen -source=git/middleware/branch.go -destination=mocks/mock_branch.go -package=mocks
+mockgen -source=git/middleware/commit.go -destination=mocks/mock_commit.go -package=mocks
 
 # Commit mocks
 mockgen -source=git/commit/git_list_all_commit_logs.go -destination=git/commit/mocks/mock_git_list_all_commit_logs.go -package=mocks
