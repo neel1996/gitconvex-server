@@ -114,6 +114,20 @@ func (mr *MockRepositoryMockRecorder) DiffTreeToTree(tree, tree2, options interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DiffTreeToTree", reflect.TypeOf((*MockRepository)(nil).DiffTreeToTree), tree, tree2, options)
 }
 
+// GetGitRepository mocks base method.
+func (m *MockRepository) GetGitRepository() *git.Repository {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGitRepository")
+	ret0, _ := ret[0].(*git.Repository)
+	return ret0
+}
+
+// GetGitRepository indicates an expected call of GetGitRepository.
+func (mr *MockRepositoryMockRecorder) GetGitRepository() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGitRepository", reflect.TypeOf((*MockRepository)(nil).GetGitRepository))
+}
+
 // Head mocks base method.
 func (m *MockRepository) Head() (middleware.Reference, error) {
 	m.ctrl.T.Helper()
@@ -145,18 +159,33 @@ func (mr *MockRepositoryMockRecorder) Index() *gomock.Call {
 }
 
 // LookupBranch mocks base method.
-func (m *MockRepository) LookupBranch(name string, remote git.BranchType) (*git.Branch, error) {
+func (m *MockRepository) LookupBranch(branchName string, branchType git.BranchType) (*git.Branch, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupBranch", name, remote)
+	ret := m.ctrl.Call(m, "LookupBranch", branchName, branchType)
 	ret0, _ := ret[0].(*git.Branch)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LookupBranch indicates an expected call of LookupBranch.
-func (mr *MockRepositoryMockRecorder) LookupBranch(name, remote interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) LookupBranch(branchName, branchType interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupBranch", reflect.TypeOf((*MockRepository)(nil).LookupBranch), name, remote)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupBranch", reflect.TypeOf((*MockRepository)(nil).LookupBranch), branchName, branchType)
+}
+
+// LookupBranchV2 mocks base method.
+func (m *MockRepository) LookupBranchV2(branchName string, branchType git.BranchType) (middleware.Branch, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LookupBranchV2", branchName, branchType)
+	ret0, _ := ret[0].(middleware.Branch)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LookupBranchV2 indicates an expected call of LookupBranchV2.
+func (mr *MockRepositoryMockRecorder) LookupBranchV2(branchName, branchType interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupBranchV2", reflect.TypeOf((*MockRepository)(nil).LookupBranchV2), branchName, branchType)
 }
 
 // LookupCommit mocks base method.
