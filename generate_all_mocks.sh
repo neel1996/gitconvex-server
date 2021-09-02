@@ -10,10 +10,12 @@ mockgen -source=git/middleware/commit.go -destination=mocks/mock_commit.go -pack
 
 # Commit mocks
 mockgen -source=git/commit/git_list_all_commit_logs.go -destination=git/commit/mocks/mock_git_list_all_commit_logs.go -package=mocks
-mockgen -source=git/middleware/commit.go -destination=git/commit/mocks/mock_commit.go -package=mocks
 mockgen -source=git/commit/git_commit_file_history.go -destination=git/commit/mocks/mock_git_commit_file_history.go -package=mocks
 
 # Remote mocks
 mockgen -source=git/remote/remote_validation.go -destination=git/remote/mocks/mock_remote_validation.go -package=mocks
 mockgen -source=git/remote/git_remote_list.go -destination=git/remote/mocks/mock_git_remote_list.go -package=mocks
 mockgen -source=git/middleware/remotes.go -destination=git/remote/mocks/mock_remotes.go -package=mocks
+
+# Branch mocks
+mockgen -source=git/branch/git_branch_add.go  -destination=git/branch/mocks/git_branch_add.go -package=mocks

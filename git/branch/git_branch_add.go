@@ -1,5 +1,7 @@
 package branch
 
+//go:generate git/branch/git_branch_add.go
+
 import (
 	"fmt"
 	git2go "github.com/libgit2/git2go/v31"
@@ -9,6 +11,7 @@ import (
 
 type Add interface {
 	AddBranch() error
+	AddBranchV2(branchName string, remoteSwitch bool, targetCommit *git2go.Commit) error
 }
 
 type addBranch struct {
@@ -17,6 +20,15 @@ type addBranch struct {
 	remoteSwitch     bool
 	targetCommit     *git2go.Commit
 	branchValidation Validation
+}
+
+func (a addBranch) AddBranchV2(branchName string, remoteSwitch bool, targetCommit *git2go.Commit) error {
+	// TODO: Make this function the default add branch once the consumers are migrated
+	a.branchName = branchName
+	a.remoteSwitch = remoteSwitch
+	a.targetCommit = targetCommit
+
+	return a.AddBranch()
 }
 
 func (a addBranch) AddBranch() error {
@@ -77,6 +89,13 @@ func NewAddBranch(repo middleware.Repository, branchName string, remoteSwitch bo
 		branchName:       branchName,
 		remoteSwitch:     remoteSwitch,
 		targetCommit:     targetCommit,
+		branchValidation: branchValidation,
+	}
+}
+
+func NewAddBranchV2(repo middleware.Repository, branchValidation Validation) Add {
+	return addBranch{
+		repo:             repo,
 		branchValidation: branchValidation,
 	}
 }

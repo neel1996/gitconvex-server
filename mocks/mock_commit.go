@@ -35,6 +35,20 @@ func (m *MockCommit) EXPECT() *MockCommitMockRecorder {
 	return m.recorder
 }
 
+// GetGitCommit mocks base method.
+func (m *MockCommit) GetGitCommit() *git.Commit {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGitCommit")
+	ret0, _ := ret[0].(*git.Commit)
+	return ret0
+}
+
+// GetGitCommit indicates an expected call of GetGitCommit.
+func (mr *MockCommitMockRecorder) GetGitCommit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGitCommit", reflect.TypeOf((*MockCommit)(nil).GetGitCommit))
+}
+
 // Id mocks base method.
 func (m *MockCommit) Id() *git.Oid {
 	m.ctrl.T.Helper()

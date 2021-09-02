@@ -25,7 +25,9 @@ func (f factory) GetCheckoutAction() Checkout {
 	}
 
 	if strings.Contains(f.branchName, "remotes/") {
-		return NewCheckoutRemoteBranch(f.repo, f.branchName)
+		addBranch := branch.NewAddBranchV2(f.repo, f.branchValidation)
+
+		return NewCheckoutRemoteBranch(f.repo, f.branchName, addBranch)
 	} else {
 		return NewCheckOutLocalBranch(f.repo, f.branchName)
 	}

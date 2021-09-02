@@ -15,7 +15,7 @@ type CheckoutFactoryTestSuite struct {
 	repo                 middleware.Repository
 	branchName           string
 	remoteBranchName     string
-	branchValidation     branch.Validation
+	addBranch            branch.Add
 	mockController       *gomock.Controller
 	mockRepo             *mocks.MockRepository
 	mockBranchValidation *branchMocks.MockValidation
@@ -32,6 +32,7 @@ func (suite *CheckoutFactoryTestSuite) SetupTest() {
 	suite.mockBranchValidation = branchMocks.NewMockValidation(suite.mockController)
 	suite.branchName = "test_branch"
 	suite.remoteBranchName = "remotes/origin/test_branch"
+	suite.addBranch = branch.NewAddBranchV2(suite.mockRepo, suite.mockBranchValidation)
 }
 
 func (suite *CheckoutFactoryTestSuite) TearDownTest() {
@@ -54,7 +55,7 @@ func (suite *CheckoutFactoryTestSuite) TestGetCheckoutAction_WhenBranchIsRemote_
 
 	suite.mockBranchValidation.EXPECT().ValidateBranchFields(suite.remoteBranchName).Return(nil)
 
-	wantAction := NewCheckoutRemoteBranch(suite.mockRepo, suite.remoteBranchName)
+	wantAction := NewCheckoutRemoteBranch(suite.mockRepo, suite.remoteBranchName, suite.addBranch)
 	gotAction := suite.checkoutFactory.GetCheckoutAction()
 
 	suite.Equal(wantAction, gotAction)

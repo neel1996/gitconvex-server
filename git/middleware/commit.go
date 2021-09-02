@@ -7,10 +7,15 @@ type Commit interface {
 	Id() *git.Oid
 	Parent(uint) Commit
 	Tree() (*git.Tree, error)
+	GetGitCommit() *git.Commit
 }
 
 type commit struct {
 	gitCommit *git.Commit
+}
+
+func (c commit) GetGitCommit() *git.Commit {
+	return c.gitCommit
 }
 
 func (c commit) Tree() (*git.Tree, error) {
