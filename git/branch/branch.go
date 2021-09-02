@@ -2,6 +2,7 @@ package branch
 
 import (
 	"errors"
+	"github.com/neel1996/gitconvex/git/branch/checkout"
 	"github.com/neel1996/gitconvex/global"
 	"github.com/neel1996/gitconvex/graph/model"
 )
@@ -17,7 +18,7 @@ type Branch interface {
 
 type Operation struct {
 	Add      Add
-	Checkout Checkout
+	Checkout checkout.Checkout
 	Compare  Compare
 	Delete   Delete
 	List     List
