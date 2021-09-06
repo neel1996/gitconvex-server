@@ -7,11 +7,11 @@ import (
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/global"
+	"github.com/neel1996/gitconvex/validator"
 )
 
 type Add interface {
-	AddBranch() error
-	AddBranchV2(branchName string, remoteSwitch bool, targetCommit *git2go.Commit) error
+	AddBranch(branchName string, remoteSwitch bool, targetCommit *git2go.Commit) error
 }
 
 type addBranch struct {
@@ -19,19 +19,14 @@ type addBranch struct {
 	branchName       string
 	remoteSwitch     bool
 	targetCommit     *git2go.Commit
-	branchValidation Validation
+	branchValidation validator.ValidatorWithStringFields
 }
 
-func (a addBranch) AddBranchV2(branchName string, remoteSwitch bool, targetCommit *git2go.Commit) error {
-	// TODO: Make this function the default add branch once the consumers are migrated
+func (a addBranch) AddBranch(branchName string, remoteSwitch bool, targetCommit *git2go.Commit) error {
 	a.branchName = branchName
 	a.remoteSwitch = remoteSwitch
 	a.targetCommit = targetCommit
 
-	return a.AddBranch()
-}
-
-func (a addBranch) AddBranch() error {
 	err := a.validateAddBranchFields()
 	if err != nil {
 		logger.Log(err.Error(), global.StatusError)
@@ -63,7 +58,7 @@ func (a addBranch) AddBranch() error {
 }
 
 func (a addBranch) validateAddBranchFields() error {
-	err := a.branchValidation.ValidateBranchFields(a.branchName)
+	err := a.branchValidation.ValidateWithFields(a.branchName)
 	if err != nil {
 		return err
 	}
@@ -83,17 +78,7 @@ func (a addBranch) validateTargetCommit(targetCommit *git2go.Commit, repo middle
 	return headCommit, nil
 }
 
-func NewAddBranch(repo middleware.Repository, branchName string, remoteSwitch bool, targetCommit *git2go.Commit, branchValidation Validation) Add {
-	return addBranch{
-		repo:             repo,
-		branchName:       branchName,
-		remoteSwitch:     remoteSwitch,
-		targetCommit:     targetCommit,
-		branchValidation: branchValidation,
-	}
-}
-
-func NewAddBranchV2(repo middleware.Repository, branchValidation Validation) Add {
+func NewAddBranch(repo middleware.Repository, branchValidation validator.ValidatorWithStringFields) Add {
 	return addBranch{
 		repo:             repo,
 		branchValidation: branchValidation,
