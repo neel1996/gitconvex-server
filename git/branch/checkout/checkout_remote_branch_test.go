@@ -9,6 +9,7 @@ import (
 	branchMocks "github.com/neel1996/gitconvex/git/branch/mocks"
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/mocks"
+	"github.com/neel1996/gitconvex/validator"
 	"github.com/stretchr/testify/suite"
 	"os"
 	"testing"
@@ -25,9 +26,9 @@ type CheckOutRemoteBranchTestSuite struct {
 	remoteBranchName         string
 	localBranchName          string
 	localBranchReferenceName string
-	branchValidation         branch.Validation
-	mockValidation           *branchMocks.MockValidation
+	branchValidation         validator.ValidatorWithStringFields
 	addBranch                branch.Add
+	mockValidation           *branchMocks.MockValidation
 	mockAddBranch            *branchMocks.MockAdd
 	checkOutRemoteBranch     Checkout
 }
@@ -56,8 +57,8 @@ func (suite *CheckOutRemoteBranchTestSuite) SetupTest() {
 	suite.mockCommit = mocks.NewMockCommit(suite.mockController)
 	suite.mockValidation = branchMocks.NewMockValidation(suite.mockController)
 	suite.mockAddBranch = branchMocks.NewMockAdd(suite.mockController)
-	suite.branchValidation = branch.NewBranchFieldsValidation(suite.repo)
-	suite.addBranch = branch.NewAddBranchV2(suite.repo, suite.branchValidation)
+	suite.branchValidation = validator.NewBranchValidator()
+	suite.addBranch = branch.NewAddBranch(suite.repo, suite.branchValidation)
 
 	suite.checkOutRemoteBranch = NewCheckoutRemoteBranch(suite.mockRepo, suite.branchName, suite.mockAddBranch)
 }
@@ -67,7 +68,7 @@ func (suite *CheckOutRemoteBranchTestSuite) TearDownTest() {
 }
 
 func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenBranchIsValid_ShouldCheckoutLocalBranch() {
-	suite.checkOutRemoteBranch = NewCheckoutRemoteBranch(suite.repo, suite.branchName, suite.addBranch)
+	suite.checkOutRemoteBranch = NewCheckoutRemoteBranch(suite.repo, suite.branchName, nil)
 
 	err := suite.checkOutRemoteBranch.CheckoutBranch()
 
@@ -115,7 +116,7 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenCheckoutTreeF
 	suite.NotNil(err)
 }
 
-func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenLookupLocalBranch_ShouldAddNewLocalBranch() {
+func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenLookupLocalBranchFails_ShouldAddNewLocalBranch() {
 	gitCommit := &git2go.Commit{}
 
 	suite.mockRepo.EXPECT().LookupBranchV2(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
@@ -125,7 +126,7 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenLookupLocalBr
 	suite.mockRepo.EXPECT().CheckoutTree(gomock.Any(), gomock.Any()).Return(nil)
 	suite.mockRepo.EXPECT().LookupBranchV2(suite.localBranchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERROR"))
 	suite.mockCommit.EXPECT().GetGitCommit().Return(gitCommit)
-	suite.mockAddBranch.EXPECT().AddBranchV2(suite.branchName, false, gitCommit).Return(nil)
+	suite.mockAddBranch.EXPECT().AddBranch(suite.branchName, false, gitCommit).Return(nil)
 	suite.mockRepo.EXPECT().SetHead(suite.localBranchReferenceName).Return(nil)
 
 	err := suite.checkOutRemoteBranch.CheckoutBranch()
@@ -143,7 +144,7 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenLocalAddBranc
 	suite.mockRepo.EXPECT().CheckoutTree(gomock.Any(), gomock.Any()).Return(nil)
 	suite.mockRepo.EXPECT().LookupBranchV2(suite.localBranchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERROR"))
 	suite.mockCommit.EXPECT().GetGitCommit().Return(gitCommit)
-	suite.mockAddBranch.EXPECT().AddBranchV2(suite.branchName, false, gitCommit).Return(errors.New("ADD_ERROR"))
+	suite.mockAddBranch.EXPECT().AddBranch(suite.branchName, false, gitCommit).Return(errors.New("ADD_ERROR"))
 
 	err := suite.checkOutRemoteBranch.CheckoutBranch()
 
@@ -160,7 +161,7 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenSetHeadFailsA
 	suite.mockRepo.EXPECT().CheckoutTree(gomock.Any(), gomock.Any()).Return(nil)
 	suite.mockRepo.EXPECT().LookupBranchV2(suite.localBranchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERROR"))
 	suite.mockCommit.EXPECT().GetGitCommit().Return(gitCommit)
-	suite.mockAddBranch.EXPECT().AddBranchV2(suite.branchName, false, gitCommit).Return(nil)
+	suite.mockAddBranch.EXPECT().AddBranch(suite.branchName, false, gitCommit).Return(nil)
 	suite.mockRepo.EXPECT().SetHead(suite.localBranchReferenceName).Return(errors.New("SET_HEAD_ERROR"))
 
 	err := suite.checkOutRemoteBranch.CheckoutBranch()

@@ -64,7 +64,7 @@ func (c checkOutRemoteBranch) CheckoutBranch() error {
 func (c checkOutRemoteBranch) addAndCheckoutNewBranch(remoteCommit *git2go.Commit, referenceBranchName string) error {
 	logger.Log("Adding local branch for remote reference", global.StatusInfo)
 
-	branchAddError := c.addBranch.AddBranchV2(c.branchName, false, remoteCommit)
+	branchAddError := c.addBranch.AddBranch(c.branchName, false, remoteCommit)
 	if branchAddError != nil {
 		logger.Log("Error while adding branch "+branchAddError.Error(), global.StatusError)
 		return branchAddError
