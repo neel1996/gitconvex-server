@@ -1,25 +1,26 @@
 package checkout
 
 import (
+	"errors"
 	"github.com/golang/mock/gomock"
-	"github.com/neel1996/gitconvex/git/branch"
-	branchMocks "github.com/neel1996/gitconvex/git/branch/mocks"
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/mocks"
+	"github.com/neel1996/gitconvex/validator"
+	validatorMock "github.com/neel1996/gitconvex/validator/mocks"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
 type CheckoutFactoryTestSuite struct {
 	suite.Suite
-	repo                 middleware.Repository
-	branchName           string
-	remoteBranchName     string
-	addBranch            branch.Add
-	mockController       *gomock.Controller
-	mockRepo             *mocks.MockRepository
-	mockBranchValidation *branchMocks.MockValidation
-	checkoutFactory      Factory
+	repo                middleware.Repository
+	branchName          string
+	remoteBranchName    string
+	mockController      *gomock.Controller
+	mockRepo            *mocks.MockRepository
+	mockBranchValidator *validatorMock.MockValidatorWithStringFields
+	mockRepoValidator   *validatorMock.MockValidator
+	checkoutFactory     Factory
 }
 
 func TestCheckoutFactoryTestSuite(t *testing.T) {
@@ -29,10 +30,10 @@ func TestCheckoutFactoryTestSuite(t *testing.T) {
 func (suite *CheckoutFactoryTestSuite) SetupTest() {
 	suite.mockController = gomock.NewController(suite.T())
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
-	suite.mockBranchValidation = branchMocks.NewMockValidation(suite.mockController)
+	suite.mockBranchValidator = validatorMock.NewMockValidatorWithStringFields(suite.mockController)
+	suite.mockRepoValidator = validatorMock.NewMockValidator(suite.mockController)
 	suite.branchName = "test_branch"
 	suite.remoteBranchName = "remotes/origin/test_branch"
-	suite.addBranch = branch.NewAddBranchV2(suite.mockRepo, suite.mockBranchValidation)
 }
 
 func (suite *CheckoutFactoryTestSuite) TearDownTest() {
@@ -40,9 +41,10 @@ func (suite *CheckoutFactoryTestSuite) TearDownTest() {
 }
 
 func (suite *CheckoutFactoryTestSuite) TestGetCheckoutAction_WhenBranchIsLocal_ShouldReturnLocalCheckoutAction() {
-	suite.checkoutFactory = NewCheckoutFactory(suite.mockRepo, suite.branchName, suite.mockBranchValidation)
+	suite.checkoutFactory = NewCheckoutFactory(suite.mockRepo, suite.branchName, suite.mockRepoValidator, suite.mockBranchValidator)
 
-	suite.mockBranchValidation.EXPECT().ValidateBranchFields(suite.branchName).Return(nil)
+	suite.mockRepoValidator.EXPECT().Validate().Return(nil)
+	suite.mockBranchValidator.EXPECT().ValidateWithFields(suite.branchName).Return(nil)
 
 	wantAction := NewCheckOutLocalBranch(suite.mockRepo, suite.branchName)
 	gotAction := suite.checkoutFactory.GetCheckoutAction()
@@ -51,20 +53,32 @@ func (suite *CheckoutFactoryTestSuite) TestGetCheckoutAction_WhenBranchIsLocal_S
 }
 
 func (suite *CheckoutFactoryTestSuite) TestGetCheckoutAction_WhenBranchIsRemote_ShouldReturnRemoteCheckoutAction() {
-	suite.checkoutFactory = NewCheckoutFactory(suite.mockRepo, suite.remoteBranchName, suite.mockBranchValidation)
+	suite.checkoutFactory = NewCheckoutFactory(suite.mockRepo, suite.remoteBranchName, suite.mockRepoValidator, suite.mockBranchValidator)
 
-	suite.mockBranchValidation.EXPECT().ValidateBranchFields(suite.remoteBranchName).Return(nil)
+	suite.mockRepoValidator.EXPECT().Validate().Return(nil)
+	suite.mockBranchValidator.EXPECT().ValidateWithFields(suite.remoteBranchName).Return(nil)
 
-	wantAction := NewCheckoutRemoteBranch(suite.mockRepo, suite.remoteBranchName, suite.addBranch)
+	wantAction := NewCheckoutRemoteBranch(suite.mockRepo, suite.remoteBranchName, nil)
 	gotAction := suite.checkoutFactory.GetCheckoutAction()
 
 	suite.Equal(wantAction, gotAction)
 }
 
-func (suite *CheckoutFactoryTestSuite) TestGetCheckoutAction_WhenBranchValidationFails_ShouldReturnNil() {
-	suite.checkoutFactory = NewCheckoutFactory(suite.mockRepo, "", suite.mockBranchValidation)
+func (suite *CheckoutFactoryTestSuite) TestGetCheckoutAction_WhenRepoValidationFails_ShouldReturnNil() {
+	suite.checkoutFactory = NewCheckoutFactory(suite.mockRepo, "", suite.mockRepoValidator, suite.mockBranchValidator)
 
-	suite.mockBranchValidation.EXPECT().ValidateBranchFields("").Return(branch.EmptyBranchNameError)
+	suite.mockRepoValidator.EXPECT().Validate().Return(validator.NilRepoError)
+
+	gotAction := suite.checkoutFactory.GetCheckoutAction()
+
+	suite.Nil(gotAction)
+}
+
+func (suite *CheckoutFactoryTestSuite) TestGetCheckoutAction_WhenBranchValidationFails_ShouldReturnNil() {
+	suite.checkoutFactory = NewCheckoutFactory(suite.mockRepo, "", suite.mockRepoValidator, suite.mockBranchValidator)
+
+	suite.mockRepoValidator.EXPECT().Validate().Return(nil)
+	suite.mockBranchValidator.EXPECT().ValidateWithFields("").Return(errors.New("VALIDATE_ERROR"))
 
 	gotAction := suite.checkoutFactory.GetCheckoutAction()
 
