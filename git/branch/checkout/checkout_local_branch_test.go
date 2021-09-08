@@ -8,6 +8,7 @@ import (
 	"github.com/neel1996/gitconvex/git/branch"
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/mocks"
+	"github.com/neel1996/gitconvex/test_utils"
 	"github.com/stretchr/testify/suite"
 	"os"
 	"testing"
@@ -37,13 +38,7 @@ func (suite *CheckOutLocalBranchTestSuite) SetupSuite() {
 	suite.repo = middleware.NewRepository(r)
 	suite.branchName = "test_checkout"
 
-	_ = branch.NewAddBranch(
-		suite.repo,
-		suite.branchName,
-		false,
-		nil,
-		branch.NewBranchFieldsValidation(suite.repo),
-	).AddBranch()
+	test_utils.AddNewTestLocalBranch(suite.repo, suite.branchName)
 }
 
 func (suite *CheckOutLocalBranchTestSuite) TearDownSuite() {
