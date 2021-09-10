@@ -9,48 +9,46 @@ import (
 )
 
 type Factory interface {
-	GetCheckoutAction() Checkout
+	GetCheckoutAction(branchName string) Checkout
 }
 
 type factory struct {
 	repo            middleware.Repository
-	branchName      string
 	repoValidator   validator.Validator
 	branchValidator validator.ValidatorWithStringFields
 }
 
-func (f factory) GetCheckoutAction() Checkout {
-	logger.Log(fmt.Sprintf("Received branch %s", f.branchName), global.StatusInfo)
+func (f factory) GetCheckoutAction(branchName string) Checkout {
+	logger.Log(fmt.Sprintf("Received branch %s", branchName), global.StatusInfo)
 	if repoValidationErr := f.repoValidator.Validate(); repoValidationErr != nil {
 		logger.Log(repoValidationErr.Error(), global.StatusError)
 		return nil
 	}
 
-	if validationErr := f.validateBranchFields(); validationErr != nil {
+	if validationErr := f.validateBranchFields(branchName); validationErr != nil {
 		return nil
 	}
 
-	if strings.Contains(f.branchName, "remotes/") {
-		return NewCheckoutRemoteBranch(f.repo, f.branchName, nil)
+	if strings.Contains(branchName, "remotes/") {
+		return NewCheckoutRemoteBranch(f.repo, branchName, nil)
 	} else {
-		return NewCheckOutLocalBranch(f.repo, f.branchName)
+		return NewCheckOutLocalBranch(f.repo, branchName)
 	}
 }
 
-func (f factory) validateBranchFields() error {
+func (f factory) validateBranchFields(branchName string) error {
 	logger.Log("Validating branch fields before checkout", global.StatusInfo)
 
-	if err := f.branchValidator.ValidateWithFields(f.branchName); err != nil {
+	if err := f.branchValidator.ValidateWithFields(branchName); err != nil {
 		logger.Log(err.Error(), global.StatusError)
 		return err
 	}
 	return nil
 }
 
-func NewCheckoutFactory(repo middleware.Repository, branchName string, repoValidator validator.Validator, branchValidator validator.ValidatorWithStringFields) Factory {
+func NewCheckoutFactory(repo middleware.Repository, repoValidator validator.Validator, branchValidator validator.ValidatorWithStringFields) Factory {
 	return factory{
 		repo:            repo,
-		branchName:      branchName,
 		repoValidator:   repoValidator,
 		branchValidator: branchValidator,
 	}
