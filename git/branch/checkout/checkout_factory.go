@@ -20,7 +20,7 @@ type factory struct {
 
 func (f factory) GetCheckoutAction(branchName string) Checkout {
 	logger.Log(fmt.Sprintf("Received branch %s", branchName), global.StatusInfo)
-	if repoValidationErr := f.repoValidator.Validate(); repoValidationErr != nil {
+	if repoValidationErr := f.repoValidator.Validate(f.repo); repoValidationErr != nil {
 		logger.Log(repoValidationErr.Error(), global.StatusError)
 		return nil
 	}

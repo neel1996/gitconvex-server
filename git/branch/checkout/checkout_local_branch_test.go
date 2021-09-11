@@ -9,6 +9,7 @@ import (
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/mocks"
 	"github.com/neel1996/gitconvex/test_utils"
+	"github.com/neel1996/gitconvex/validator"
 	"github.com/stretchr/testify/suite"
 	"os"
 	"testing"
@@ -42,7 +43,7 @@ func (suite *CheckOutLocalBranchTestSuite) SetupSuite() {
 }
 
 func (suite *CheckOutLocalBranchTestSuite) TearDownSuite() {
-	branch.NewDeleteBranch(suite.repo.GetGitRepository(), suite.branchName)
+	branch.NewDeleteBranch(suite.repo, validator.NewBranchValidator())
 }
 
 func (suite *CheckOutLocalBranchTestSuite) SetupTest() {
