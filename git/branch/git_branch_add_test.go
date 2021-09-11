@@ -55,8 +55,7 @@ func (suite *BranchAddTestSuite) SetupTest() {
 }
 
 func (suite *BranchAddTestSuite) TearDownSuite() {
-	r, _ := git2go.OpenRepository(os.Getenv("GITCONVEX_TEST_REPO"))
-	_ = NewDeleteBranch(r, suite.branchName).DeleteBranch()
+	_ = NewDeleteBranch(suite.repo, validator.NewBranchValidator()).DeleteBranch(suite.branchName)
 	suite.mockController.Finish()
 }
 

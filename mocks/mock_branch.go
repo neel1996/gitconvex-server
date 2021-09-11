@@ -34,6 +34,20 @@ func (m *MockBranch) EXPECT() *MockBranchMockRecorder {
 	return m.recorder
 }
 
+// Delete mocks base method.
+func (m *MockBranch) Delete() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockBranchMockRecorder) Delete() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockBranch)(nil).Delete))
+}
+
 // Target mocks base method.
 func (m *MockBranch) Target() *git.Oid {
 	m.ctrl.T.Helper()

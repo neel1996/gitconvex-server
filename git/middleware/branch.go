@@ -4,10 +4,15 @@ import git2go "github.com/libgit2/git2go/v31"
 
 type Branch interface {
 	Target() *git2go.Oid
+	Delete() error
 }
 
 type branch struct {
 	branch *git2go.Branch
+}
+
+func (b branch) Delete() error {
+	return b.branch.Delete()
 }
 
 func (b branch) Target() *git2go.Oid {

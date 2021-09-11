@@ -35,29 +35,15 @@ func (m *MockAdd) EXPECT() *MockAddMockRecorder {
 }
 
 // AddBranch mocks base method.
-func (m *MockAdd) AddBranch() error {
+func (m *MockAdd) AddBranch(branchName string, remoteSwitch bool, targetCommit *git.Commit) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddBranch")
+	ret := m.ctrl.Call(m, "AddBranch", branchName, remoteSwitch, targetCommit)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddBranch indicates an expected call of AddBranch.
-func (mr *MockAddMockRecorder) AddBranch() *gomock.Call {
+func (mr *MockAddMockRecorder) AddBranch(branchName, remoteSwitch, targetCommit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBranch", reflect.TypeOf((*MockAdd)(nil).AddBranch))
-}
-
-// AddBranchV2 mocks base method.
-func (m *MockAdd) AddBranchV2(branchName string, remoteSwitch bool, targetCommit *git.Commit) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddBranchV2", branchName, remoteSwitch, targetCommit)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AddBranchV2 indicates an expected call of AddBranchV2.
-func (mr *MockAddMockRecorder) AddBranchV2(branchName, remoteSwitch, targetCommit interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBranchV2", reflect.TypeOf((*MockAdd)(nil).AddBranchV2), branchName, remoteSwitch, targetCommit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBranch", reflect.TypeOf((*MockAdd)(nil).AddBranch), branchName, remoteSwitch, targetCommit)
 }
