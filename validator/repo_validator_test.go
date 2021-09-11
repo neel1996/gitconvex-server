@@ -21,7 +21,7 @@ func TestRepoValidatorTestSuite(t *testing.T) {
 func (suite *RepoValidatorTestSuite) SetupTest() {
 	suite.mockController = gomock.NewController(suite.T())
 	suite.mockRepo = mocks.NewMockRepository(suite.mockController)
-	suite.repoValidator = NewRepoValidator(suite.mockRepo)
+	suite.repoValidator = NewRepoValidator()
 }
 
 func (suite *RepoValidatorTestSuite) TearDownTest() {
@@ -29,15 +29,15 @@ func (suite *RepoValidatorTestSuite) TearDownTest() {
 }
 
 func (suite *RepoValidatorTestSuite) TestValidate_WhenRepoIsNotNil_ShouldReturnNil() {
-	err := suite.repoValidator.Validate()
+	err := suite.repoValidator.Validate(suite.mockRepo)
 
 	suite.Nil(err)
 }
 
 func (suite *RepoValidatorTestSuite) TestValidate_WhenRepoIsNil_ShouldReturnRepoNilError() {
-	suite.repoValidator = NewRepoValidator(nil)
+	suite.repoValidator = NewRepoValidator()
 
-	err := suite.repoValidator.Validate()
+	err := suite.repoValidator.Validate(nil)
 
 	suite.NotNil(err)
 	suite.Equal(NilRepoError, err)

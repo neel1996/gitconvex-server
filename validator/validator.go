@@ -1,7 +1,7 @@
 package validator
 
 type Validator interface {
-	Validate() error
+	Validate(interface{}) error
 }
 
 type ValidatorWithStringFields interface {
