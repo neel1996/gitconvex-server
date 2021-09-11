@@ -18,4 +18,7 @@ mockgen -source=git/remote/git_remote_list.go -destination=git/remote/mocks/mock
 mockgen -source=git/middleware/remotes.go -destination=git/remote/mocks/mock_remotes.go -package=mocks
 
 # Branch mocks
-mockgen -source=git/branch/git_branch_add.go  -destination=git/branch/mocks/git_branch_add.go -package=mocks
+mockgen -source=git/branch/git_branch_add.go  -destination=git/branch/mocks/mock_git_branch_add.go -package=mocks
+
+# Validator mocks
+mockgen -source=validator/validator.go -destination=validator/mocks/mock_validator.go -package=mocks
