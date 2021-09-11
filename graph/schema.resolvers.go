@@ -45,16 +45,13 @@ func (r *mutationResolver) AddBranch(ctx context.Context, repoID string, branchN
 	repoObject = git.RepoStruct{RepoId: repoID}
 	go repoObject.Repo(repoChan)
 	repo := <-repoChan
-	if repo.GitRepo == nil {
-		logger.Log("Repo is invalid. Branch addition failed", global.StatusError)
+
+	branchController := r.BranchController(ctx, middleware.NewRepository(repo.GitRepo))
+	if branchController == nil {
 		return global.BranchAddError, nil
 	}
 
-	addBranch := branch.NewAddBranch(repo.GitRepo, branchName, false, nil)
-	b := branch.Operation{
-		Add: addBranch,
-	}
-	return b.GitAddBranch()
+	return branchController.GitAddBranch(branchName, false, nil)
 }
 
 func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, branchName string) (string, error) {
@@ -67,16 +64,13 @@ func (r *mutationResolver) CheckoutBranch(ctx context.Context, repoID string, br
 	go repoObject.Repo(repoChan)
 
 	repo := <-repoChan
-	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
-		logger.Log("Repository is invalid or HEAD is null", global.StatusError)
+
+	branchController := r.BranchController(ctx, middleware.NewRepository(repo.GitRepo))
+	if branchController == nil {
 		return global.BranchCheckoutError, nil
 	}
 
-	checkOutBranch := branch.NewBranchCheckout(repo.GitRepo, branchName)
-	b := branch.Operation{
-		Checkout: checkOutBranch,
-	}
-	return b.GitCheckoutBranch()
+	return branchController.GitCheckoutBranch(branchName)
 }
 
 func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, branchName string, forceFlag bool) (*model.BranchDeleteStatus, error) {
@@ -87,18 +81,15 @@ func (r *mutationResolver) DeleteBranch(ctx context.Context, repoID string, bran
 	repoObject = git.RepoStruct{RepoId: repoID}
 	go repoObject.Repo(repoChan)
 	repo := <-repoChan
-	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
-		logger.Log("Repo is invalid or HEAD is null", global.StatusError)
+
+	branchController := r.BranchController(ctx, middleware.NewRepository(repo.GitRepo))
+	if branchController == nil {
 		return &model.BranchDeleteStatus{
 			Status: global.BranchDeleteError,
 		}, nil
 	}
 
-	deleteBranch := branch.NewDeleteBranch(repo.GitRepo, branchName)
-	b := branch.Operation{
-		Delete: deleteBranch,
-	}
-	return b.GitDeleteBranch()
+	return branchController.GitDeleteBranch(branchName)
 }
 
 func (r *mutationResolver) FetchFromRemote(ctx context.Context, repoID string, remoteURL *string, remoteBranch *string) (*model.FetchResult, error) {
@@ -118,9 +109,6 @@ func (r *mutationResolver) FetchFromRemote(ctx context.Context, repoID string, r
 			FetchedItems: nil,
 		}, nil
 	}
-
-	context.WithValue(ctx, initialize.Repo, repo.GitRepo)
-	context.WithValue(ctx, initialize.RemoteUrl, remoteURL)
 
 	remoteName := initialize.RemoteObjects(ctx).RemoteName
 
@@ -274,7 +262,6 @@ func (r *mutationResolver) PushToRemote(ctx context.Context, repoID string, remo
 	go repoObject.Repo(repoChan)
 	repo := <-repoChan
 
-	context.WithValue(ctx, initialize.Repo, repo.GitRepo)
 	remoteName := initialize.RemoteObjects(ctx).RemoteName.GetRemoteNameWithUrl()
 
 	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil || remoteName == "" {
@@ -330,10 +317,6 @@ func (r *mutationResolver) AddRemote(ctx context.Context, repoID string, remoteN
 		return &model.RemoteMutationResult{Status: global.RemoteAddError}, nil
 	}
 
-	context.WithValue(ctx, initialize.Repo, repo.GitRepo)
-	context.WithValue(ctx, initialize.RemoteName, remoteName)
-	context.WithValue(ctx, initialize.RemoteUrl, remoteURL)
-
 	addRemote := initialize.RemoteObjects(ctx).AddRemote
 	remoteObject := remote.Operation{Add: addRemote}
 
@@ -352,9 +335,6 @@ func (r *mutationResolver) DeleteRemote(ctx context.Context, repoID string, remo
 		logger.Log("Repo is invalid", global.StatusError)
 		return &model.RemoteMutationResult{Status: global.RemoteAddError}, nil
 	}
-
-	context.WithValue(ctx, initialize.Repo, repo.GitRepo)
-	context.WithValue(ctx, initialize.RemoteName, remoteName)
 
 	deleteRemote := initialize.RemoteObjects(ctx).DeleteRemote
 
@@ -378,9 +358,6 @@ func (r *mutationResolver) EditRemote(ctx context.Context, repoID string, remote
 		logger.Log("Repo is invalid", global.StatusError)
 		return &model.RemoteMutationResult{Status: constants.RemoteEditError.Error()}, nil
 	}
-
-	context.WithValue(ctx, initialize.Repo, repo.GitRepo)
-	context.WithValue(ctx, initialize.RemoteName, remoteName)
 
 	editRemote := initialize.RemoteObjects(ctx).EditRemote
 	editRemoteObject := remote.Operation{
@@ -515,7 +492,6 @@ func (r *queryResolver) GitUnPushedCommits(ctx context.Context, repoID string, r
 		return nil, nil
 	}
 
-	context.WithValue(ctx, initialize.Repo, repo.GitRepo)
 	remoteName := initialize.RemoteObjects(ctx).RemoteName.GetRemoteNameWithUrl()
 
 	remoteRef := remoteName + "/" + remoteBranch
@@ -613,11 +589,8 @@ func (r *queryResolver) BranchCompare(ctx context.Context, repoID string, baseBr
 		}, nil
 	}
 
-	branchCompare := branch.NewBranchCompare(repo.GitRepo, baseBranch, compareBranch)
-	b := branch.Operation{
-		Compare: branchCompare,
-	}
-	return b.GitCompareBranches()
+	branchCompare := branch.NewBranchCompare(middleware.NewRepository(repo.GitRepo), baseBranch, compareBranch, nil)
+	return branchCompare.CompareBranch(), nil
 }
 
 func (r *queryResolver) GetRemote(ctx context.Context, repoID string) ([]*model.RemoteDetails, error) {
@@ -627,9 +600,7 @@ func (r *queryResolver) GetRemote(ctx context.Context, repoID string) ([]*model.
 	var repoObject git.RepoInterface
 	repoObject = git.RepoStruct{RepoId: repoID}
 	go repoObject.Repo(repoChan)
-	repo := <-repoChan
-
-	context.WithValue(ctx, initialize.Repo, repo.GitRepo)
+	//repo := <-repoChan
 
 	listRemote := initialize.RemoteObjects(ctx).ListRemote
 	remoteUrlList := remote.Operation{List: listRemote}
