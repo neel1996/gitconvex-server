@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	git2go "github.com/libgit2/git2go/v31"
 	"github.com/neel1996/gitconvex/git/branch"
 	"github.com/neel1996/gitconvex/git/branch/checkout"
@@ -14,7 +13,7 @@ type BranchController interface {
 	GitAddBranch(branchName string, isRemoteBranch bool, targetCommit *git2go.Commit) (string, error)
 	GitCheckoutBranch(branchName string) (string, error)
 	GitDeleteBranch(branchName string) (*model.BranchDeleteStatus, error)
-	GitCompareBranches() ([]*model.BranchCompareResults, error)
+	GitCompareBranches(baseBranch string, compareBranch string) ([]*model.BranchCompareResults, error)
 	GitListBranches() (model.ListOfBranches, error)
 }
 
@@ -46,14 +45,8 @@ func (b branchController) GitCheckoutBranch(branchName string) (string, error) {
 	return global.BranchCheckoutSuccess, nil
 }
 
-func (b branchController) GitCompareBranches() ([]*model.BranchCompareResults, error) {
-	branchDiff := b.compare.CompareBranch()
-
-	if len(branchDiff) == 0 {
-		return []*model.BranchCompareResults{}, errors.New("no difference between the two branches")
-	}
-
-	return branchDiff, nil
+func (b branchController) GitCompareBranches(baseBranch string, compareBranch string) ([]*model.BranchCompareResults, error) {
+	return b.compare.CompareBranch(baseBranch, compareBranch)
 }
 
 func (b branchController) GitDeleteBranch(branchName string) (*model.BranchDeleteStatus, error) {

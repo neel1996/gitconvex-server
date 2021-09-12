@@ -9,6 +9,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	git "github.com/libgit2/git2go/v31"
+	middleware "github.com/neel1996/gitconvex/git/middleware"
 )
 
 // MockBranch is a mock of Branch interface.
@@ -34,6 +35,20 @@ func (m *MockBranch) EXPECT() *MockBranchMockRecorder {
 	return m.recorder
 }
 
+// Cmp mocks base method.
+func (m *MockBranch) Cmp(r middleware.Reference) int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Cmp", r)
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Cmp indicates an expected call of Cmp.
+func (mr *MockBranchMockRecorder) Cmp(r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cmp", reflect.TypeOf((*MockBranch)(nil).Cmp), r)
+}
+
 // Delete mocks base method.
 func (m *MockBranch) Delete() error {
 	m.ctrl.T.Helper()
@@ -46,6 +61,20 @@ func (m *MockBranch) Delete() error {
 func (mr *MockBranchMockRecorder) Delete() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockBranch)(nil).Delete))
+}
+
+// Reference mocks base method.
+func (m *MockBranch) Reference() middleware.Reference {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Reference")
+	ret0, _ := ret[0].(middleware.Reference)
+	return ret0
+}
+
+// Reference indicates an expected call of Reference.
+func (mr *MockBranchMockRecorder) Reference() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reference", reflect.TypeOf((*MockBranch)(nil).Reference))
 }
 
 // Target mocks base method.

@@ -35,6 +35,20 @@ func (m *MockCommit) EXPECT() *MockCommitMockRecorder {
 	return m.recorder
 }
 
+// Author mocks base method.
+func (m *MockCommit) Author() *git.Signature {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Author")
+	ret0, _ := ret[0].(*git.Signature)
+	return ret0
+}
+
+// Author indicates an expected call of Author.
+func (mr *MockCommitMockRecorder) Author() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Author", reflect.TypeOf((*MockCommit)(nil).Author))
+}
+
 // GetGitCommit mocks base method.
 func (m *MockCommit) GetGitCommit() *git.Commit {
 	m.ctrl.T.Helper()
@@ -61,6 +75,20 @@ func (m *MockCommit) Id() *git.Oid {
 func (mr *MockCommitMockRecorder) Id() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Id", reflect.TypeOf((*MockCommit)(nil).Id))
+}
+
+// Message mocks base method.
+func (m *MockCommit) Message() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Message")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Message indicates an expected call of Message.
+func (mr *MockCommitMockRecorder) Message() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Message", reflect.TypeOf((*MockCommit)(nil).Message))
 }
 
 // Parent mocks base method.

@@ -10,7 +10,6 @@ import (
 	"github.com/neel1996/gitconvex/constants"
 	"github.com/neel1996/gitconvex/controller"
 	"github.com/neel1996/gitconvex/git"
-	"github.com/neel1996/gitconvex/git/branch"
 	"github.com/neel1996/gitconvex/git/commit"
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/git/remote"
@@ -579,8 +578,9 @@ func (r *queryResolver) BranchCompare(ctx context.Context, repoID string, baseBr
 	repoObject = git.RepoStruct{RepoId: repoID}
 	go repoObject.Repo(repoChan)
 	repo := <-repoChan
-	if head, _ := repo.GitRepo.Head(); repo.GitRepo == nil || head == nil {
-		logger.Log("Repo is invalid or HEAD is nil", global.StatusError)
+
+	branchController := r.BranchController(ctx, middleware.NewRepository(repo.GitRepo))
+	if branchController == nil {
 		return []*model.BranchCompareResults{
 			{
 				Date:    "",
@@ -589,8 +589,8 @@ func (r *queryResolver) BranchCompare(ctx context.Context, repoID string, baseBr
 		}, nil
 	}
 
-	branchCompare := branch.NewBranchCompare(middleware.NewRepository(repo.GitRepo), baseBranch, compareBranch, nil)
-	return branchCompare.CompareBranch(), nil
+	return branchController.GitCompareBranches(baseBranch, compareBranch)
+
 }
 
 func (r *queryResolver) GetRemote(ctx context.Context, repoID string) ([]*model.RemoteDetails, error) {
