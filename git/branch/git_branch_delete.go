@@ -26,7 +26,7 @@ func (d deleteBranch) DeleteBranch(branchName string) error {
 		return validationErr
 	}
 
-	branch, deleteBranchErr := repo.LookupBranchV2(branchName, git2go.BranchLocal)
+	branch, deleteBranchErr := repo.LookupBranch(branchName, git2go.BranchLocal)
 	if deleteBranchErr != nil {
 		logger.Log(fmt.Sprintf("Failed to delete branch %s -> %v", branchName, deleteBranchErr.Error()), global.StatusError)
 		return deleteBranchErr

@@ -159,10 +159,10 @@ func (mr *MockRepositoryMockRecorder) Index() *gomock.Call {
 }
 
 // LookupBranch mocks base method.
-func (m *MockRepository) LookupBranch(branchName string, branchType git.BranchType) (*git.Branch, error) {
+func (m *MockRepository) LookupBranch(branchName string, branchType git.BranchType) (middleware.Branch, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LookupBranch", branchName, branchType)
-	ret0, _ := ret[0].(*git.Branch)
+	ret0, _ := ret[0].(middleware.Branch)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -171,21 +171,6 @@ func (m *MockRepository) LookupBranch(branchName string, branchType git.BranchTy
 func (mr *MockRepositoryMockRecorder) LookupBranch(branchName, branchType interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupBranch", reflect.TypeOf((*MockRepository)(nil).LookupBranch), branchName, branchType)
-}
-
-// LookupBranchV2 mocks base method.
-func (m *MockRepository) LookupBranchV2(branchName string, branchType git.BranchType) (middleware.Branch, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupBranchV2", branchName, branchType)
-	ret0, _ := ret[0].(middleware.Branch)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// LookupBranchV2 indicates an expected call of LookupBranchV2.
-func (mr *MockRepositoryMockRecorder) LookupBranchV2(branchName, branchType interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupBranchV2", reflect.TypeOf((*MockRepository)(nil).LookupBranchV2), branchName, branchType)
 }
 
 // LookupCommit mocks base method.

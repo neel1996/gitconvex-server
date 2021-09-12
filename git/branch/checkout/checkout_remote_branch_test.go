@@ -76,7 +76,7 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenBranchIsValid
 }
 
 func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenBranchLookupFails_ShouldReturnError() {
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.remoteBranchName, git2go.BranchRemote).Return(nil, errors.New("LOOKUP_ERROR"))
+	suite.mockRepo.EXPECT().LookupBranch(suite.remoteBranchName, git2go.BranchRemote).Return(nil, errors.New("LOOKUP_ERROR"))
 
 	err := suite.checkOutRemoteBranch.CheckoutBranch()
 
@@ -84,7 +84,7 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenBranchLookupF
 }
 
 func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenCommitLookupFails_ShouldReturnError() {
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
+	suite.mockRepo.EXPECT().LookupBranch(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
 	suite.mockBranch.EXPECT().Target().Return(&git2go.Oid{})
 	suite.mockRepo.EXPECT().LookupCommitV2(gomock.Any()).Return(nil, errors.New("LOOKUP_ERROR"))
 
@@ -94,7 +94,7 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenCommitLookupF
 }
 
 func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenFetchCommitTreeFails_ShouldReturnError() {
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
+	suite.mockRepo.EXPECT().LookupBranch(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
 	suite.mockBranch.EXPECT().Target().Return(&git2go.Oid{})
 	suite.mockRepo.EXPECT().LookupCommitV2(gomock.Any()).Return(suite.mockCommit, nil)
 	suite.mockCommit.EXPECT().Tree().Return(nil, errors.New("TREE_ERROR"))
@@ -105,7 +105,7 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenFetchCommitTr
 }
 
 func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenCheckoutTreeFails_ShouldReturnError() {
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
+	suite.mockRepo.EXPECT().LookupBranch(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
 	suite.mockBranch.EXPECT().Target().Return(&git2go.Oid{})
 	suite.mockRepo.EXPECT().LookupCommitV2(gomock.Any()).Return(suite.mockCommit, nil)
 	suite.mockCommit.EXPECT().Tree().Return(&git2go.Tree{}, nil)
@@ -119,12 +119,12 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenCheckoutTreeF
 func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenLookupLocalBranchFails_ShouldAddNewLocalBranch() {
 	gitCommit := &git2go.Commit{}
 
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
+	suite.mockRepo.EXPECT().LookupBranch(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
 	suite.mockBranch.EXPECT().Target().Return(&git2go.Oid{})
 	suite.mockRepo.EXPECT().LookupCommitV2(gomock.Any()).Return(suite.mockCommit, nil)
 	suite.mockCommit.EXPECT().Tree().Return(&git2go.Tree{}, nil)
 	suite.mockRepo.EXPECT().CheckoutTree(gomock.Any(), gomock.Any()).Return(nil)
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.localBranchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERROR"))
+	suite.mockRepo.EXPECT().LookupBranch(suite.localBranchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERROR"))
 	suite.mockCommit.EXPECT().GetGitCommit().Return(gitCommit)
 	suite.mockAddBranch.EXPECT().AddBranch(suite.branchName, false, gitCommit).Return(nil)
 	suite.mockRepo.EXPECT().SetHead(suite.localBranchReferenceName).Return(nil)
@@ -137,12 +137,12 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenLookupLocalBr
 func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenLocalAddBranchFails_ShouldReturnError() {
 	gitCommit := &git2go.Commit{}
 
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
+	suite.mockRepo.EXPECT().LookupBranch(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
 	suite.mockBranch.EXPECT().Target().Return(&git2go.Oid{})
 	suite.mockRepo.EXPECT().LookupCommitV2(gomock.Any()).Return(suite.mockCommit, nil)
 	suite.mockCommit.EXPECT().Tree().Return(&git2go.Tree{}, nil)
 	suite.mockRepo.EXPECT().CheckoutTree(gomock.Any(), gomock.Any()).Return(nil)
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.localBranchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERROR"))
+	suite.mockRepo.EXPECT().LookupBranch(suite.localBranchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERROR"))
 	suite.mockCommit.EXPECT().GetGitCommit().Return(gitCommit)
 	suite.mockAddBranch.EXPECT().AddBranch(suite.branchName, false, gitCommit).Return(errors.New("ADD_ERROR"))
 
@@ -154,12 +154,12 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenLocalAddBranc
 func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenSetHeadFailsAfterAddingNewBranch_ShouldReturnError() {
 	gitCommit := &git2go.Commit{}
 
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
+	suite.mockRepo.EXPECT().LookupBranch(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
 	suite.mockBranch.EXPECT().Target().Return(&git2go.Oid{})
 	suite.mockRepo.EXPECT().LookupCommitV2(gomock.Any()).Return(suite.mockCommit, nil)
 	suite.mockCommit.EXPECT().Tree().Return(&git2go.Tree{}, nil)
 	suite.mockRepo.EXPECT().CheckoutTree(gomock.Any(), gomock.Any()).Return(nil)
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.localBranchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERROR"))
+	suite.mockRepo.EXPECT().LookupBranch(suite.localBranchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERROR"))
 	suite.mockCommit.EXPECT().GetGitCommit().Return(gitCommit)
 	suite.mockAddBranch.EXPECT().AddBranch(suite.branchName, false, gitCommit).Return(nil)
 	suite.mockRepo.EXPECT().SetHead(suite.localBranchReferenceName).Return(errors.New("SET_HEAD_ERROR"))
@@ -170,12 +170,12 @@ func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenSetHeadFailsA
 }
 
 func (suite *CheckOutRemoteBranchTestSuite) TestCheckoutBranch_WhenSetHeadFails_ShouldReturnError() {
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
+	suite.mockRepo.EXPECT().LookupBranch(suite.remoteBranchName, git2go.BranchRemote).Return(suite.mockBranch, nil)
 	suite.mockBranch.EXPECT().Target().Return(&git2go.Oid{})
 	suite.mockRepo.EXPECT().LookupCommitV2(gomock.Any()).Return(suite.mockCommit, nil)
 	suite.mockCommit.EXPECT().Tree().Return(&git2go.Tree{}, nil)
 	suite.mockRepo.EXPECT().CheckoutTree(gomock.Any(), gomock.Any()).Return(nil)
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.localBranchName, git2go.BranchLocal).Return(nil, nil)
+	suite.mockRepo.EXPECT().LookupBranch(suite.localBranchName, git2go.BranchLocal).Return(nil, nil)
 	suite.mockRepo.EXPECT().SetHead(suite.localBranchReferenceName).Return(errors.New("SET_HEAD_ERROR"))
 
 	err := suite.checkOutRemoteBranch.CheckoutBranch()

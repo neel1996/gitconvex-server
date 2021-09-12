@@ -78,7 +78,7 @@ func (suite *BranchDeleteTestSuite) TestDeleteBranch_WhenValidationFails_ShouldR
 
 func (suite *BranchDeleteTestSuite) TestDeleteBranch_WhenBranchLookupFails_ShouldReturnError() {
 	suite.mockBranchValidator.EXPECT().ValidateWithFields(suite.branchName).Return(nil)
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.branchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERR"))
+	suite.mockRepo.EXPECT().LookupBranch(suite.branchName, git2go.BranchLocal).Return(nil, errors.New("LOOKUP_ERR"))
 
 	err := suite.branchDelete.DeleteBranch(suite.branchName)
 
@@ -87,7 +87,7 @@ func (suite *BranchDeleteTestSuite) TestDeleteBranch_WhenBranchLookupFails_Shoul
 
 func (suite *BranchDeleteTestSuite) TestDeleteBranch_WhenBranchDeleteFails_ShouldReturnError() {
 	suite.mockBranchValidator.EXPECT().ValidateWithFields(suite.branchName).Return(nil)
-	suite.mockRepo.EXPECT().LookupBranchV2(suite.branchName, git2go.BranchLocal).Return(suite.mockBranch, nil)
+	suite.mockRepo.EXPECT().LookupBranch(suite.branchName, git2go.BranchLocal).Return(suite.mockBranch, nil)
 	suite.mockBranch.EXPECT().Delete().Return(errors.New("DELETE_ERROR"))
 
 	err := suite.branchDelete.DeleteBranch(suite.branchName)

@@ -14,8 +14,7 @@ type Repository interface {
 	CreateCommit(s string, signature *git.Signature, signature2 *git.Signature, message string, tree *git.Tree, parents ...*git.Commit) (*git.Oid, error)
 	DiffTreeToTree(tree *git.Tree, tree2 *git.Tree, options *git.DiffOptions) (*git.Diff, error)
 	CreateBranch(string, *git.Commit, bool) (*git.Branch, error)
-	LookupBranch(branchName string, branchType git.BranchType) (*git.Branch, error)
-	LookupBranchV2(branchName string, branchType git.BranchType) (Branch, error)
+	LookupBranch(branchName string, branchType git.BranchType) (Branch, error)
 	CheckoutTree(tree *git.Tree, c *git.CheckoutOptions) error
 	SetHead(name string) error
 	GetGitRepository() *git.Repository
@@ -74,11 +73,7 @@ func (r repository) LookupCommitV2(oid *git.Oid) (Commit, error) {
 	return NewCommit(gitCommit), nil
 }
 
-func (r repository) LookupBranch(branchName string, branchType git.BranchType) (*git.Branch, error) {
-	return r.repo.LookupBranch(branchName, branchType)
-}
-
-func (r repository) LookupBranchV2(branchName string, branchType git.BranchType) (Branch, error) {
+func (r repository) LookupBranch(branchName string, branchType git.BranchType) (Branch, error) {
 	gitBranch, err := r.repo.LookupBranch(branchName, branchType)
 	if err != nil {
 		return nil, err

@@ -18,7 +18,7 @@ func (c checkOutLocalBranch) CheckoutBranch() error {
 
 	logger.Log(fmt.Sprintf("Initiating local branch checkout for %s", branchName), global.StatusInfo)
 
-	branch, branchErr := repo.LookupBranchV2(branchName, git2go.BranchLocal)
+	branch, branchErr := repo.LookupBranch(branchName, git2go.BranchLocal)
 	if branchErr != nil {
 		return c.LogAndReturnError(branchErr)
 	}

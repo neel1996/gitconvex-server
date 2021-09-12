@@ -24,7 +24,7 @@ func (c checkOutRemoteBranch) CheckoutBranch() error {
 	branchFields := c.GenerateBranchFields()
 
 	logger.Log(fmt.Sprintf("Branch - %s is a remote branch. Trying with intermediate remote fetch!", branchName), global.StatusWarning)
-	remoteBranch, remoteBranchErr := repo.LookupBranchV2(branchFields.RemoteBranchName, git2go.BranchRemote)
+	remoteBranch, remoteBranchErr := repo.LookupBranch(branchFields.RemoteBranchName, git2go.BranchRemote)
 	if remoteBranchErr != nil {
 		return c.LogAndReturnError(remoteBranchErr)
 	}
@@ -45,7 +45,7 @@ func (c checkOutRemoteBranch) CheckoutBranch() error {
 		return c.LogAndReturnError(checkoutErr)
 	}
 
-	_, localLookupErr := repo.LookupBranchV2(branchFields.BranchName, git2go.BranchLocal)
+	_, localLookupErr := repo.LookupBranch(branchFields.BranchName, git2go.BranchLocal)
 	if localLookupErr != nil {
 		logger.Log(localLookupErr.Error(), global.StatusError)
 		gitCommit := remoteCommit.GetGitCommit()
