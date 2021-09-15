@@ -18,10 +18,15 @@ type Repository interface {
 	CheckoutTree(tree *git.Tree, c *git.CheckoutOptions) error
 	SetHead(name string) error
 	GetGitRepository() *git.Repository
+	NewBranchIterator(branchType git.BranchType) (*git.BranchIterator, error)
 }
 
 type repository struct {
 	repo *git.Repository
+}
+
+func (r repository) NewBranchIterator(branchType git.BranchType) (*git.BranchIterator, error) {
+	return r.repo.NewBranchIterator(branchType)
 }
 
 func (r repository) SetHead(name string) error {
