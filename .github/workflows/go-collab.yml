@@ -46,6 +46,7 @@ jobs:
           sudo chown $(whoami) /usr/local/gitconvex/
 
       - name: Run Go Test
+        shell: bash
         run: make dockerise-test
 
   gitconvex-build:
