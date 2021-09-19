@@ -47,7 +47,7 @@ jobs:
 
       - name: Run Go Test
         shell: bash
-        run: make dockerise-test
+        run: make test-ci
 
   gitconvex-build:
     needs:
