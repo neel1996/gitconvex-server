@@ -37,14 +37,17 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Run Go Test
+      - name: Setup Test Artifacts
         run: |
           sudo cp /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.1/lib/lib* /usr/lib
           export PATH="/home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.1/lib/:$PATH"
           git config --global user.name "${{ secrets.ACTION_USER_NAME }}" && git config --global user.email "${{ secrets.ACTION_USER_EMAIL }}"
           sudo mkdir -p /usr/local/gitconvex
           sudo chown $(whoami) /usr/local/gitconvex/
-          make dockerise-test
+
+      - name: Run Go Test
+        shell: bash
+        run: make test-ci
 
   gitconvex-build:
     needs:
