@@ -47,7 +47,9 @@ jobs:
 
       - name: Run Go Test
         shell: bash
-        run: make test-ci
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          make test-ci-pretty
 
   gitconvex-build:
     needs:
