@@ -45,6 +45,12 @@ jobs:
           sudo mkdir -p /usr/local/gitconvex
           sudo chown $(whoami) /usr/local/gitconvex/
 
+      - name: Try GOtestsum
+        run: |
+          go get gotest.tools/gotestsum
+          export PATH=$PATH:$(go env GOPATH)/bin
+          gotestsum ./... -cover
+
       - name: Run Go Test
         shell: bash
         run: make test-ci

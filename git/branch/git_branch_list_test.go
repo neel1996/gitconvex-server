@@ -8,6 +8,7 @@ import (
 	"github.com/neel1996/gitconvex/git/middleware"
 	"github.com/neel1996/gitconvex/mocks"
 	"github.com/stretchr/testify/suite"
+	"log"
 	"os"
 	"testing"
 )
@@ -46,6 +47,8 @@ func (suite *BranchListTestSuite) TestListBranches_WhenRepoHasBranches_ShouldRet
 	suite.branchList = NewBranchList(suite.repo)
 
 	branchList, err := suite.branchList.ListBranches()
+
+	log.Println(branchList)
 
 	suite.Nil(err)
 	suite.Equal(2, len(branchList.BranchList))
