@@ -59,6 +59,14 @@ test-ci: git-testuser-setup
     go test ./... -count=1 -p=1 -cover -coverprofile=coverage.out && \
     rm -rf $$GITCONVEX_TEST_REPO
 
+test-ci-pretty: git-testuser-setup
+	go generate && \
+	go clean --cache && \
+    sh ./build_scripts/clone_test_repo.sh && \
+    go get gotest.tools/gotestsum && \
+    gotestsum ./... -count=1 -p=1 -cover -coverprofile=coverage.out && \
+    rm -rf $$GITCONVEX_TEST_REPO
+
 dockerise-test:
 	rm -rf $$GITCONVEX_TEST_REPO && \
 	docker-compose -f docker-compose.test.yaml build && \

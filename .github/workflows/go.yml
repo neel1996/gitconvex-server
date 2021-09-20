@@ -47,9 +47,8 @@ jobs:
 
       - name: Try GOtestsum
         run: |
-          go get gotest.tools/gotestsum
           export PATH=$PATH:$(go env GOPATH)/bin
-          gotestsum ./... -cover
+          make test-ci-pretty
 
       - name: Run Go Test
         shell: bash
