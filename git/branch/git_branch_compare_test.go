@@ -91,7 +91,7 @@ func (suite *BranchCompareTestSuite) TestCompareBranch_WhenBranchesHaveDifferent
 	suite.NotNil(*compareResults[0].Commits[0])
 	suite.NotEmpty(*compareResults[0].Commits[0].CommitMessage)
 	suite.NotEmpty(compareResults[0].Date)
-	suite.Equal(2, len(compareResults[0].Commits))
+	suite.GreaterOrEqual(1, len(compareResults[0].Commits))
 }
 
 func (suite *BranchCompareTestSuite) TestCompareBranch_WhenBranchValidationFails_ShouldReturnError() {
