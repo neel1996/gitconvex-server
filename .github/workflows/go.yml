@@ -21,6 +21,7 @@ jobs:
       PKG_CONFIG_PATH: /home/linuxbrew/.linuxbrew/Cellar/libgit2/1.1.1/lib/pkgconfig/
       GITCONVEX_TEST_REPO: /home/runner/work/gitconvex-server/gitconvex-test
       GITCONVEX_DEFAULT_PATH: /usr/local/gitconvex
+      COVERAGE_THRESHOLD: 90
 
     steps:
       - name: Install libgit2 from Homebrew
@@ -50,6 +51,14 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           make test-ci-pretty
+
+      - name: Check Coverage
+        shell: bash
+        run: |
+          export COVERAGE_PERCENT=`go tool cover -func=coverage.out | grep "total:" | grep -Eo '[0-9]+\.[0-9]+'`
+          echo "Current coverage percentage : $COVERAGE_PERCENT"
+          make check-coverage
+
 
   gitconvex-build:
     needs:
