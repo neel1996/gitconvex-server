@@ -11,10 +11,6 @@ type commitMessageSearch struct {
 	commits []git.Commit
 }
 
-func (m commitMessageSearch) New(commits []git.Commit) Search {
-	return commitMessageSearch{commits: commits}
-}
-
 func (m commitMessageSearch) Search(searchKey string) []git.Commit {
 	var (
 		matchingCommits []git.Commit
